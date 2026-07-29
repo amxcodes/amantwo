@@ -3,6 +3,7 @@ import "@fontsource-variable/inter";
 import "@fontsource/dm-mono/300.css";
 import "@fontsource/dm-mono/400.css";
 import "@fontsource/dm-mono/500.css";
+import "@fontsource/gochi-hand/400.css";
 import "../styles/global.css";
 
 interface Props {
@@ -17,7 +18,10 @@ const { title, description } = Astro.props;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f5f3ed" />
     <link rel="preconnect" href="https://assets.watermelon.sh" crossorigin />
@@ -27,6 +31,7 @@ const { title, description } = Astro.props;
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <slot />
+    <nav class="edge-scroll-rail" data-edge-scroll-rail aria-label="Page sections"></nav>
     <script>
       import "../scripts/motion";
     </script>

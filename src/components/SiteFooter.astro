@@ -1,17 +1,44 @@
 ---
+import BrandIcon from "./BrandIcon.astro";
+import { FooterSignature } from "./FooterSignature";
+
 interface Props {
   email: string;
-  links: Array<{ label: string; href: string }>;
 }
 
-const { email, links } = Astro.props;
+const { email } = Astro.props;
+const socialLinks = [
+  { label: "Email", brand: "gmail", href: `mailto:${email}` },
+  { label: "GitHub", brand: "github", href: "https://github.com/amxcodes" },
+  { label: "Instagram", brand: "instagram", href: "https://www.instagram.com/amxcodes/" },
+  { label: "YouTube", brand: "youtube", href: "https://www.youtube.com/@amxcodes" },
+] as const;
 ---
 
-<footer class="site-footer" data-reveal="section">
-  <p>Have a problem worth caring about?</p>
-  <a class="footer-email" href={`mailto:${email}`}>Say hello.</a>
-  <nav aria-label="Social links">
-    {links.map((link) => <a href={link.href}>{link.label}</a>)}
-  </nav>
-  <p class="footer-note">Aman Anu · Kochi · <span data-year></span></p>
+<footer id="signature-footer" class="signature-footer" data-reveal="section" data-scroll-label="Contact">
+  <a class="signature-footer-top" href="#home">Top <span aria-hidden="true">↑</span></a>
+  <div class="signature-footer-content">
+    <div class="signature-footer-main">
+      <FooterSignature client:load name="Aman" sectionId="signature-footer" />
+      <p class="signature-footer-message">A small, occasional note on products, systems, and moving images.</p>
+      <form class="signature-footer-subscribe" action={`mailto:${email}?subject=Newsletter%20subscription`} method="post" enctype="text/plain">
+        <label class="sr-only" for="footer-email">Email address</label>
+        <input id="footer-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="Email address" required />
+        <button type="submit">Join <span aria-hidden="true">↗</span></button>
+      </form>
+      <nav class="signature-footer-socials" aria-label="Aman Anu on social media">
+        {socialLinks.map((link) => (
+          <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined} aria-label={link.label} title={link.label}>
+            <BrandIcon brand={link.brand} />
+            <span>{link.label}</span>
+          </a>
+        ))}
+      </nav>
+      <p class="signature-footer-meta">© <span data-year></span> Aman Anu · Kochi, India</p>
+    </div>
+  </div>
+
+  <div class="signature-footer-landscape" aria-hidden="true">
+    <img src="/media/footer-landscape.png" alt="" />
+  </div>
 </footer>

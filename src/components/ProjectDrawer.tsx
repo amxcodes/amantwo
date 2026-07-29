@@ -41,6 +41,8 @@ export default function ProjectDrawer() {
   return (
     <Drawer.Root
       open={Boolean(project)}
+      handleOnly
+      closeThreshold={0.22}
       onOpenChange={(open) => {
         if (!open) setProject(null);
       }}
@@ -51,8 +53,17 @@ export default function ProjectDrawer() {
           className="project-drawer"
           aria-describedby="project-drawer-summary"
         >
-          <section className="project-drawer-panel">
-            <div className="drawer-handle" aria-hidden="true" />
+          <section
+            className="project-drawer-panel"
+            aria-label="Project details"
+          >
+            <Drawer.Handle
+              className="drawer-drag-handle"
+              preventCycle
+              aria-label="Drag down to close project details"
+            >
+              <span className="drawer-handle" aria-hidden="true" />
+            </Drawer.Handle>
             {media ? (
               <div className="drawer-media">
                 {media.type === "video" ? (
@@ -72,7 +83,18 @@ export default function ProjectDrawer() {
                   <img src={media.src} alt={media.alt ?? ""} />
                 )}
               </div>
-            ) : null}
+            ) : (
+              <div className="drawer-media-empty">
+                <span aria-hidden="true">◌</span>
+                <div>
+                  <p>Media is being prepared</p>
+                  <small>
+                    The case study will open with images or film when it is
+                    ready.
+                  </small>
+                </div>
+              </div>
+            )}
             <div className="drawer-content">
               <div className="drawer-topline">
                 <p>{project?.eyebrow ?? "Selected work"}</p>

@@ -1,4 +1,7 @@
 ---
+import AboutSection from "../components/AboutSection.astro";
+import EducationSection from "../components/EducationSection.astro";
+import ExperienceSection from "../components/ExperienceSection.astro";
 import ProfileHero from "../components/ProfileHero.astro";
 import ProjectCollection from "../components/ProjectCollection.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -12,8 +15,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     <SiteHeader {...siteData.identity} />
     <main id="main-content">
       <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
-      <ProjectCollection projects={siteData.projects} roles={siteData.roles} />
+      <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} />
+      <AboutSection {...siteData.about} />
+      <ExperienceSection entries={siteData.experience} />
+      <EducationSection entries={siteData.education} />
     </main>
-    <SiteFooter email={siteData.identity.email} links={siteData.links} />
+    <SiteFooter email={siteData.identity.email} />
   </div>
 </BaseLayout>

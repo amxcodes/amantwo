@@ -20,7 +20,7 @@ function setupReveals() {
   );
 
   inView(
-    "[data-reveal='section']",
+    "[data-reveal='section']:not([data-github-activity])",
     (element) => {
       animate(
         element,
@@ -59,6 +59,7 @@ function setupProjects() {
   );
   if (!section || !scroller) return;
 
+  const slots = ["lead", "stack", "feature", "wide"];
   const cards = Array.from(
     section.querySelectorAll<HTMLElement>("[data-project-card]"),
   );
@@ -68,6 +69,18 @@ function setupProjects() {
   const filters = Array.from(
     section.querySelectorAll<HTMLButtonElement>("[data-project-filter]"),
   );
+  const sortCycle = section.querySelector<HTMLButtonElement>(
+    "[data-project-sort-cycle]",
+  );
+  const sortLabel = section.querySelector<HTMLElement>(
+    "[data-project-sort-label]",
+  );
+  const previousPage = section.querySelector<HTMLButtonElement>(
+    "[data-project-page-previous]",
+  );
+  const nextPage = section.querySelector<HTMLButtonElement>(
+    "[data-project-page-next]",
+  );
   const dots = section.querySelector<HTMLElement>(
     "[data-project-pagination-dots]",
   );
@@ -75,7 +88,34 @@ function setupProjects() {
     "[data-project-position]",
   );
   let frame = 0;
-  let lastPageChange = 0;
+  let activeFilter = "all";
+  const sortModes = [
+    { value: "featured", label: "Featured" },
+    { value: "title", label: "A–Z" },
+    { value: "category", label: "Type" },
+  ] as const;
+  let sortMode: (typeof sortModes)[number]["value"] = "featured";
+
+  const visibleCards = () => {
+    const filtered = cards.filter((card) => {
+      const categories = card.dataset.categories?.split(" ") ?? [];
+      return activeFilter === "all" || categories.includes(activeFilter);
+    });
+
+    return filtered.toSorted((a, b) => {
+      if (sortMode === "title") {
+        return (a.dataset.projectTitle ?? "").localeCompare(
+          b.dataset.projectTitle ?? "",
+        );
+      }
+      if (sortMode === "category") {
+        return (a.dataset.projectPrimaryCategory ?? "").localeCompare(
+          b.dataset.projectPrimaryCategory ?? "",
+        );
+      }
+      return Number(a.dataset.projectIndex) - Number(b.dataset.projectIndex);
+    });
+  };
 
   const visiblePages = () => pages.filter((page) => !page.hidden);
   const activePageIndex = (available = visiblePages()) =>
@@ -95,9 +135,10 @@ function setupProjects() {
   const updatePagination = () => {
     frame = 0;
     const available = visiblePages();
-    const active = activePageIndex(available);
-    if (position)
-      position.textContent = `${available.length ? active + 1 : 0} / ${available.length}`;
+    const active = available.length ? activePageIndex(available) : 0;
+    if (position) position.textContent = `${active + 1} / ${available.length}`;
+    if (previousPage) previousPage.disabled = active <= 0;
+    if (nextPage) nextPage.disabled = active >= available.length - 1;
     dots
       ?.querySelectorAll<HTMLButtonElement>("[data-project-page-dot]")
       .forEach((dot, index) => {
@@ -121,33 +162,76 @@ function setupProjects() {
     );
   };
 
+  const changePage = (direction: -1 | 1) => {
+    const available = visiblePages();
+    if (!available.length) return;
+    const nextIndex = Math.min(
+      available.length - 1,
+      Math.max(0, activePageIndex(available) + direction),
+    );
+    scrollToPage(available[nextIndex]);
+  };
+
+  const arrangeProjects = () => {
+    const arranged = visibleCards();
+    cards.forEach((card) => {
+      card.hidden = true;
+    });
+    pages.forEach((page) => {
+      page.replaceChildren();
+      page.hidden = true;
+      page.dataset.projectCount = "0";
+    });
+    arranged.forEach((card, index) => {
+      const page = pages[Math.floor(index / slots.length)];
+      if (!page) return;
+      const slot = slots[index % slots.length] ?? "wide";
+      card.hidden = false;
+      card.classList.remove(
+        "bento-slot-lead",
+        "bento-slot-stack",
+        "bento-slot-feature",
+        "bento-slot-wide",
+      );
+      card.classList.add(`bento-slot-${slot}`);
+      page.hidden = false;
+      page.dataset.projectCount = String(page.children.length + 1);
+      page.append(card);
+    });
+    filters.forEach((button) => {
+      button.setAttribute(
+        "aria-pressed",
+        String((button.dataset.projectFilter ?? "all") === activeFilter),
+      );
+    });
+    scroller.scrollTo({
+      left: 0,
+      behavior: reducedMotion.matches ? "auto" : "smooth",
+    });
+    renderDots();
+    requestPagination();
+  };
+
   for (const filter of filters) {
     filter.addEventListener("click", () => {
-      const value = filter.dataset.projectFilter ?? "all";
-      for (const card of cards) {
-        const categories = card.dataset.categories?.split(" ") ?? [];
-        card.hidden =
-          value !== "all" &&
-          !(value === "about" && card.hasAttribute("data-project-about")) &&
-          !categories.includes(value);
-      }
-      for (const page of pages) {
-        page.hidden =
-          value !== "all" &&
-          !Array.from(
-            page.querySelectorAll<HTMLElement>("[data-project-card]"),
-          ).some((card) => !card.hidden);
-      }
-      for (const button of filters)
-        button.setAttribute("aria-pressed", String(button === filter));
-      scroller.scrollTo({
-        left: 0,
-        behavior: reducedMotion.matches ? "auto" : "smooth",
-      });
-      renderDots();
-      requestPagination();
+      activeFilter = filter.dataset.projectFilter ?? "all";
+      arrangeProjects();
     });
   }
+
+  sortCycle?.addEventListener("click", () => {
+    const currentIndex = sortModes.findIndex((mode) => mode.value === sortMode);
+    const nextMode = sortModes[(currentIndex + 1) % sortModes.length];
+    sortMode = nextMode.value;
+    if (sortLabel) sortLabel.textContent = nextMode.label;
+    sortCycle.setAttribute(
+      "aria-label",
+      `Change project order. Currently ${nextMode.label}.`,
+    );
+    arrangeProjects();
+  });
+  previousPage?.addEventListener("click", () => changePage(-1));
+  nextPage?.addEventListener("click", () => changePage(1));
 
   section
     .querySelectorAll<HTMLButtonElement>("[data-project-open]")
@@ -181,36 +265,9 @@ function setupProjects() {
       });
     });
 
-  section.addEventListener(
-    "wheel",
-    (event) => {
-      if (
-        reducedMotion.matches ||
-        !precisePointer.matches ||
-        Math.abs(event.deltaY) <= Math.abs(event.deltaX)
-      )
-        return;
-      const bounds = section.getBoundingClientRect();
-      if (
-        bounds.top > window.innerHeight * 0.18 ||
-        bounds.bottom < window.innerHeight * 0.72
-      )
-        return;
-      const available = visiblePages();
-      const next =
-        available[activePageIndex(available) + Math.sign(event.deltaY)];
-      if (!next) return;
-      event.preventDefault();
-      if (Date.now() - lastPageChange < 520) return;
-      lastPageChange = Date.now();
-      scrollToPage(next);
-    },
-    { passive: false },
-  );
   scroller.addEventListener("scroll", requestPagination, { passive: true });
   new ResizeObserver(requestPagination).observe(scroller);
-  renderDots();
-  updatePagination();
+  arrangeProjects();
 }
 
 function setupChromaticText() {
@@ -304,6 +361,220 @@ function setupPortrait() {
   );
 }
 
+function setupChronicleDetails() {
+  const roots = document.querySelectorAll<HTMLElement>(
+    "[data-chronicle-detail]",
+  );
+  roots.forEach((root) => {
+    const triggers = root.querySelectorAll<HTMLButtonElement>(
+      "[data-chronicle-trigger]",
+    );
+    const preview = root.querySelector<HTMLElement>("[data-chronicle-preview]");
+    if (!triggers.length || !preview) return;
+
+    const previewMeta = preview.querySelector<HTMLElement>(
+      "[data-chronicle-preview-meta]",
+    );
+    const previewTitle = preview.querySelector<HTMLElement>(
+      "[data-chronicle-preview-title]",
+    );
+    const previewDetail = preview.querySelector<HTMLElement>(
+      "[data-chronicle-preview-detail]",
+    );
+
+    let closeTimer = 0;
+    let activeTrigger: HTMLButtonElement | undefined;
+    const positionPreview = (trigger?: HTMLButtonElement) => {
+      if (!trigger || !precisePointer.matches) {
+        preview.style.removeProperty("left");
+        preview.style.removeProperty("top");
+        return;
+      }
+
+      const triggerBounds = trigger.getBoundingClientRect();
+      const previewBounds = preview.getBoundingClientRect();
+      const gutter = 12;
+      const spaceAbove = triggerBounds.top - gutter;
+      const spaceBelow = window.innerHeight - triggerBounds.bottom - gutter;
+      const showBelow =
+        spaceAbove < previewBounds.height + 12 &&
+        spaceBelow > previewBounds.height + 12;
+      const left = Math.min(
+        Math.max(gutter, triggerBounds.left),
+        window.innerWidth - previewBounds.width - gutter,
+      );
+      const top = showBelow
+        ? Math.min(
+            window.innerHeight - previewBounds.height - gutter,
+            triggerBounds.bottom + 10,
+          )
+        : Math.max(gutter, triggerBounds.top - previewBounds.height - 10);
+
+      preview.style.left = `${left}px`;
+      preview.style.top = `${top}px`;
+      preview.dataset.placement = showBelow ? "below" : "above";
+    };
+    const setOpen = (open: boolean, trigger?: HTMLButtonElement) => {
+      window.clearTimeout(closeTimer);
+      if (open && trigger) {
+        activeTrigger = trigger;
+        if (previewMeta) {
+          previewMeta.textContent = trigger.dataset.chroniclePreviewMeta ?? "";
+        }
+        if (previewTitle) {
+          previewTitle.textContent =
+            trigger.dataset.chroniclePreviewTitle ?? "";
+        }
+        if (previewDetail) {
+          previewDetail.textContent =
+            trigger.dataset.chroniclePreviewDetail ?? "";
+        }
+        positionPreview(trigger);
+      }
+      if (!open) activeTrigger = undefined;
+      root.dataset.open = String(open);
+      preview.setAttribute("aria-hidden", String(!open));
+      triggers.forEach((trigger) => {
+        trigger.setAttribute(
+          "aria-expanded",
+          String(open && trigger === activeTrigger),
+        );
+      });
+    };
+    const scheduleClose = () => {
+      closeTimer = window.setTimeout(() => setOpen(false), 90);
+    };
+
+    root.addEventListener("pointerleave", () => {
+      if (precisePointer.matches) scheduleClose();
+    });
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("pointerenter", () => {
+        if (precisePointer.matches) setOpen(true, trigger);
+      });
+      trigger.addEventListener("focus", () => setOpen(true, trigger));
+      trigger.addEventListener("blur", scheduleClose);
+      trigger.addEventListener("click", () => {
+        if (!precisePointer.matches) {
+          const isSameDetail =
+            root.dataset.open === "true" &&
+            previewTitle?.textContent ===
+              (trigger.dataset.chroniclePreviewTitle ?? "");
+          setOpen(!isSameDetail, trigger);
+        }
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setOpen(false);
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (!root.contains(event.target as Node)) setOpen(false);
+    });
+  });
+}
+
+function setupEdgeScrollRail() {
+  const rail = document.querySelector<HTMLElement>("[data-edge-scroll-rail]");
+  if (!rail || !precisePointer.matches) return;
+
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-scroll-label][id]"),
+  );
+  if (sections.length < 2) return;
+
+  const buttons = sections.map((section, index) => {
+    const button = document.createElement("button");
+    const marker = document.createElement("span");
+    const label = document.createElement("span");
+    const title = section.dataset.scrollLabel ?? `Section ${index + 1}`;
+    button.type = "button";
+    button.className = "edge-scroll-rail-item";
+    button.dataset.edgeScrollItem = section.id;
+    button.style.setProperty("--rail-scale", index === 0 ? "1" : "0.25");
+    button.setAttribute("aria-label", `Scroll to ${title}`);
+    button.setAttribute("aria-current", String(index === 0));
+    marker.className = "edge-scroll-rail-marker";
+    label.className = "edge-scroll-rail-label";
+    label.textContent = title;
+    button.append(marker, label);
+    button.addEventListener("click", () => {
+      section.scrollIntoView({
+        block: "start",
+        behavior: reducedMotion.matches ? "auto" : "smooth",
+      });
+    });
+    button.addEventListener("pointerenter", () => updateRail(index));
+    button.addEventListener("focus", () => updateRail(index));
+    return button;
+  });
+
+  let activeIndex = 0;
+  let hoverIndex = -1;
+  let frame = 0;
+
+  const applyRailState = (displayedIndex = hoverIndex) => {
+    buttons.forEach((button, index) => {
+      const selected = index === activeIndex;
+      const highlighted =
+        index === displayedIndex || (displayedIndex < 0 && selected);
+      const distance =
+        displayedIndex < 0
+          ? Math.abs(index - activeIndex)
+          : Math.abs(index - displayedIndex);
+      const scale = highlighted
+        ? 1
+        : distance === 1
+          ? 0.68
+          : distance === 2
+            ? 0.44
+            : 0.25;
+      button.style.setProperty("--rail-scale", scale.toFixed(2));
+      button.setAttribute("aria-current", String(selected));
+    });
+  };
+
+  const updateRail = (index: number) => {
+    hoverIndex = index;
+    applyRailState(index);
+  };
+
+  const updateActiveSection = () => {
+    frame = 0;
+    const viewportPoint = window.innerHeight * 0.45;
+    activeIndex = sections.reduce((closest, section, index) => {
+      const currentDistance = Math.abs(
+        section.getBoundingClientRect().top - viewportPoint,
+      );
+      const closestDistance = Math.abs(
+        sections[closest].getBoundingClientRect().top - viewportPoint,
+      );
+      return currentDistance < closestDistance ? index : closest;
+    }, 0);
+    applyRailState();
+  };
+
+  const requestActiveSection = () => {
+    if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
+  };
+
+  rail.addEventListener("pointerleave", () => {
+    hoverIndex = -1;
+    applyRailState();
+  });
+  rail.addEventListener("blur", (event) => {
+    if (!rail.contains(event.relatedTarget as Node)) {
+      hoverIndex = -1;
+      applyRailState();
+    }
+  });
+
+  rail.replaceChildren(...buttons);
+  rail.dataset.ready = "true";
+  window.addEventListener("scroll", requestActiveSection, { passive: true });
+  window.addEventListener("resize", requestActiveSection, { passive: true });
+  updateActiveSection();
+}
+
 function setYear() {
   const year = document.querySelector<HTMLElement>("[data-year]");
   if (year) year.textContent = String(new Date().getFullYear());
@@ -312,5 +583,7 @@ function setYear() {
 setupReveals();
 setupChromaticText();
 setupPortrait();
+setupChronicleDetails();
 setupProjects();
+setupEdgeScrollRail();
 setYear();

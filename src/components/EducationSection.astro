@@ -1,0 +1,57 @@
+---
+interface SegmentText {
+  type: "text";
+  value: string;
+}
+
+interface SegmentPill {
+  type: "pill";
+  label: string;
+  detail: string;
+  tone: "blue" | "orange" | "yellow" | "green";
+}
+
+interface Entry {
+  id: string;
+  period: string;
+  location: string;
+  segments: Array<SegmentText | SegmentPill>;
+}
+
+interface Props {
+  entries: Entry[];
+}
+
+const { entries } = Astro.props;
+---
+
+<section class="chronicle-section education-section" id="education" aria-labelledby="education-title" data-reveal="section" data-scroll-label="Education">
+  <div class="chronicle-heading"><h2 id="education-title">Education</h2></div>
+  <ol class="chronicle-list" aria-label="Education entries">
+    {entries.map((entry) => (
+      <li class="chronicle-entry" data-chronicle-detail>
+        <p class="chronicle-sentence">
+          {entry.segments.map((segment) =>
+            segment.type === "text" ? segment.value : (
+              <button
+                class:list={["chronicle-keyword", `tone-${segment.tone}`]}
+                type="button"
+                data-chronicle-trigger
+                data-chronicle-preview-title={segment.label}
+                data-chronicle-preview-detail={segment.detail}
+                data-chronicle-preview-meta={`${entry.period} · ${entry.location}`}
+                aria-expanded="false"
+                aria-controls={`${entry.id}-detail`}
+              >{segment.label}</button>
+            ),
+          )}
+        </p>
+        <aside class="chronicle-preview" id={`${entry.id}-detail`} aria-hidden="true" data-chronicle-preview>
+          <p data-chronicle-preview-meta>{entry.period} · {entry.location}</p>
+          <h4 data-chronicle-preview-title>More detail</h4>
+          <span data-chronicle-preview-detail></span>
+        </aside>
+      </li>
+    ))}
+  </ol>
+</section>

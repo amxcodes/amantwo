@@ -5,6 +5,25 @@ const linkSchema = z.object({
   href: z.string().min(1),
 });
 
+const inlinePillSchema = z.object({
+  type: z.literal("pill"),
+  label: z.string().min(1),
+  detail: z.string().min(1),
+  tone: z.enum(["blue", "orange", "yellow", "green"]),
+});
+
+const inlineTextSchema = z.object({
+  type: z.literal("text"),
+  value: z.string().min(1),
+});
+
+const timelineEntrySchema = z.object({
+  id: z.string().min(1),
+  period: z.string().min(1),
+  location: z.string().min(1),
+  segments: z.array(z.union([inlineTextSchema, inlinePillSchema])).min(1),
+});
+
 const projectSchema = z.object({
   slug: z.string().min(1),
   eyebrow: z.string().min(1),
@@ -14,7 +33,9 @@ const projectSchema = z.object({
   tone: z.enum(["blue", "cream", "orange", "red", "yellow", "mist", "green"]),
   layout: z.enum(["folder", "compact", "note", "feature", "tile"]),
   status: z.string().min(1),
-  categories: z.array(z.enum(["ai", "film", "experiment"])).min(1),
+  categories: z
+    .array(z.enum(["product", "ai", "web", "mobile", "film", "experiment"]))
+    .min(1),
   detail: z.string().min(1),
   caseStudy: z.string().min(1),
   tags: z.array(z.string().min(1)).min(1),
@@ -47,6 +68,28 @@ export const siteSchema = z.object({
   roles: z.array(z.string().min(1)).min(1).max(4),
   heroRoles: z.array(z.string().min(1)).min(1).max(4),
   links: z.array(linkSchema),
+  github: z.object({
+    account: z.string().regex(/^(?!-)[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i),
+    profileUrl: z.url(),
+  }),
+  about: z.object({
+    eyebrow: z.string().min(1),
+    heading: z.string().min(1),
+    description: z.string().min(1),
+    details: z
+      .array(
+        z.object({
+          label: z.string().min(1),
+          value: z.string().min(1),
+        }),
+      )
+      .min(1),
+    portraitSrc: z.string().min(1),
+    portraitAlt: z.string().min(1),
+    links: z.array(linkSchema).min(1),
+  }),
+  experience: z.array(timelineEntrySchema),
+  education: z.array(timelineEntrySchema),
   projects: z.array(projectSchema),
 });
 
@@ -55,7 +98,7 @@ export const siteData = siteSchema.parse({
     name: "Aman Anu",
     location: "Kochi, India",
     availability: "Available for thoughtful collaborations",
-    email: "hello@amananu.com",
+    email: "amananuworks@gmail.com",
     avatarSrc: "https://assets.watermelon.sh/wm_alex.png",
     portraitSrc: "/media/aman-portrait.png",
     introduction: "I’m Aman",
@@ -69,9 +112,163 @@ export const siteData = siteSchema.parse({
     "— a Product Builder",
   ],
   links: [
-    { label: "Email", href: "mailto:hello@amananu.com" },
+    { label: "Email", href: "mailto:amananuworks@gmail.com" },
     { label: "LinkedIn", href: "https://www.linkedin.com/" },
     { label: "GitHub", href: "https://github.com/" },
+  ],
+  github: {
+    account: "amxcodes",
+    profileUrl: "https://github.com/amxcodes",
+  },
+  about: {
+    eyebrow: "A few notes",
+    heading: "What I’m drawn to.",
+    description:
+      "I move between product thinking, code, and moving images. The small details are usually where the feeling begins.",
+    details: [
+      { label: "Usually thinking about", value: "systems with feeling" },
+      { label: "Keeps me curious", value: "frames, code & music" },
+      { label: "Current state", value: "making & noticing" },
+    ],
+    portraitSrc: "/media/aman-about-annotated-paper.png",
+    portraitAlt:
+      "A cobalt-blue line drawing of Aman Anu in profile, with three handwritten annotations.",
+    links: [
+      { label: "Email", href: "mailto:amananuworks@gmail.com" },
+      { label: "GitHub", href: "https://github.com/amxcodes" },
+    ],
+  },
+  experience: [
+    {
+      id: "digicult",
+      period: "Jun 2025 - Present",
+      location: "Kochi, India",
+      segments: [
+        { type: "text", value: "At " },
+        {
+          type: "pill",
+          label: "Digicult Global Media",
+          detail:
+            "A creative and technology-led media practice where I work across products, campaigns, tools, and emerging technology.",
+          tone: "orange",
+        },
+        { type: "text", value: ", I work as a " },
+        {
+          type: "pill",
+          label: "Creative Technologist",
+          detail:
+            "A hybrid role spanning product thinking, engineering, emerging tools, creative direction, and practical execution.",
+          tone: "blue",
+        },
+        { type: "text", value: " - owning " },
+        {
+          type: "pill",
+          label: "product architecture",
+          detail:
+            "Mapping workflows, data models, permissions, interfaces, and implementation for products such as Covena and onFlow.",
+          tone: "yellow",
+        },
+        { type: "text", value: ", " },
+        {
+          type: "pill",
+          label: "agentic AI systems",
+          detail:
+            "Designing safe AI tool-calling and workflow systems with deliberate boundaries for real operational work.",
+          tone: "green",
+        },
+        { type: "text", value: ", " },
+        {
+          type: "pill",
+          label: "intern mentorship",
+          detail:
+            "Led a four-month programme for six interns across development and creative tracks, resulting in four shipped projects and two commercial AI-video projects.",
+          tone: "blue",
+        },
+        { type: "text", value: ", and " },
+        {
+          type: "pill",
+          label: "creative campaigns",
+          detail:
+            "Directed AI-driven brand films and campaign content by translating brand strategy into visual storytelling.",
+          tone: "orange",
+        },
+        { type: "text", value: "." },
+      ],
+    },
+    {
+      id: "ergo",
+      period: "Dec 2024",
+      location: "Kochi, India",
+      segments: [
+        { type: "text", value: "Earlier, with " },
+        {
+          type: "pill",
+          label: "Ergo Consulting",
+          detail:
+            "A short international guest-relations internship during the International Rubber Conference 2024.",
+          tone: "yellow",
+        },
+        { type: "text", value: ", I supported " },
+        {
+          type: "pill",
+          label: "international guest relations",
+          detail:
+            "Handled onboarding, scheduling, and logistics for high-profile international delegates as part of the core reception team.",
+          tone: "green",
+        },
+        { type: "text", value: "." },
+      ],
+    },
+  ],
+  education: [
+    {
+      id: "bca",
+      period: "2022 - 2025",
+      location: "Kochi, India",
+      segments: [
+        { type: "text", value: "I completed a " },
+        {
+          type: "pill",
+          label: "BCA with First-Class Honours",
+          detail:
+            "A full-time Bachelor of Computer Applications degree, completed in 2025 with First-Class Honours.",
+          tone: "blue",
+        },
+        { type: "text", value: " at " },
+        {
+          type: "pill",
+          label: "SCMS School of Technology and Management",
+          detail:
+            "The Kochi institution where I developed the software foundation that now supports my product and creative-technology work.",
+          tone: "green",
+        },
+        { type: "text", value: ", building a base in " },
+        {
+          type: "pill",
+          label: "software development",
+          detail:
+            "A practical foundation across application development, technical problem-solving, and working with software systems.",
+          tone: "yellow",
+        },
+        { type: "text", value: ", " },
+        {
+          type: "pill",
+          label: "product design",
+          detail:
+            "Learning to shape interfaces, journeys, and system decisions around the people using them.",
+          tone: "orange",
+        },
+        { type: "text", value: ", and " },
+        {
+          type: "pill",
+          label: "AI systems",
+          detail:
+            "An ongoing technical practice in generative tools, agentic workflows, and controlled AI actions.",
+          tone: "green",
+        },
+        { type: "text", value: "." },
+      ],
+    },
   ],
   projects: [
     {
@@ -84,7 +281,7 @@ export const siteData = siteSchema.parse({
       tone: "cream",
       layout: "compact",
       status: "In development",
-      categories: ["ai"],
+      categories: ["product", "ai"],
       detail:
         "A people-first operating system that brings the everyday work of teams into one calm, considered product.",
       caseStudy:
@@ -102,7 +299,7 @@ export const siteData = siteSchema.parse({
       tone: "orange",
       layout: "note",
       status: "Active research",
-      categories: ["ai", "experiment"],
+      categories: ["product", "ai", "experiment"],
       detail:
         "An ongoing exploration of a personal agent that can hold context, coordinate tools, and remain useful over time.",
       caseStudy:

@@ -6,68 +6,619 @@ import ProjectDrawer from "./ProjectDrawer.tsx";
 interface Props {
   projects: Project[];
   roles: string[];
+  github: {
+    account: string;
+    profileUrl: string;
+  };
 }
 
-const { projects, roles } = Astro.props;
-const filters = [
-  { label: "About me", value: "about" },
-  { label: "Selected work", value: "all" },
-  { label: "AI systems", value: "ai" },
-  { label: "Films", value: "film" },
-  { label: "Experiments", value: "experiment" },
+const { projects, github } = Astro.props;
+const categoryOptions = [
+  {
+    label: "All",
+    value: "all",
+  },
+  {
+    label: "Product",
+    value: "product",
+  },
+  {
+    label: "AI",
+    value: "ai",
+  },
+  {
+    label: "Web",
+    value: "web",
+  },
+  {
+    label: "Mobile",
+    value: "mobile",
+  },
+  {
+    label: "Films",
+    value: "film",
+  },
+  {
+    label: "Notes",
+    value: "experiment",
+  },
 ];
+const categories = categoryOptions
+  .map((category) => ({
+    ...category,
+    count:
+      category.value === "all"
+        ? projects.length
+        : projects.filter((project) =>
+            project.categories.includes(
+              category.value as (typeof project.categories)[number],
+            ),
+          ).length,
+  }))
+  .filter((category) => category.count > 0);
 const slots = ["lead", "stack", "feature", "wide"] as const;
-const featuredProjects = projects.slice(0, 3);
-const remainingProjects = projects.slice(3);
 const projectPages = Array.from(
-  { length: Math.ceil(remainingProjects.length / slots.length) },
-  (_, index) => remainingProjects.slice(index * slots.length, (index + 1) * slots.length),
+  { length: Math.max(1, Math.ceil(projects.length / slots.length)) },
+  (_, index) => projects.slice(index * slots.length, (index + 1) * slots.length),
 );
-const pageCount = 1 + projectPages.length;
+const pageCount = projectPages.length;
+const githubSkeletonCells = Array.from(
+  { length: 26 * 7 },
+  (_, index) => `github-loading-${index}`,
+);
 ---
 
-<section class="work-section" aria-labelledby="work-title" data-project-section>
-  <h2 id="work-title" class="sr-only">Selected work and practice</h2>
-  <nav class="work-filters" aria-label="Portfolio sections" data-reveal="section">
-    {filters.map((filter) => (
-      <button class="work-filter" type="button" data-project-filter={filter.value} aria-pressed={filter.value === "all" ? "true" : "false"}>
-        {filter.label}
+<section class="work-section" aria-labelledby="work-title" data-project-section data-scroll-label="Work">
+  <h2 id="work-title" class="sr-only">Selected work</h2>
+
+  <div class="work-browser" data-reveal="section">
+    <nav class="work-filters" aria-label="Filter projects">
+      {categories.map((category) => (
+        <button class="work-filter" type="button" data-project-filter={category.value} aria-pressed={category.value === "all" ? "true" : "false"}>
+          {category.label}
+        </button>
+      ))}
+    </nav>
+
+    <div class="work-browser-actions">
+      <button class="work-order" type="button" data-project-sort-cycle aria-label="Change project order. Currently featured first.">
+        <span aria-hidden="true">↕</span>
+        <span>Order:</span>
+        <strong data-project-sort-label>Featured</strong>
       </button>
-    ))}
-  </nav>
+
+      <nav class="work-pagination" aria-label="Project pages">
+        <button type="button" data-project-page-previous aria-label="Previous project page">
+          <span aria-hidden="true">←</span>
+        </button>
+        <div class="work-pagination-dots" data-project-pagination-dots aria-label="Project pages"></div>
+        <button type="button" data-project-page-next aria-label="Next project page">
+          <span aria-hidden="true">→</span>
+        </button>
+        <span class="sr-only" aria-live="polite" data-project-position>1 / {pageCount}</span>
+      </nav>
+    </div>
+  </div>
 
   <div class="work-rail" id="work" data-project-rail>
-    <div class="project-scroller" data-project-scroller tabindex="0" aria-label="Project pages. Swipe, scroll, or use pagination to browse.">
-      <section class="project-bento-page project-bento-page--featured" data-project-page aria-label="Featured projects">
-        <article class="project-card about-card tone-mist layout-folder bento-slot-about" id="about" data-reveal="project" data-project-card data-project-about>
-          <a class="project-card-action" href="mailto:hello@amananu.com">
-            <p class="folder-copy">I work where product thinking, systems, code, and image-making meet.</p>
-            <span class="folder-label">About me ↗</span>
-          </a>
-        </article>
-
-        {featuredProjects.map((project, index) => <ProjectCard project={project} index={index} slot={slots[index] ?? "lead"} />)}
-
-        <article class="project-card practice-card tone-yellow layout-practice bento-slot-practice" data-reveal="project" data-project-card data-project-static>
-          <div>
-            <p class="card-heading">Practice</p>
-            <h2>Building complex systems that still feel human.</h2>
-            <ul aria-label="Disciplines">{roles.map((role) => <li>{role}</li>)}</ul>
-          </div>
-        </article>
-      </section>
-
+    <div class="project-scroller" data-project-scroller tabindex="0" aria-label="Project pages. Use pagination or sorting controls to browse.">
       {projectPages.map((page, pageIndex) => (
-        <section class="project-bento-page" data-project-page data-project-count={page.length} aria-label={`Project page ${pageIndex + 2}`}>
-          {page.map((project, index) => <ProjectCard project={project} index={pageIndex * slots.length + index + featuredProjects.length} slot={slots[index] ?? "lead"} />)}
+        <section class="project-bento-page" data-project-page data-project-count={page.length} aria-label={`Project page ${pageIndex + 1}`}>
+          {page.map((project, index) => <ProjectCard project={project} index={pageIndex * slots.length + index} slot={slots[index] ?? "wide"} />)}
         </section>
       ))}
-    </div>
-
-    <div class="work-pagination" aria-label="Project pagination">
-      <div class="work-pagination-dots" data-project-pagination-dots aria-label="Project pages"></div>
-      <span class="sr-only" aria-live="polite" data-project-position>1 / {pageCount}</span>
     </div>
   </div>
   <ProjectDrawer client:load />
 </section>
+
+<section
+  class="github-activity-section"
+  id="github"
+  aria-labelledby="github-title"
+  data-github-activity
+  data-github-account={github.account}
+  data-github-intro="pending"
+  data-scroll-label="GitHub"
+>
+  <div class="github-activity-intro">
+    <p class="github-activity-kicker">Building in public</p>
+    <h2 id="github-title">A live log of work in motion.</h2>
+    <p>Experiments, systems, and repos moving forward.</p>
+    <a class="github-profile-link" href={github.profileUrl} target="_blank" rel="noreferrer">
+      <span>github.com/{github.account}</span>
+      <i aria-hidden="true">&#8599;</i>
+    </a>
+  </div>
+
+  <div class="github-activity-panel">
+    <div class="github-graph" aria-busy="true">
+      <dl class="github-activity-metrics" aria-label="GitHub activity summary">
+        <div>
+          <dt>Account</dt>
+          <dd>@{github.account}</dd>
+        </div>
+        <div>
+          <dt>Contributions</dt>
+          <dd data-github-total>—</dd>
+        </div>
+        <div>
+          <dt>Active days</dt>
+          <dd data-github-active>—</dd>
+        </div>
+        <div>
+          <dt>Window</dt>
+          <dd>6 months</dd>
+        </div>
+      </dl>
+
+      <div class="github-graph-topline">
+        <p>Live public activity</p>
+        <span data-github-activity-label>Move across the graph</span>
+      </div>
+
+      <div class="github-graph-scroll" data-github-scroll>
+        <fieldset class="github-graph-grid github-graph-grid--loading" data-github-grid>
+          <legend class="sr-only" data-github-status>Loading GitHub activity</legend>
+          {githubSkeletonCells.map(() => <span data-github-skeleton />)}
+        </fieldset>
+      </div>
+
+      <p class="github-graph-error" data-github-error hidden>
+        Activity is unavailable right now.
+        <a href={github.profileUrl} target="_blank" rel="noreferrer">
+          View @{github.account} on GitHub &#8599;
+        </a>
+      </p>
+
+      <div
+        class="github-graph-legend"
+        role="img"
+        aria-label="Contribution activity legend from less to more"
+      >
+        <span>Less</span>
+        {["#e7ebdd", "#cfe7a7", "#9fcd76", "#66a867", "#376f50"].map(
+          (color) => <i style={`background-color: ${color}`} />,
+        )}
+        <span>More</span>
+      </div>
+
+      <span class="github-graph-tooltip" role="tooltip" data-github-tooltip hidden></span>
+    </div>
+  </div>
+</section>
+
+<script>
+  type GithubContribution = {
+    date: string;
+    count: number;
+    level?: number;
+  };
+
+  type GithubCell = GithubContribution & {
+    level: number;
+  };
+
+  const githubColors = [
+    "#e7ebdd",
+    "#cfe7a7",
+    "#9fcd76",
+    "#66a867",
+    "#376f50",
+  ];
+
+  const githubRequests = new Map<string, Promise<GithubContribution[]>>();
+
+  const requestGithubActivity = (account: string) => {
+    const existing = githubRequests.get(account);
+    if (existing) return existing;
+
+    const request = fetch(
+      `https://github-contributions-api.jogruber.de/v4/${account}?y=last`,
+    ).then(async (response) => {
+      if (!response.ok) throw new Error("Contribution request failed.");
+      const payload = (await response.json()) as {
+        contributions?: GithubContribution[];
+      };
+      if (!Array.isArray(payload.contributions)) {
+        throw new Error("No contribution data returned.");
+      }
+      return payload.contributions;
+    });
+    githubRequests.set(account, request);
+    return request;
+  };
+
+  const parseGithubDate = (value: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const shiftGithubDate = (date: Date, days: number) => {
+    const shifted = new Date(date);
+    shifted.setUTCDate(shifted.getUTCDate() + days);
+    return shifted;
+  };
+
+  const githubISODate = (date: Date) => date.toISOString().slice(0, 10);
+
+  const recentGithubActivity = (
+    contributions: GithubContribution[],
+    months = 6,
+  ) => {
+    const dated = contributions
+      .map((contribution) => ({
+        contribution,
+        date: parseGithubDate(contribution.date),
+      }))
+      .filter(
+        (
+          item,
+        ): item is { contribution: GithubContribution; date: Date } =>
+          item.date !== null,
+      );
+    const latest = dated.reduce<Date | null>(
+      (current, item) =>
+        !current || item.date > current ? item.date : current,
+      null,
+    );
+    if (!latest) return [];
+    const start = new Date(latest);
+    start.setUTCMonth(start.getUTCMonth() - months);
+    return dated
+      .filter((item) => item.date >= start)
+      .map((item) => item.contribution);
+  };
+
+  const buildGithubCells = (
+    contributions: GithubContribution[],
+  ): GithubCell[] => {
+    const valid = contributions
+      .map((contribution) => ({
+        ...contribution,
+        parsedDate: parseGithubDate(contribution.date),
+      }))
+      .filter(
+        (
+          contribution,
+        ): contribution is GithubContribution & { parsedDate: Date } =>
+          contribution.parsedDate !== null &&
+          Number.isFinite(contribution.count),
+      )
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    if (valid.length === 0) return [];
+
+    const maximum = Math.max(
+      0,
+      ...valid.map((contribution) => contribution.count),
+    );
+    const byDate = new Map(
+      valid.map((contribution) => [contribution.date, contribution]),
+    );
+    const first = valid[0].parsedDate;
+    const last = valid[valid.length - 1].parsedDate;
+    const start = shiftGithubDate(first, -first.getUTCDay());
+    const end = shiftGithubDate(last, 6 - last.getUTCDay());
+    const cells: GithubCell[] = [];
+
+    for (let date = start; date <= end; date = shiftGithubDate(date, 1)) {
+      const key = githubISODate(date);
+      const contribution = byDate.get(key);
+      const count = Math.max(0, contribution?.count ?? 0);
+      const explicit = contribution?.level;
+      const level =
+        typeof explicit === "number" &&
+        Number.isInteger(explicit) &&
+        explicit >= 0 &&
+        explicit <= 4 &&
+        count > 0
+          ? explicit
+          : count <= 0 || maximum <= 0
+            ? 0
+            : Math.min(4, Math.max(1, Math.ceil((count / maximum) * 4)));
+      cells.push({ date: key, count, level });
+    }
+
+    return cells;
+  };
+
+  const githubContributionLabel = (contribution: GithubCell) => {
+    const parsedDate = parseGithubDate(contribution.date);
+    const date = parsedDate
+      ? new Intl.DateTimeFormat("en", {
+          month: "short",
+          day: "numeric",
+        }).format(parsedDate)
+      : contribution.date;
+    const unit =
+      contribution.count === 1 ? "contribution" : "contributions";
+    return `${contribution.count} ${unit} on ${date}`;
+  };
+
+  const resetGithubProximity = (cells: HTMLButtonElement[]) => {
+    cells.forEach((cell) => {
+      cell.style.removeProperty("--github-proximity");
+      const fill = cell.querySelector<HTMLElement>(
+        ".github-graph-cell-fill",
+      );
+      fill?.style.removeProperty("filter");
+    });
+  };
+
+  const updateGithubProximity = (
+    cells: HTMLButtonElement[],
+    activeWeek: number,
+    activeDay: number,
+  ) => {
+    cells.forEach((cell) => {
+      const week = Number(cell.dataset.githubWeek);
+      const day = Number(cell.dataset.githubDay);
+      const distance = Math.hypot(week - activeWeek, day - activeDay);
+      const strength = Math.max(0, 1 - distance / 3);
+      cell.style.setProperty("--github-proximity", strength.toFixed(3));
+      const fill = cell.querySelector<HTMLElement>(
+        ".github-graph-cell-fill",
+      );
+      fill?.style.setProperty(
+        "filter",
+        `brightness(${1 + strength * 0.34}) saturate(${1 + strength * 0.22})`,
+      );
+    });
+  };
+
+  const initializeGithubActivity = async (section: HTMLElement) => {
+    if (section.dataset.githubInitialized === "true") return;
+    section.dataset.githubInitialized = "true";
+
+    const account = section.dataset.githubAccount;
+    const graph = section.querySelector<HTMLElement>(".github-graph");
+    const grid = section.querySelector<HTMLFieldSetElement>(
+      "[data-github-grid]",
+    );
+    const scroll = section.querySelector<HTMLElement>("[data-github-scroll]");
+    const status = section.querySelector<HTMLElement>("[data-github-status]");
+    const activityLabel = section.querySelector<HTMLElement>(
+      "[data-github-activity-label]",
+    );
+    const total = section.querySelector<HTMLElement>("[data-github-total]");
+    const active = section.querySelector<HTMLElement>("[data-github-active]");
+    const error = section.querySelector<HTMLElement>("[data-github-error]");
+    const tooltip = section.querySelector<HTMLElement>(
+      "[data-github-tooltip]",
+    );
+    if (
+      !account ||
+      !graph ||
+      !grid ||
+      !scroll ||
+      !status ||
+      !activityLabel ||
+      !total ||
+      !active ||
+      !error ||
+      !tooltip
+    ) {
+      return;
+    }
+
+    try {
+      const cells = buildGithubCells(
+        recentGithubActivity(await requestGithubActivity(account)),
+      );
+      if (cells.length === 0) throw new Error("No contribution cells.");
+
+      grid.querySelectorAll("[data-github-skeleton]").forEach((cell) => {
+        cell.remove();
+      });
+      grid.classList.remove("github-graph-grid--loading");
+      status.textContent = `GitHub activity for ${account}`;
+      total.textContent = cells
+        .reduce((sum, contribution) => sum + contribution.count, 0)
+        .toLocaleString("en");
+      active.textContent = cells
+        .filter((contribution) => contribution.count > 0)
+        .length.toLocaleString("en");
+
+      const renderedCells: HTMLButtonElement[] = [];
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      const hideTooltip = () => {
+        tooltip.dataset.visible = "false";
+        window.setTimeout(() => {
+          if (tooltip.dataset.visible === "false") tooltip.hidden = true;
+        }, 140);
+      };
+
+      cells.forEach((contribution, index) => {
+        const button = document.createElement("button");
+        const fill = document.createElement("span");
+        const label = githubContributionLabel(contribution);
+        const weekIndex = Math.floor(index / 7);
+        const dayIndex = index % 7;
+        const entranceDelay = weekIndex * 26 + dayIndex * 16;
+        const ambientSeed = ((weekIndex * 17 + dayIndex * 31) % 11) / 10;
+        button.type = "button";
+        button.className = "github-graph-cell";
+        button.dataset.githubWeek = String(weekIndex);
+        button.dataset.githubDay = String(dayIndex);
+        button.setAttribute("aria-label", label);
+        button.title = label;
+        fill.className = "github-graph-cell-fill";
+        fill.style.backgroundColor = githubColors[contribution.level];
+        if (contribution.level > 0 && !reducedMotion) {
+          fill.dataset.ambient = "true";
+          fill.style.setProperty(
+            "--github-ambient-delay",
+            `${entranceDelay + 720 + ambientSeed * 850}ms`,
+          );
+          fill.style.setProperty(
+            "--github-ambient-duration",
+            `${2.4 + ambientSeed * 1.2}s`,
+          );
+        }
+        button.append(fill);
+        renderedCells.push(button);
+
+        const showActivity = (
+          pointer?: {
+            clientX: number;
+            clientY: number;
+          },
+        ) => {
+          activityLabel.textContent = label;
+          updateGithubProximity(renderedCells, weekIndex, dayIndex);
+          const rect = button.getBoundingClientRect();
+          const placement = rect.top > 64 ? "above" : "below";
+          tooltip.textContent = label;
+          tooltip.hidden = false;
+          tooltip.dataset.placement = placement;
+          tooltip.style.left = `${Math.min(
+            Math.max(pointer?.clientX ?? rect.left + rect.width / 2, 100),
+            window.innerWidth - 100,
+          )}px`;
+          tooltip.style.top = `${
+            placement === "above" ? rect.top - 10 : rect.bottom + 10
+          }px`;
+          requestAnimationFrame(() => {
+            tooltip.dataset.visible = "true";
+          });
+        };
+
+        button.addEventListener("pointerenter", (event) => {
+          showActivity(event);
+        });
+        button.addEventListener("focus", () => {
+          showActivity();
+        });
+        button.addEventListener("blur", hideTooltip);
+        grid.append(button);
+
+        if (reducedMotion) {
+          button.dataset.entered = "true";
+        } else {
+          const entrance = button.animate(
+            [
+              {
+                opacity: 0,
+                transform: "translateY(5px) scale(0.68)",
+              },
+              {
+                opacity: 1,
+                transform: "translateY(0) scale(1)",
+              },
+            ],
+            {
+              duration: 520,
+              delay: entranceDelay,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+              fill: "both",
+            },
+          );
+          void entrance.finished
+            .catch(() => undefined)
+            .then(() => {
+              entrance.cancel();
+              button.dataset.entered = "true";
+            });
+        }
+      });
+
+      grid.addEventListener("mouseleave", () => {
+        activityLabel.textContent = "Move across the graph";
+        resetGithubProximity(renderedCells);
+        hideTooltip();
+      });
+      graph.setAttribute("aria-busy", "false");
+    } catch {
+      graph.setAttribute("aria-busy", "false");
+      scroll.hidden = true;
+      error.hidden = false;
+    }
+  };
+
+  const playGithubIntro = (section: HTMLElement) => {
+    if (section.dataset.githubIntroPlayed === "true") return;
+    section.dataset.githubIntroPlayed = "true";
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      section.dataset.githubIntro = "complete";
+      return;
+    }
+
+    const introParts = [
+      ...section.querySelectorAll<HTMLElement>(
+        ".github-activity-intro > *, .github-activity-panel",
+      ),
+    ];
+    section.dataset.githubIntro = "playing";
+    const animations = introParts.map((part, index) =>
+      part.animate(
+        [
+          { opacity: 0, transform: "translateY(12px)" },
+          { opacity: 1, transform: "translateY(0px)" },
+        ],
+        {
+          duration: 520,
+          delay: index * 70,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          fill: "both",
+        },
+      ),
+    );
+    void Promise.all(
+      animations.map((animation) => animation.finished.catch(() => undefined)),
+    ).then(() => {
+      section.dataset.githubIntro = "complete";
+      animations.forEach((animation) => animation.cancel());
+    });
+  };
+
+  const githubSections = [
+    ...document.querySelectorAll<HTMLElement>("[data-github-activity]"),
+  ];
+  githubSections.forEach((section) => {
+    const account = section.dataset.githubAccount;
+    if (account) {
+      void requestGithubActivity(account).catch(() => undefined);
+    }
+  });
+  let githubFrame = 0;
+
+  const checkGithubSections = () => {
+    githubFrame = 0;
+    githubSections.forEach((section) => {
+      if (section.dataset.githubInitialized === "true") return;
+      const bounds = section.getBoundingClientRect();
+      const visibleHeight = Math.max(
+        0,
+        Math.min(bounds.bottom, window.innerHeight) - Math.max(bounds.top, 0),
+      );
+      const requiredHeight =
+        Math.min(bounds.height, window.innerHeight) * 0.75;
+      if (visibleHeight < requiredHeight) return;
+      playGithubIntro(section);
+      void initializeGithubActivity(section);
+    });
+    if (
+      githubSections.every(
+        (section) => section.dataset.githubInitialized === "true",
+      )
+    ) {
+      window.removeEventListener("scroll", requestGithubCheck);
+      window.removeEventListener("resize", requestGithubCheck);
+    }
+  };
+
+  const requestGithubCheck = () => {
+    if (!githubFrame)
+      githubFrame = window.requestAnimationFrame(checkGithubSections);
+  };
+
+  window.addEventListener("scroll", requestGithubCheck, { passive: true });
+  window.addEventListener("resize", requestGithubCheck, { passive: true });
+  window.addEventListener("pageshow", requestGithubCheck, { once: true });
+  requestGithubCheck();
+</script>

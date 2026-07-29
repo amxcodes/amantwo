@@ -1,0 +1,38 @@
+---
+import BrandIcon from "./BrandIcon.astro";
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  portraitSrc: string;
+  portraitAlt: string;
+  links: Array<{ label: string; href: string }>;
+}
+
+const { eyebrow, heading, description, portraitSrc, portraitAlt, links } = Astro.props;
+const brandForLabel = {
+  Email: "gmail",
+  GitHub: "github",
+} as const;
+---
+
+<section class="about-section" id="about" aria-labelledby="about-title" data-reveal="section" data-scroll-label="About">
+  <div class="about-section-copy">
+    <p class="about-section-kicker">{eyebrow}</p>
+    <h2 id="about-title">{heading}</h2>
+    <p class="about-section-description">{description}</p>
+    <nav class="about-section-links" aria-label="About Aman links">
+      {links.map((link) => (
+        <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined}>
+          <BrandIcon brand={brandForLabel[link.label as keyof typeof brandForLabel] ?? "gmail"} />
+          <span>{link.label}</span>
+        </a>
+      ))}
+    </nav>
+  </div>
+
+  <figure class="about-section-portrait">
+    <img src={portraitSrc} alt={portraitAlt} width="1254" height="1254" loading="lazy" decoding="async" />
+  </figure>
+</section>

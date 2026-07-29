@@ -34,6 +34,8 @@ const mediaSource = project.media?.src ?? "";
   data-project-meta={project.meta}
   data-project-status={project.status}
   data-project-layout={project.layout}
+  data-project-index={index}
+  data-project-primary-category={project.categories[0]}
   style={`--card-index:${index}`}
   id={project.slug}
 >

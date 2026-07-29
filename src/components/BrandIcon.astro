@@ -1,0 +1,23 @@
+---
+import { siGithub, siGmail, siInstagram, siYoutube } from "simple-icons";
+
+type Brand = "github" | "gmail" | "instagram" | "youtube";
+
+interface Props {
+  brand: Brand;
+  title?: string;
+}
+
+const { brand, title } = Astro.props;
+const icon = {
+  github: siGithub,
+  gmail: siGmail,
+  instagram: siInstagram,
+  youtube: siYoutube,
+}[brand];
+---
+
+<svg class="brand-icon" viewBox="0 0 24 24" role={title ? "img" : undefined} aria-hidden={title ? undefined : "true"} focusable="false">
+  {title && <title>{title}</title>}
+  <path d={icon.path} fill="currentColor" />
+</svg>
