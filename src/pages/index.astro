@@ -1,0 +1,19 @@
+---
+import ProfileHero from "../components/ProfileHero.astro";
+import ProjectCollection from "../components/ProjectCollection.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { siteData } from "../content/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Aman Anu — Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} />
+    <main id="main-content">
+      <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
+      <ProjectCollection projects={siteData.projects} roles={siteData.roles} />
+    </main>
+    <SiteFooter email={siteData.identity.email} links={siteData.links} />
+  </div>
+</BaseLayout>

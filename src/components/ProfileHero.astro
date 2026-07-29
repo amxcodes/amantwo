@@ -1,0 +1,49 @@
+---
+import ChromaticTextReveal from "./ChromaticTextReveal.astro";
+import InlinePortrait from "./InlinePortrait.astro";
+
+interface Props {
+  name: string;
+  avatarSrc: string;
+  portraitSrc: string;
+  introduction: string;
+  heroClosing: string;
+  statement: string;
+  location: string;
+  heroRoles: string[];
+}
+
+const {
+  name,
+  avatarSrc,
+  portraitSrc,
+  introduction,
+  heroClosing,
+  statement,
+  location,
+  heroRoles,
+} = Astro.props;
+---
+
+<section class="profile-hero" aria-labelledby="profile-title">
+  <div class="profile-card">
+    <h1 id="profile-title" data-reveal="hero">
+      <span class="hero-primary">
+        <span class="hero-identity">
+          <span class="hero-lead">{introduction}</span>
+          <InlinePortrait
+            compactSrc={avatarSrc}
+            fullSrc={portraitSrc}
+            alt={`Portrait of ${name}`}
+          />
+        </span>
+        <span class="hero-role-slot">
+          <strong><ChromaticTextReveal words={heroRoles} /></strong>
+        </span>
+      </span>
+      <span class="hero-secondary">{heroClosing}</span>
+    </h1>
+    <p class="profile-tagline" data-reveal="hero">{statement}</p>
+    <p class="location" data-reveal="hero">{location} · Available worldwide</p>
+  </div>
+</section>

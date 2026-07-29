@@ -1,0 +1,60 @@
+---
+import type { Project } from "../content/site";
+
+interface Props {
+  project: Project;
+  index: number;
+  slot?: "lead" | "stack" | "feature" | "wide";
+}
+
+const { project, index, slot = "lead" } = Astro.props;
+const mediaSource = project.media?.src ?? "";
+---
+
+<article
+  class:list={[
+    "project-card",
+    `tone-${project.tone}`,
+    `layout-${project.layout}`,
+    `bento-slot-${slot}`,
+  ]}
+  data-reveal="project"
+  data-project-card
+  data-categories={project.categories.join(" ")}
+  data-project-eyebrow={project.eyebrow}
+  data-project-title={project.title}
+  data-project-summary={project.summary}
+  data-project-detail={project.detail}
+  data-project-case-study={project.caseStudy}
+  data-project-tags={JSON.stringify(project.tags)}
+  data-project-links={JSON.stringify(project.links)}
+  data-project-media={mediaSource}
+  data-project-media-type={project.media?.type ?? ""}
+  data-project-media-label={project.media?.alt ?? ""}
+  data-project-meta={project.meta}
+  data-project-status={project.status}
+  data-project-layout={project.layout}
+  style={`--card-index:${index}`}
+  id={project.slug}
+>
+  <button
+    class="project-card-action"
+    type="button"
+    data-project-open
+    aria-haspopup="dialog"
+    aria-label={`Open ${project.title} project details`}
+  >
+    <div class="card-heading">
+      <p>{project.eyebrow}</p>
+      <span aria-hidden="true">0{index + 1} ↗</span>
+    </div>
+    <div class="card-body">
+      <h2>{project.title}</h2>
+      <p>{project.summary}</p>
+    </div>
+    <div class="card-footer">
+      <span>{project.meta}</span>
+      <span>{project.status}</span>
+    </div>
+  </button>
+</article>

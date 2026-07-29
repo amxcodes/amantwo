@@ -1,0 +1,33 @@
+{
+  "name": "amananuworks",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/react": "^6.0.2",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource/dm-mono": "^5.3.0",
+    "astro": "latest",
+    "motion": "latest",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "vaul": "^1.1.2",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@astrojs/check": "latest",
+    "@biomejs/biome": "latest",
+    "@rolldown/pluginutils": "^1.0.1",
+    "typescript": "5.9.3",
+    "vitest": "latest"
+  }
+}

@@ -1,0 +1,73 @@
+---
+import type { Project } from "../content/site";
+import ProjectCard from "./ProjectCard.astro";
+import ProjectDrawer from "./ProjectDrawer.tsx";
+
+interface Props {
+  projects: Project[];
+  roles: string[];
+}
+
+const { projects, roles } = Astro.props;
+const filters = [
+  { label: "About me", value: "about" },
+  { label: "Selected work", value: "all" },
+  { label: "AI systems", value: "ai" },
+  { label: "Films", value: "film" },
+  { label: "Experiments", value: "experiment" },
+];
+const slots = ["lead", "stack", "feature", "wide"] as const;
+const featuredProjects = projects.slice(0, 3);
+const remainingProjects = projects.slice(3);
+const projectPages = Array.from(
+  { length: Math.ceil(remainingProjects.length / slots.length) },
+  (_, index) => remainingProjects.slice(index * slots.length, (index + 1) * slots.length),
+);
+const pageCount = 1 + projectPages.length;
+---
+
+<section class="work-section" aria-labelledby="work-title" data-project-section>
+  <h2 id="work-title" class="sr-only">Selected work and practice</h2>
+  <nav class="work-filters" aria-label="Portfolio sections" data-reveal="section">
+    {filters.map((filter) => (
+      <button class="work-filter" type="button" data-project-filter={filter.value} aria-pressed={filter.value === "all" ? "true" : "false"}>
+        {filter.label}
+      </button>
+    ))}
+  </nav>
+
+  <div class="work-rail" id="work" data-project-rail>
+    <div class="project-scroller" data-project-scroller tabindex="0" aria-label="Project pages. Swipe, scroll, or use pagination to browse.">
+      <section class="project-bento-page project-bento-page--featured" data-project-page aria-label="Featured projects">
+        <article class="project-card about-card tone-mist layout-folder bento-slot-about" id="about" data-reveal="project" data-project-card data-project-about>
+          <a class="project-card-action" href="mailto:hello@amananu.com">
+            <p class="folder-copy">I work where product thinking, systems, code, and image-making meet.</p>
+            <span class="folder-label">About me ↗</span>
+          </a>
+        </article>
+
+        {featuredProjects.map((project, index) => <ProjectCard project={project} index={index} slot={slots[index] ?? "lead"} />)}
+
+        <article class="project-card practice-card tone-yellow layout-practice bento-slot-practice" data-reveal="project" data-project-card data-project-static>
+          <div>
+            <p class="card-heading">Practice</p>
+            <h2>Building complex systems that still feel human.</h2>
+            <ul aria-label="Disciplines">{roles.map((role) => <li>{role}</li>)}</ul>
+          </div>
+        </article>
+      </section>
+
+      {projectPages.map((page, pageIndex) => (
+        <section class="project-bento-page" data-project-page data-project-count={page.length} aria-label={`Project page ${pageIndex + 2}`}>
+          {page.map((project, index) => <ProjectCard project={project} index={pageIndex * slots.length + index + featuredProjects.length} slot={slots[index] ?? "lead"} />)}
+        </section>
+      ))}
+    </div>
+
+    <div class="work-pagination" aria-label="Project pagination">
+      <div class="work-pagination-dots" data-project-pagination-dots aria-label="Project pages"></div>
+      <span class="sr-only" aria-live="polite" data-project-position>1 / {pageCount}</span>
+    </div>
+  </div>
+  <ProjectDrawer client:load />
+</section>

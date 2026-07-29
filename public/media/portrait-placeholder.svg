@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600" role="img" aria-labelledby="title desc">
+  <title id="title">Portrait placeholder</title>
+  <desc id="desc">A clean graphic placeholder to be replaced by Aman's processed portrait.</desc>
+  <rect width="480" height="600" fill="none"/>
+  <circle cx="240" cy="210" r="92" fill="#7fa0bf"/>
+  <path d="M94 600c18-166 83-250 146-250s128 84 146 250" fill="#3f607d"/>
+</svg>

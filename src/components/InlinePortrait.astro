@@ -1,0 +1,43 @@
+---
+interface Props {
+  compactSrc: string;
+  fullSrc: string;
+  alt: string;
+}
+
+const { compactSrc, fullSrc, alt } = Astro.props;
+const hasPreview = true;
+---
+
+<span
+  class="portrait-anchor"
+  data-portrait-root
+  data-has-preview={hasPreview ? "true" : "false"}
+>
+  <button
+    class="portrait-trigger"
+    type="button"
+    aria-expanded="false"
+    aria-controls="portrait-preview"
+    aria-label={`Show a larger portrait: ${alt}`}
+    data-portrait-trigger
+  >
+    <span class="avatar-fallback" aria-hidden="true">AA</span>
+    <img
+      src={compactSrc}
+      width="48"
+      height="48"
+      alt=""
+      decoding="async"
+      referrerpolicy="no-referrer"
+      data-avatar-image
+    />
+  </button>
+  {
+    hasPreview && (
+      <span class="portrait-preview" id="portrait-preview" aria-hidden="true" data-portrait-preview>
+        <img src={fullSrc} width="328" height="410" alt="" decoding="async" />
+      </span>
+    )
+  }
+</span>

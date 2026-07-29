@@ -1,0 +1,23 @@
+---
+interface Props {
+  words: string[];
+}
+
+const { words } = Astro.props;
+const uniqueWords = [...new Set(words)];
+const firstWord = uniqueWords[0] ?? "";
+---
+
+<span
+  class="chromatic-text"
+  aria-label={firstWord}
+  data-chromatic-text
+  data-words={JSON.stringify(uniqueWords)}
+>
+  {uniqueWords.map((word) => (
+    <span class="chromatic-sizer" aria-hidden="true">{word}</span>
+  ))}
+  <span class="chromatic-active" aria-hidden="true" data-chromatic-active>
+    {firstWord}
+  </span>
+</span>

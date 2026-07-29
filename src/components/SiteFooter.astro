@@ -1,0 +1,17 @@
+---
+interface Props {
+  email: string;
+  links: Array<{ label: string; href: string }>;
+}
+
+const { email, links } = Astro.props;
+---
+
+<footer class="site-footer" data-reveal="section">
+  <p>Have a problem worth caring about?</p>
+  <a class="footer-email" href={`mailto:${email}`}>Say hello.</a>
+  <nav aria-label="Social links">
+    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+  </nav>
+  <p class="footer-note">Aman Anu · Kochi · <span data-year></span></p>
+</footer>
