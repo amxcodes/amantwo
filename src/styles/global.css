@@ -1963,6 +1963,8 @@ li {
 .chronicle-keyword {
   --keyword-accent: var(--blue);
   display: inline-flex;
+  min-height: 2.2em;
+  box-sizing: border-box;
   align-items: center;
   gap: 0.38em;
   margin: 0.08em 0.12em 0.08em 0;
@@ -2019,7 +2021,7 @@ li {
 .chronicle-keyword:focus-visible,
 .chronicle-entry[data-open="true"] .chronicle-keyword:focus {
   color: var(--ink);
-  background: color-mix(in srgb, var(--keyword-accent) 12%, white);
+  background: color-mix(in srgb, white 70%, var(--paper));
   border-color: color-mix(in srgb, var(--keyword-accent) 44%, white);
 }
 
@@ -2096,6 +2098,87 @@ li {
   margin-top: 9px;
   color: var(--ink-soft);
   font-size: 12px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.chronicle-drawer {
+  position: fixed;
+  z-index: 90;
+  inset: auto 0 0;
+  width: min(620px, 100%);
+  max-width: none;
+  max-height: min(62dvh, 480px);
+  margin: 0 auto;
+  overflow: hidden;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  transition-property: opacity, filter;
+  transition-duration: 260ms;
+  transition-timing-function: var(--ease-out);
+  will-change: transform, opacity;
+}
+
+.chronicle-drawer-overlay {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  background: rgb(24 31 40 / 0.16);
+  backdrop-filter: blur(3px);
+  transition-property: opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+}
+
+.chronicle-drawer[data-state="closed"] {
+  opacity: 0;
+  filter: blur(1px);
+}
+
+.chronicle-drawer-panel {
+  max-height: min(62dvh, 480px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background: var(--paper);
+  border: 0;
+  border-radius: 28px 28px 0 0;
+}
+
+.chronicle-drawer-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.chronicle-drawer-content {
+  padding: 12px 28px calc(32px + env(safe-area-inset-bottom));
+}
+
+.chronicle-drawer-meta {
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chronicle-drawer-content h2 {
+  margin: 18px 0 11px;
+  color: var(--ink);
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.chronicle-drawer-content [id="chronicle-drawer-description"] {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
   line-height: 1.55;
   text-wrap: pretty;
 }
@@ -2884,31 +2967,11 @@ html[data-motion="reduced"] [data-reveal] {
   }
 
   .chronicle-preview {
-    position: fixed;
-    z-index: 70;
-    top: auto;
-    right: 12px;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    left: 12px;
-    width: auto;
-    max-width: none;
-    padding: 20px;
-    border-radius: 20px;
-    translate: 0 24px;
+    display: none;
   }
 
-  .chronicle-entry[data-open="true"] .chronicle-preview {
-    translate: 0;
-  }
-
-  html:has(.chronicle-entry[data-open="true"])::before {
-    position: fixed;
-    z-index: 69;
-    inset: 0;
-    content: "";
-    pointer-events: none;
-    background: rgb(29 36 48 / 0.12);
-    backdrop-filter: blur(2px);
+  .chronicle-drawer-content {
+    padding-inline: 20px;
   }
 
   .github-activity-panel {

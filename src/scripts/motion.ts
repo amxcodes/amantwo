@@ -455,13 +455,24 @@ function setupChronicleDetails() {
       trigger.addEventListener("focus", () => setOpen(true, trigger));
       trigger.addEventListener("blur", scheduleClose);
       trigger.addEventListener("click", () => {
-        if (!precisePointer.matches) {
-          const isSameDetail =
-            root.dataset.open === "true" &&
-            previewTitle?.textContent ===
-              (trigger.dataset.chroniclePreviewTitle ?? "");
-          setOpen(!isSameDetail, trigger);
-        }
+        if (precisePointer.matches) return;
+
+        window.dispatchEvent(
+          new CustomEvent("portfolio:open-chronicle-detail", {
+            detail: {
+              title: trigger.dataset.chroniclePreviewTitle ?? "More detail",
+              detail: trigger.dataset.chroniclePreviewDetail ?? "",
+              meta: trigger.dataset.chroniclePreviewMeta ?? "",
+              tone: trigger.classList.contains("tone-orange")
+                ? "orange"
+                : trigger.classList.contains("tone-yellow")
+                  ? "yellow"
+                  : trigger.classList.contains("tone-green")
+                    ? "green"
+                    : "blue",
+            },
+          }),
+        );
       });
     });
     document.addEventListener("keydown", (event) => {

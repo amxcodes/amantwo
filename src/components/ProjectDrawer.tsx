@@ -41,7 +41,6 @@ export default function ProjectDrawer() {
   return (
     <Drawer.Root
       open={Boolean(project)}
-      handleOnly
       closeThreshold={0.22}
       onOpenChange={(open) => {
         if (!open) setProject(null);
@@ -57,13 +56,9 @@ export default function ProjectDrawer() {
             className="project-drawer-panel"
             aria-label="Project details"
           >
-            <Drawer.Handle
-              className="drawer-drag-handle"
-              preventCycle
-              aria-label="Drag down to close project details"
-            >
+            <div className="drawer-drag-handle" aria-hidden="true">
               <span className="drawer-handle" aria-hidden="true" />
-            </Drawer.Handle>
+            </div>
             {media ? (
               <div className="drawer-media">
                 {media.type === "video" ? (
@@ -85,7 +80,6 @@ export default function ProjectDrawer() {
               </div>
             ) : (
               <div className="drawer-media-empty">
-                <span aria-hidden="true">◌</span>
                 <div>
                   <p>Media is being prepared</p>
                   <small>
