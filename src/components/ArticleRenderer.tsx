@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import "./article-renderer.css";
 import VoiceNotePlayer from "./VoiceNotePlayer";
 import { resolveMediaUrl } from "../lib/media";
@@ -87,6 +88,12 @@ const slugify = (value: string, index: number) =>
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "section"
   }-${index + 1}`;
+
+const headingLabel = (block: PublicArticleBlock) => {
+  const content = typeof block.content === "string" ? block.content.trim() : "";
+  if (content) return content;
+  return typeof block.label === "string" ? block.label.trim() : "";
+};
 
 const formatDate = (value?: string | number) => {
   if (!value) return "";
@@ -271,20 +278,84 @@ export default function ArticleRenderer({
   const [typeface, setTypeface] = useState<"serif" | "sans">("serif");
   const [spacing, setSpacing] = useState<"compact" | "relaxed">("relaxed");
   const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [indexOpen, setIndexOpen] = useState(false);
+  const indexTriggerRef = useRef<HTMLButtonElement>(null);
+  const [indexMenuStyle, setIndexMenuStyle] = useState<React.CSSProperties>({});
   const headings = useMemo(
     () =>
       article.body.flatMap((block, index) =>
-        block.type === "heading" && block.content
-          ? [
-              {
-                id: block.id || slugify(block.content, index),
-                label: block.content,
-              },
-            ]
+        block.type === "heading"
+          ? (() => {
+              const label = headingLabel(block);
+              return label
+                ? [{ id: block.id || slugify(label, index), label }]
+                : [];
+            })()
           : [],
       ),
     [article.body],
   );
+
+  useEffect(() => {
+    if (!indexOpen) return;
+    const updateIndexPosition = () => {
+      const trigger = indexTriggerRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.min(400, Math.max(220, window.innerWidth - 24));
+      const left = Math.min(
+        Math.max(12, rect.right - width),
+        Math.max(12, window.innerWidth - width - 12),
+      );
+      const roomAbove = Math.max(0, rect.top - 24);
+      const roomBelow = Math.max(0, window.innerHeight - rect.bottom - 24);
+      const opensAbove = roomAbove >= Math.min(360, roomBelow);
+      const maxHeight = Math.max(
+        140,
+        Math.min(360, opensAbove ? roomAbove : roomBelow),
+      );
+      setIndexMenuStyle({
+        left,
+        width,
+        maxHeight,
+        ...(opensAbove
+          ? { bottom: Math.max(12, window.innerHeight - rect.top + 8) }
+          : { top: Math.min(window.innerHeight - 100, rect.bottom + 8) }),
+      });
+    };
+    updateIndexPosition();
+    const scrollRoot = indexTriggerRef.current?.closest<HTMLElement>(".blog-reader-panel");
+    (scrollRoot ?? window).addEventListener("scroll", updateIndexPosition, { passive: true });
+    window.addEventListener("resize", updateIndexPosition);
+    return () => {
+      (scrollRoot ?? window).removeEventListener("scroll", updateIndexPosition);
+      window.removeEventListener("resize", updateIndexPosition);
+    };
+  }, [indexOpen]);
+
+  useEffect(() => {
+    if (!indexOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIndexOpen(false);
+    };
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      const popover = document.querySelector(".article-index-popover");
+      if (
+        target &&
+        !indexTriggerRef.current?.contains(target) &&
+        !popover?.contains(target)
+      ) {
+        setIndexOpen(false);
+      }
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+    };
+  }, [indexOpen]);
 
   useEffect(() => {
     const update = () => {
@@ -433,33 +504,64 @@ export default function ArticleRenderer({
 
       {headings.length > 0 ? (
         <nav className="article-index" aria-label="On this page">
-          <details>
-            <summary>
-              Index <span>{headings.length}</span>
-            </summary>
-            <ol>
-              {headings.map((heading) => (
-                <li key={heading.id}>
-                  <a href={`#${heading.id}`}>{heading.label}</a>
-                </li>
-              ))}
-            </ol>
-          </details>
+          <button
+            className="article-index-trigger"
+            ref={indexTriggerRef}
+            type="button"
+            aria-expanded={indexOpen}
+            aria-controls="article-index-popover"
+            onClick={() => setIndexOpen((open) => !open)}
+          >
+            <span>Index</span>
+            <span aria-hidden="true">{headings.length}</span>
+          </button>
         </nav>
       ) : null}
+
+      {indexOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="article-index-popover"
+              id="article-index-popover"
+              role="dialog"
+              aria-label="Article index"
+              style={indexMenuStyle}
+            >
+              <div className="article-index-popover-header">
+                <span>Index</span>
+                <span>{headings.length}</span>
+              </div>
+              <ol>
+                {headings.map((heading, index) => (
+                  <li key={heading.id}>
+                    <a
+                      href={`#${heading.id}`}
+                      onClick={() => setIndexOpen(false)}
+                    >
+                      <span aria-hidden="true">{index + 1}</span>
+                      {heading.label}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>,
+            document.body,
+          )
+        : null}
 
       <div className="article-renderer-body">
         {article.body.map((block, index) => {
           const key = block.id ?? `${block.type}-${index}`;
           if (block.type === "heading") {
-            const id = block.id || slugify(block.content ?? "", index);
+            const label = headingLabel(block);
+            const id = block.id || slugify(label, index);
             return block.level === 3 ? (
               <h3 id={id} key={key}>
-                <InlineContent value={block.content ?? ""} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
+                <InlineContent value={label} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
               </h3>
             ) : (
               <h2 id={id} key={key}>
-                <InlineContent value={block.content ?? ""} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
+                <InlineContent value={label} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
               </h2>
             );
           }

@@ -895,3 +895,107 @@
   .article-reader-preferences,
   .article-index details[open] ol { animation: none; }
 }
+
+/* The index is rendered through a document-level portal. That keeps the
+   mobile menu above the drawer's scroll/overflow layers instead of letting a
+   transformed sheet clip its list. */
+.article-index-trigger {
+  pointer-events: auto;
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: .52rem .75rem .52rem .85rem;
+  color: var(--article-ink);
+  background: color-mix(in srgb, var(--article-paper) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--article-ink) 14%, transparent);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgb(23 34 53 / 12%), 0 1px 0 rgb(255 255 255 / 70%) inset;
+  cursor: pointer;
+  font: 600 .72rem/1 var(--font-mono, monospace);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.article-index-trigger > span:last-child {
+  display: grid;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  color: var(--article-muted);
+  background: color-mix(in srgb, var(--article-ink) 7%, transparent);
+  border-radius: 999px;
+  font-size: .68rem;
+  font-variant-numeric: tabular-nums;
+}
+.article-index-trigger:hover { background: color-mix(in srgb, var(--article-paper) 88%, #dce7e8); }
+.article-index-trigger:active { scale: .98; }
+.article-index-trigger:focus { outline: none; }
+.article-index-trigger:focus-visible { outline: 2px solid #7fa475; outline-offset: 3px; }
+
+.article-index-popover {
+  position: fixed;
+  z-index: 1000;
+  max-width: calc(100vw - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: .72rem .9rem .82rem;
+  color: var(--article-ink, #172235);
+  background: color-mix(in srgb, var(--article-paper, #f7f4ec) 97%, transparent);
+  border: 1px solid color-mix(in srgb, var(--article-ink, #172235) 14%, transparent);
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgb(23 34 53 / 20%), 0 1px 0 rgb(255 255 255 / 76%) inset;
+  backdrop-filter: blur(18px) saturate(1.04);
+  animation: article-index-portal-in 150ms cubic-bezier(.2, 0, 0, 1);
+}
+.article-index-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .1rem .15rem .55rem;
+  color: var(--article-muted, #667085);
+  font: 600 .66rem/1 var(--font-mono, monospace);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.article-index-popover-header span:last-child { font-variant-numeric: tabular-nums; }
+.article-index-popover ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.article-index-popover li + li { margin-top: .1rem; }
+.article-index-popover a {
+  display: grid;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  gap: .45rem;
+  align-items: start;
+  padding: .42rem .3rem;
+  color: inherit;
+  border-radius: .55rem;
+  font: 500 .79rem/1.35 var(--font-sans, sans-serif);
+  text-decoration: none;
+}
+.article-index-popover a:hover,
+.article-index-popover a:focus-visible { background: color-mix(in srgb, var(--article-ink, #172235) 7%, transparent); outline: none; }
+.article-index-popover a > span { color: var(--article-muted, #667085); font: 600 .65rem/1.35 var(--font-mono, monospace); }
+
+@keyframes article-index-portal-in {
+  from { opacity: 0; transform: translateY(5px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 620px) {
+  .article-index-popover {
+    width: min(25rem, calc(100vw - 1.3rem)) !important;
+    max-width: calc(100vw - 1.3rem);
+    border-radius: 1.1rem;
+  }
+  .article-index-popover a { min-height: 2.45rem; align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-index-trigger,
+  .article-index-popover { animation: none; transition: none; }
+}
