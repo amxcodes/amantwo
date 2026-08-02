@@ -159,7 +159,7 @@ const footerEmail = typeof footerContent?.email === "string" ? footerContent.ema
       <EducationSection entries={education} />
       <BlogSection posts={posts} />
       <ChronicleDetailsDrawer client:load />
-      <BlogReader client:load />
+      <BlogReader convexUrl={publicConvexUrl} client:load />
     </main>
     <SiteFooter email={footerEmail} />
   </div>

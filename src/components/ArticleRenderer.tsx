@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import "./article-renderer.css";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import ArticleShareButton from "./ArticleShareButton";
 import { resolveMediaUrl } from "../lib/media";
 
 export type PublicArticleBlock = {
@@ -126,7 +127,9 @@ function HighlightedText({
   offset?: number;
 }) {
   const ranges = (highlights ?? [])
-    .filter((range) => range.end > offset && range.start < offset + value.length)
+    .filter(
+      (range) => range.end > offset && range.start < offset + value.length,
+    )
     .sort((a, b) => a.start - b.start);
   if (!ranges.length) return <>{value}</>;
   const nodes: Array<ReactNode> = [];
@@ -135,7 +138,15 @@ function HighlightedText({
     const start = Math.max(cursor, range.start - offset);
     const end = Math.min(value.length, Math.max(start, range.end - offset));
     if (start > cursor) nodes.push(value.slice(cursor, start));
-    if (end > start) nodes.push(<mark className={`article-highlight tone-${range.tone}`} key={`${range.start}-${index}`}>{value.slice(start, end)}</mark>);
+    if (end > start)
+      nodes.push(
+        <mark
+          className={`article-highlight tone-${range.tone}`}
+          key={`${range.start}-${index}`}
+        >
+          {value.slice(start, end)}
+        </mark>,
+      );
     cursor = end;
   });
   if (cursor < value.length) nodes.push(value.slice(cursor));
@@ -149,27 +160,49 @@ function InlineAttachmentPill({
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
-  const icon = attachment.kind === "audio" ? "◉" : attachment.kind === "image" ? "▧" : attachment.kind === "video" ? "▷" : "↗";
+  const icon =
+    attachment.kind === "audio"
+      ? "◉"
+      : attachment.kind === "image"
+        ? "▧"
+        : attachment.kind === "video"
+          ? "▷"
+          : "↗";
   if (attachment.kind === "audio" && attachment.src) {
     return (
       <span className="article-inline-pill article-inline-pill-audio">
-        <button type="button" onClick={() => {
-          const audio = audioRef.current;
-          if (!audio) return;
-          if (playing) audio.pause(); else void audio.play();
-          setPlaying(!playing);
-        }} aria-label={`${playing ? "Pause" : "Play"} ${attachment.label}`}>
+        <button
+          type="button"
+          onClick={() => {
+            const audio = audioRef.current;
+            if (!audio) return;
+            if (playing) audio.pause();
+            else void audio.play();
+            setPlaying(!playing);
+          }}
+          aria-label={`${playing ? "Pause" : "Play"} ${attachment.label}`}
+        >
           <span aria-hidden="true">{playing ? "Ⅱ" : icon}</span>
           {attachment.label}
         </button>
         {/* biome-ignore lint/a11y/useMediaCaption: inline voice notes expose their transcript in the article model. */}
-        <audio ref={audioRef} src={resolveMediaUrl(attachment.src)} preload="metadata" onEnded={() => setPlaying(false)} />
+        <audio
+          ref={audioRef}
+          src={resolveMediaUrl(attachment.src)}
+          preload="metadata"
+          onEnded={() => setPlaying(false)}
+        />
       </span>
     );
   }
   const href = attachment.href ?? attachment.src ?? "#";
   return (
-    <a className={`article-inline-pill article-inline-pill-${attachment.kind}`} href={href} target="_blank" rel="noreferrer">
+    <a
+      className={`article-inline-pill article-inline-pill-${attachment.kind}`}
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+    >
       <span aria-hidden="true">{icon}</span>
       {attachment.label || attachment.kind}
     </a>
@@ -189,19 +222,43 @@ function InlineContent({
     return <HighlightedText value={value} highlights={highlights} />;
   }
   const nodes: Array<ReactNode> = [];
-  const lookup = new Map(inlineAttachments.map((attachment) => [attachment.id, attachment]));
+  const lookup = new Map(
+    inlineAttachments.map((attachment) => [attachment.id, attachment]),
+  );
   const pattern = /\uE000([^\uE001]+)\uE001/g;
   let cursor = 0;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(value))) {
     const start = match.index;
-    if (start > cursor) nodes.push(<HighlightedText key={`text-${start}`} value={value.slice(cursor, start)} highlights={highlights} offset={cursor} />);
+    if (start > cursor)
+      nodes.push(
+        <HighlightedText
+          key={`text-${start}`}
+          value={value.slice(cursor, start)}
+          highlights={highlights}
+          offset={cursor}
+        />,
+      );
     const attachment = lookup.get(match[1]);
-    if (attachment) nodes.push(<InlineAttachmentPill key={`attachment-${attachment.id}`} attachment={attachment} />);
+    if (attachment)
+      nodes.push(
+        <InlineAttachmentPill
+          key={`attachment-${attachment.id}`}
+          attachment={attachment}
+        />,
+      );
     else nodes.push(match[0]);
     cursor = start + match[0].length;
   }
-  if (cursor < value.length) nodes.push(<HighlightedText key={`text-${cursor}`} value={value.slice(cursor)} highlights={highlights} offset={cursor} />);
+  if (cursor < value.length)
+    nodes.push(
+      <HighlightedText
+        key={`text-${cursor}`}
+        value={value.slice(cursor)}
+        highlights={highlights}
+        offset={cursor}
+      />,
+    );
   return <>{nodes}</>;
 }
 
@@ -279,7 +336,9 @@ export default function ArticleRenderer({
   const [spacing, setSpacing] = useState<"compact" | "relaxed">("relaxed");
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [indexOpen, setIndexOpen] = useState(false);
+  const [indexMenuReady, setIndexMenuReady] = useState(false);
   const indexTriggerRef = useRef<HTMLButtonElement>(null);
+  const indexPopoverRef = useRef<HTMLDivElement>(null);
   const [indexMenuStyle, setIndexMenuStyle] = useState<React.CSSProperties>({});
   const headings = useMemo(
     () =>
@@ -297,7 +356,14 @@ export default function ArticleRenderer({
   );
 
   useEffect(() => {
-    if (!indexOpen) return;
+    if (!indexOpen) {
+      setIndexMenuReady(false);
+      return;
+    }
+
+    // Measure before revealing the portal so a press never flashes an
+    // unpositioned, full-width menu at the viewport origin.
+    setIndexMenuReady(false);
     const updateIndexPosition = () => {
       const trigger = indexTriggerRef.current;
       if (!trigger) return;
@@ -322,10 +388,14 @@ export default function ArticleRenderer({
           ? { bottom: Math.max(12, window.innerHeight - rect.top + 8) }
           : { top: Math.min(window.innerHeight - 100, rect.bottom + 8) }),
       });
+      setIndexMenuReady(true);
     };
     updateIndexPosition();
-    const scrollRoot = indexTriggerRef.current?.closest<HTMLElement>(".blog-reader-panel");
-    (scrollRoot ?? window).addEventListener("scroll", updateIndexPosition, { passive: true });
+    const scrollRoot =
+      indexTriggerRef.current?.closest<HTMLElement>(".blog-reader-panel");
+    (scrollRoot ?? window).addEventListener("scroll", updateIndexPosition, {
+      passive: true,
+    });
     window.addEventListener("resize", updateIndexPosition);
     return () => {
       (scrollRoot ?? window).removeEventListener("scroll", updateIndexPosition);
@@ -333,27 +403,54 @@ export default function ArticleRenderer({
     };
   }, [indexOpen]);
 
+  const handleIndexSelect = (id: string) => {
+    // The page and drawer can contain the same article at the same time.
+    // Resolve the heading inside this renderer, never the first global match.
+    const target = Array.from(
+      articleRef.current?.querySelectorAll<HTMLElement>("[id]") ?? [],
+    ).find((element) => element.id === id);
+    if (!target) return;
+
+    const scrollRoot = articleRef.current?.closest<HTMLElement>(
+      ".blog-reader-panel",
+    );
+    if (scrollRoot) {
+      const targetRect = target.getBoundingClientRect();
+      const rootRect = scrollRoot.getBoundingClientRect();
+      scrollRoot.scrollBy({
+        top: targetRect.top - rootRect.top - 56,
+        behavior: "smooth",
+      });
+    } else {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    setIndexOpen(false);
+  };
+
   useEffect(() => {
     if (!indexOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIndexOpen(false);
     };
-    const closeOnOutsidePointer = (event: PointerEvent) => {
+    // Dismiss on click rather than pointerdown. A native document-level
+    // pointerdown listener runs before React's portal handlers and can close
+    // the menu before an index item receives its click, especially on touch.
+    const closeOnOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node | null;
-      const popover = document.querySelector(".article-index-popover");
       if (
         target &&
         !indexTriggerRef.current?.contains(target) &&
-        !popover?.contains(target)
+        !indexPopoverRef.current?.contains(target)
       ) {
         setIndexOpen(false);
       }
     };
     document.addEventListener("keydown", closeOnEscape);
-    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("click", closeOnOutsideClick);
     return () => {
       document.removeEventListener("keydown", closeOnEscape);
-      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("click", closeOnOutsideClick);
     };
   }, [indexOpen]);
 
@@ -363,17 +460,25 @@ export default function ArticleRenderer({
       if (!element) return;
       const scrollRoot = element.closest<HTMLElement>(".blog-reader-panel");
       if (scrollRoot) {
-        const distance = Math.max(1, scrollRoot.scrollHeight - scrollRoot.clientHeight);
-        setProgress(Math.min(100, Math.max(0, (scrollRoot.scrollTop / distance) * 100)));
+        const distance = Math.max(
+          1,
+          scrollRoot.scrollHeight - scrollRoot.clientHeight,
+        );
+        setProgress(
+          Math.min(100, Math.max(0, (scrollRoot.scrollTop / distance) * 100)),
+        );
         return;
       }
       const rect = element.getBoundingClientRect();
       const distance = Math.max(1, rect.height - window.innerHeight);
       setProgress(Math.min(100, Math.max(0, (-rect.top / distance) * 100)));
     };
-    const scrollRoot = articleRef.current?.closest<HTMLElement>(".blog-reader-panel");
+    const scrollRoot =
+      articleRef.current?.closest<HTMLElement>(".blog-reader-panel");
     update();
-    (scrollRoot ?? window).addEventListener("scroll", update, { passive: true });
+    (scrollRoot ?? window).addEventListener("scroll", update, {
+      passive: true,
+    });
     window.addEventListener("resize", update);
     return () => {
       (scrollRoot ?? window).removeEventListener("scroll", update);
@@ -400,9 +505,20 @@ export default function ArticleRenderer({
         </div>
         <h1>{article.title}</h1>
         <p>{article.summary}</p>
-        {article.narration?.src ? (
-          <VoiceNotePlayer src={resolveMediaUrl(article.narration.src)} label={article.narration.alt} links={article.links} />
-        ) : null}
+        <div
+          className={`article-renderer-header-tools${article.narration?.src ? " has-narration" : ""}`}
+        >
+          {article.narration?.src ? (
+            <VoiceNotePlayer
+              src={resolveMediaUrl(article.narration.src)}
+              label={article.narration.alt}
+              links={article.links}
+            />
+          ) : null}
+          <div className="article-renderer-actions">
+            <ArticleShareButton slug={article.slug} title={article.title} />
+          </div>
+        </div>
       </header>
 
       {showPreferences ? (
@@ -486,7 +602,11 @@ export default function ArticleRenderer({
       {article.cover?.src ? (
         <figure className="article-renderer-cover">
           {article.cover.kind === "video" ? (
-            <video controls preload="metadata" src={resolveMediaUrl(article.cover.src)}>
+            <video
+              controls
+              preload="metadata"
+              src={resolveMediaUrl(article.cover.src)}
+            >
               <track kind="captions" srcLang="en" label="English captions" />
             </video>
           ) : (
@@ -510,7 +630,10 @@ export default function ArticleRenderer({
             type="button"
             aria-expanded={indexOpen}
             aria-controls="article-index-popover"
-            onClick={() => setIndexOpen((open) => !open)}
+            onClick={() => {
+              setIndexMenuReady(false);
+              setIndexOpen((open) => !open);
+            }}
           >
             <span>Index</span>
             <span aria-hidden="true">{headings.length}</span>
@@ -522,10 +645,14 @@ export default function ArticleRenderer({
         ? createPortal(
             <div
               className="article-index-popover"
+              ref={indexPopoverRef}
               id="article-index-popover"
               role="dialog"
               aria-label="Article index"
+              data-positioned={indexMenuReady ? "true" : "false"}
               style={indexMenuStyle}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             >
               <div className="article-index-popover-header">
                 <span>Index</span>
@@ -536,7 +663,11 @@ export default function ArticleRenderer({
                   <li key={heading.id}>
                     <a
                       href={`#${heading.id}`}
-                      onClick={() => setIndexOpen(false)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        handleIndexSelect(heading.id);
+                      }}
                     >
                       <span aria-hidden="true">{index + 1}</span>
                       {heading.label}
@@ -557,25 +688,43 @@ export default function ArticleRenderer({
             const id = block.id || slugify(label, index);
             return block.level === 3 ? (
               <h3 id={id} key={key}>
-                <InlineContent value={label} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
+                <InlineContent
+                  value={label}
+                  highlights={block.highlights}
+                  inlineAttachments={block.inlineAttachments}
+                />
               </h3>
             ) : (
               <h2 id={id} key={key}>
-                <InlineContent value={label} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
+                <InlineContent
+                  value={label}
+                  highlights={block.highlights}
+                  inlineAttachments={block.inlineAttachments}
+                />
               </h2>
             );
           }
           if (block.type === "quote")
             return (
               <blockquote key={key}>
-                <p><InlineContent value={block.content ?? ""} highlights={block.highlights} inlineAttachments={block.inlineAttachments} /></p>
+                <p>
+                  <InlineContent
+                    value={block.content ?? ""}
+                    highlights={block.highlights}
+                    inlineAttachments={block.inlineAttachments}
+                  />
+                </p>
                 {block.attribution ? <cite>{block.attribution}</cite> : null}
               </blockquote>
             );
           if (block.type === "image")
             return (
               <figure key={key}>
-                <img src={resolveMediaUrl(block.src ?? "")} alt={block.alt ?? ""} loading="lazy" />
+                <img
+                  src={resolveMediaUrl(block.src ?? "")}
+                  alt={block.alt ?? ""}
+                  loading="lazy"
+                />
                 {block.caption ? (
                   <figcaption>{block.caption}</figcaption>
                 ) : null}
@@ -584,7 +733,11 @@ export default function ArticleRenderer({
           if (block.type === "video")
             return (
               <figure key={key}>
-                <video src={resolveMediaUrl(block.src ?? "")} controls preload="metadata">
+                <video
+                  src={resolveMediaUrl(block.src ?? "")}
+                  controls
+                  preload="metadata"
+                >
                   <track
                     kind="captions"
                     srcLang="en"
@@ -597,7 +750,14 @@ export default function ArticleRenderer({
               </figure>
             );
           if (block.type === "audio")
-            return <VoiceNotePlayer key={key} src={resolveMediaUrl(block.src ?? "")} label={block.label} transcript={block.transcript} />;
+            return (
+              <VoiceNotePlayer
+                key={key}
+                src={resolveMediaUrl(block.src ?? "")}
+                label={block.label}
+                transcript={block.transcript}
+              />
+            );
           if (block.type === "link")
             return <SmartLink key={key} block={block} />;
           if (block.type === "embed")
@@ -609,7 +769,11 @@ export default function ArticleRenderer({
                 className={`article-callout variant-${block.variant ?? "note"}`}
                 key={key}
               >
-                <InlineContent value={block.content ?? ""} highlights={block.highlights} inlineAttachments={block.inlineAttachments} />
+                <InlineContent
+                  value={block.content ?? ""}
+                  highlights={block.highlights}
+                  inlineAttachments={block.inlineAttachments}
+                />
               </aside>
             );
           if (block.type === "code")
@@ -626,7 +790,15 @@ export default function ArticleRenderer({
                 ))}
               </ul>
             );
-          return <p key={key}><InlineContent value={block.content ?? ""} highlights={block.highlights} inlineAttachments={block.inlineAttachments} /></p>;
+          return (
+            <p key={key}>
+              <InlineContent
+                value={block.content ?? ""}
+                highlights={block.highlights}
+                inlineAttachments={block.inlineAttachments}
+              />
+            </p>
+          );
         })}
       </div>
       {article.links?.length && !article.narration?.src ? (

@@ -2341,11 +2341,9 @@ li {
   padding: clamp(22px, 3vw, 30px);
   color: var(--ink);
   background: var(--blog-surface);
-  border: 0;
-  border-radius: 28px;
-  transition-property: translate, scale;
-  transition-duration: 180ms;
-  transition-timing-function: var(--ease-out);
+  border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
+  /* A softly irregular radius gives the note cards a quiet pebble silhouette. */
+  border-radius: 2.15rem 2.35rem 2.05rem 2.3rem;
 }
 
 .blog-card.tone-orange {
@@ -2356,10 +2354,6 @@ li {
 }
 .blog-card.tone-yellow {
   --blog-surface: #f0d77d;
-}
-
-.blog-card:hover {
-  translate: 0 -2px;
 }
 
 .blog-card > p {
@@ -2402,43 +2396,129 @@ li {
   letter-spacing: 0.05em;
   text-decoration: none;
   background: color-mix(in srgb, var(--paper) 66%, transparent);
-  border: 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
   border-radius: 999px;
   cursor: pointer;
-  transition-property: background-color, translate, scale;
-  transition-duration: 180ms;
-  transition-timing-function: var(--ease-out);
+  white-space: nowrap;
+  transition: none;
+}
+
+.blog-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  min-width: 0;
+}
+
+.blog-card-actions .blog-card-read {
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.blog-card-actions .blog-card-share {
+  width: auto;
+  max-width: 100%;
+  justify-self: end;
+  padding-inline: 11px;
+  white-space: nowrap;
+}
+
+.blog-card-actions .blog-card-share span {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+.blog-card-actions .blog-card-share[data-copied="true"] {
+  width: auto;
+  flex-basis: auto;
+  padding-inline: 11px;
+}
+
+.article-share-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  color: var(--ink);
+  font: 500 10px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 62%);
+  cursor: pointer;
+  transition: none;
+}
+
+.article-share-button svg {
+  display: none;
+}
+
+.article-share-button:hover,
+.article-share-button:focus-visible {
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  outline: none;
+}
+
+.article-share-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue, #7899ba) 70%, transparent);
+  outline-offset: 3px;
+}
+
+.article-share-button[data-copied="true"] {
+  color: #496b4e;
+  background: color-mix(in srgb, #bdd8ad 65%, var(--paper));
+  border-color: color-mix(in srgb, #496b4e 24%, transparent);
+}
+
+.article-share-button[data-copied="true"] svg {
+  color: #496b4e;
+  background: color-mix(in srgb, #bdd8ad 75%, var(--paper));
+}
+
+.article-renderer-actions {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .blog-card-actions { padding-top: 20px; }
+  .article-share-button { min-height: 40px; }
+  .article-renderer-actions { margin-top: 1rem; }
 }
 
 .blog-card-arrow {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  order: 2;
-  place-items: center;
-  font-family: Inter, sans-serif;
-  font-size: 14px;
-  font-style: normal;
-  background: color-mix(in srgb, white 60%, transparent);
-  border-radius: 50%;
+  display: none;
 }
 
 .blog-card-read small {
+  min-width: 0;
+  overflow: hidden;
   color: var(--ink-soft);
   font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .blog-card-read:hover,
 .blog-card-read:focus-visible {
   background: color-mix(in srgb, var(--paper) 84%, transparent);
   outline: none;
-  translate: 0 -1px;
 }
-.blog-card-read:active {
-  translate: 0;
-  scale: 0.96;
-}
-
 .blog-grid-loading {
   display: flex;
   min-block-size: clamp(180px, 22vw, 240px);
@@ -3791,7 +3871,7 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
 
   .blog-card {
     min-height: 270px;
-    border-radius: 24px;
+    border-radius: 1.8rem 1.95rem 1.75rem 1.9rem;
   }
 
   .blog-card h3 {
@@ -4444,9 +4524,16 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
 }
 
 /* The sheet is a quiet surface, not a second card layered over the page. */
+.blog-reader {
+  overflow: hidden;
+  background: var(--paper);
+  border-radius: 28px 28px 0 0;
+  box-shadow: none;
+}
+
 .blog-reader-panel {
-  border-radius: 1.6rem 1.6rem 0 0;
-  box-shadow: 0 -18px 54px rgb(24 31 40 / 12%);
+  border-radius: 28px 28px 0 0;
+  box-shadow: none;
 }
 
 .blog-reader-panel .drawer-drag-handle {
@@ -4469,6 +4556,7 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     width: 100%;
     max-width: 100vw;
     max-height: calc(100dvh - env(safe-area-inset-top) - .35rem);
+    border-radius: 24px 24px 0 0;
   }
 
   .blog-reader-panel {
