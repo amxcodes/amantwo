@@ -4459,3 +4459,59 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   height: .2rem;
   background: color-mix(in srgb, var(--ink) 18%, transparent);
 }
+
+/* Small screens: keep the drawer and its reader chrome within the viewport.
+   The panel remains the only scroll owner, so dragging and index navigation
+   never move the page behind it. */
+@media (max-width: 720px) {
+  .blog-reader {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 100vw;
+    max-height: calc(100dvh - env(safe-area-inset-top) - .35rem);
+  }
+
+  .blog-reader-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top) - .35rem);
+    border-radius: 24px 24px 0 0;
+    overscroll-behavior: contain;
+  }
+
+  .blog-reader-panel .drawer-drag-handle {
+    height: 22px;
+    padding-top: 2px;
+  }
+
+  .blog-reader-header,
+  .blog-reader-copy,
+  .blog-reader-controls,
+  .blog-reader-cover {
+    width: min(calc(100% - 32px), 680px);
+  }
+
+  .blog-reader-header { padding-top: 18px; }
+  .blog-reader-header h2 { margin-top: 18px; line-height: 1; overflow-wrap: anywhere; }
+  .blog-reader-header [id="blog-reader-summary"] { font-size: 15px; }
+
+  .blog-reader-controls {
+    gap: 7px;
+    margin-block: 22px 28px;
+    padding-block: 10px;
+  }
+
+  .blog-reader-controls fieldset {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .blog-reader-controls legend { min-width: 4.2rem; }
+  .blog-reader-controls button { min-height: 34px; padding-inline: 8px; }
+  .blog-reader-cover { margin-bottom: 26px; }
+  .blog-reader-cover img { max-height: 34dvh; border-radius: 14px; }
+  .blog-reader-copy { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
+  .blog-reader-copy p { font-size: 17px; line-height: 1.65; }
+  .blog-reader-panel.size-large .blog-reader-copy p { font-size: 20px; }
+  .blog-reader-copy h3 { font-size: 1.38em; overflow-wrap: anywhere; }
+  .blog-reader-inline-image img { max-height: 48dvh; border-radius: 14px; }
+  .blog-reader-inline-link { padding: 12px 14px; }
+}

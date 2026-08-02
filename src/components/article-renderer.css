@@ -428,6 +428,82 @@
   vertical-align: middle;
 }
 .article-voice-note figcaption { display: inline-flex; align-items: baseline; gap: .45rem; padding: 0; white-space: nowrap; }
+
+/* Mobile reader controls stay inside the drawer instead of expanding the
+   article's layout. The preferences and index become compact, scrollable
+   sheets that respect the safe area. */
+@media (max-width: 720px) {
+  .blog-reader .article-reader-tools {
+    position: sticky;
+    z-index: 24;
+    top: .45rem;
+    max-width: calc(100% - 1.25rem);
+    margin: 0 auto 1.5rem;
+  }
+
+  .blog-reader .article-reader-trigger { min-height: 2.35rem; }
+
+  .blog-reader .article-reader-preferences {
+    position: fixed;
+    z-index: 140;
+    inset: auto .75rem calc(.75rem + env(safe-area-inset-bottom));
+    display: grid;
+    width: auto;
+    min-width: 0;
+    max-height: min(58dvh, 380px);
+    padding: .65rem;
+    overflow-y: auto;
+    border-radius: 1.15rem;
+    transform: none;
+    box-shadow: 0 20px 50px rgb(23 34 53 / 22%);
+  }
+
+  .blog-reader .article-reader-tools fieldset {
+    flex-wrap: wrap;
+    gap: .2rem;
+  }
+
+  .blog-reader .article-reader-tools legend {
+    width: 100%;
+    margin: .2rem 0 0;
+  }
+
+  .blog-reader .article-reader-tools button { min-height: 2.15rem; }
+
+  .blog-reader .article-index { bottom: calc(.75rem + env(safe-area-inset-bottom)); max-width: calc(100% - 1.5rem); }
+
+  .blog-reader .article-index details {
+    max-width: calc(100vw - 1.5rem);
+    box-shadow: 0 12px 34px rgb(23 34 53 / 18%);
+  }
+
+  .blog-reader .article-index details[open] {
+    position: fixed;
+    z-index: 135;
+    right: .75rem;
+    bottom: calc(.75rem + env(safe-area-inset-bottom));
+    left: .75rem;
+    max-height: min(62dvh, 430px);
+    overflow-y: auto;
+    border-radius: 1.15rem;
+    box-shadow: 0 20px 50px rgb(23 34 53 / 24%);
+  }
+
+  .blog-reader .article-index details[open] summary {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+    background: #172235;
+  }
+
+  .blog-reader .article-index ol {
+    max-width: none;
+    margin: 0;
+    padding: .25rem .9rem 1rem 2rem;
+  }
+
+  .blog-reader .article-index a { display: block; padding-block: .18rem; line-height: 1.45; }
+}
 .article-voice-note figcaption span { font-size: .58rem; letter-spacing: .1em; }
 .article-voice-note audio { width: 9.5rem; height: 1.8rem; }
 .article-voice-note details { flex: 0 1 auto; font-size: .72rem; }
