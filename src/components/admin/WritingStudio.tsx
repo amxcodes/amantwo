@@ -1417,7 +1417,21 @@ function Writer({
             </div>
           </article>
         </section>
+        {settingsOpen ? (
+          <button
+            className="writer-inspector-backdrop"
+            type="button"
+            aria-label="Close studio panel"
+            onClick={() => setSettingsOpen(false)}
+          />
+        ) : null}
         <aside className="writer-inspector" aria-label="Post settings">
+          <div className="writer-inspector-mobile-head">
+            <span className="writer-inspector-mobile-handle" aria-hidden="true" />
+            <button type="button" onClick={() => setSettingsOpen(false)}>
+              Done
+            </button>
+          </div>
           <nav className="writer-inspector-tabs" aria-label="Post settings">
             {inspectorTabs.map(([tab, label, icon]) => (
               <button
