@@ -1,7 +1,7 @@
-const imageKitEndpoint = import.meta.env.PUBLIC_IMAGEKIT_URL_ENDPOINT?.replace(
-  /\/$/,
-  "",
-);
+const imageKitEndpoint = (
+  import.meta.env.PUBLIC_IMAGEKIT_URL_ENDPOINT?.trim() ||
+  "https://ik.imagekit.io/amananuworks"
+).replace(/\/$/, "");
 
 /**
  * Keeps public components provider-agnostic. ImageKit can be connected later

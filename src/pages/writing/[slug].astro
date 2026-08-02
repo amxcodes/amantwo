@@ -8,9 +8,10 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { siteData } from "../../content/site";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { publicConvexUrl } from "../../lib/publicConfig";
 
 const slug = Astro.params.slug ?? "";
-const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+const convexUrl = publicConvexUrl;
 let article: PublicArticle | null = null;
 let lookupFailed = false;
 

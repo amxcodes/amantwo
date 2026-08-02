@@ -1,6 +1,7 @@
 ---
 import type { PublicArticle } from "./ArticleRenderer";
 import PublishedWritingCards from "./PublishedWritingCards";
+import { publicConvexUrl } from "../lib/publicConfig";
 
 type ArticleCard = PublicArticle & { tone?: string };
 
@@ -20,7 +21,7 @@ const { posts } = Astro.props;
 
   <PublishedWritingCards
     initialPosts={posts}
-    convexUrl={import.meta.env.PUBLIC_CONVEX_URL}
+    convexUrl={publicConvexUrl}
     client:load
   />
 </section>

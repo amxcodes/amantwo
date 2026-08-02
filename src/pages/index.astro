@@ -14,13 +14,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
 import type { PublicArticle } from "../components/ArticleRenderer";
+import { publicConvexUrl } from "../lib/publicConfig";
 
 type ManagedSection = {
   registryType: string;
   content: Record<string, unknown>;
 };
 
-const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+const convexUrl = publicConvexUrl;
 let managedSections: ManagedSection[] | null = null;
 let managedArticles: PublicArticle[] | null = null;
 

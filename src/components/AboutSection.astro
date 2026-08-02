@@ -1,5 +1,6 @@
 ---
 import BrandIcon from "./BrandIcon.astro";
+import { resolveMediaUrl } from "../lib/media";
 
 interface Props {
   eyebrow: string;
@@ -33,6 +34,6 @@ const brandForLabel = {
   </div>
 
   <figure class="about-section-portrait">
-    <img src={portraitSrc} alt={portraitAlt} width="1254" height="1254" loading="lazy" decoding="async" />
+    <img src={resolveMediaUrl(portraitSrc)} alt={portraitAlt} width="1254" height="1254" loading="lazy" decoding="async" />
   </figure>
 </section>

@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type Keyboar
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { siteData } from "../../content/site";
+import { publicConvexUrl } from "../../lib/publicConfig";
 import AdminMediaUpload from "./AdminMediaUpload";
 import StudioAiPanel from "./StudioAiPanel";
 import {
@@ -1759,7 +1760,7 @@ function ConnectedWritingStudio() {
 }
 
 export default function WritingStudio() {
-  const url = import.meta.env.PUBLIC_CONVEX_URL;
+  const url = publicConvexUrl;
   if (!url)
     return (
       <main className="writer-loading">

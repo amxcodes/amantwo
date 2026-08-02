@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Drawer } from "vaul";
+import { resolveMediaUrl } from "../lib/media";
 
 type DrawerProject = {
   eyebrow?: string;
@@ -44,8 +45,15 @@ export default function ProjectDrawer() {
       window.removeEventListener("portfolio:open-project", openProject);
   }, []);
 
-  const mediaItems = project?.mediaItems?.filter((item) => item.src) ?? [];
-  if (!mediaItems.length && project?.media?.src) mediaItems.push(project.media);
+  const mediaItems = project?.mediaItems
+    ?.filter((item) => item.src)
+    .map((item) => ({ ...item, src: resolveMediaUrl(item.src ?? "") })) ?? [];
+  if (!mediaItems.length && project?.media?.src) {
+    mediaItems.push({
+      ...project.media,
+      src: resolveMediaUrl(project.media.src),
+    });
+  }
   const media = mediaItems[mediaIndex];
 
   return (

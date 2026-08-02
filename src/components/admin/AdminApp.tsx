@@ -11,6 +11,7 @@ import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { siteData } from "../../content/site";
+import { publicConvexUrl } from "../../lib/publicConfig";
 import AiProviderSettings from "./AiProviderSettings";
 import "./admin.css";
 
@@ -1772,7 +1773,7 @@ function ConnectedAdmin() {
 }
 
 export default function AdminApp() {
-  const url = import.meta.env.PUBLIC_CONVEX_URL;
+  const url = publicConvexUrl;
   if (!url)
     return (
       <main className="admin-auth">

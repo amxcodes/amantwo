@@ -1,6 +1,7 @@
 ---
 import ChromaticTextReveal from "./ChromaticTextReveal.astro";
 import InlinePortrait from "./InlinePortrait.astro";
+import { resolveMediaUrl } from "../lib/media";
 
 interface Props {
   name: string;
@@ -32,8 +33,8 @@ const {
         <span class="hero-identity">
           <span class="hero-lead">{introduction}</span>
           <InlinePortrait
-            compactSrc={avatarSrc}
-            fullSrc={portraitSrc}
+            compactSrc={resolveMediaUrl(avatarSrc)}
+            fullSrc={resolveMediaUrl(portraitSrc)}
             alt={`Portrait of ${name}`}
           />
         </span>

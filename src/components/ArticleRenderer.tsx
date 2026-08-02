@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "./article-renderer.css";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import { resolveMediaUrl } from "../lib/media";
 
 export type PublicArticleBlock = {
   id?: string;
@@ -155,7 +156,7 @@ function InlineAttachmentPill({
           {attachment.label}
         </button>
         {/* biome-ignore lint/a11y/useMediaCaption: inline voice notes expose their transcript in the article model. */}
-        <audio ref={audioRef} src={attachment.src} preload="metadata" onEnded={() => setPlaying(false)} />
+        <audio ref={audioRef} src={resolveMediaUrl(attachment.src)} preload="metadata" onEnded={() => setPlaying(false)} />
       </span>
     );
   }
@@ -329,7 +330,7 @@ export default function ArticleRenderer({
         <h1>{article.title}</h1>
         <p>{article.summary}</p>
         {article.narration?.src ? (
-          <VoiceNotePlayer src={article.narration.src} label={article.narration.alt} links={article.links} />
+          <VoiceNotePlayer src={resolveMediaUrl(article.narration.src)} label={article.narration.alt} links={article.links} />
         ) : null}
       </header>
 
@@ -414,12 +415,12 @@ export default function ArticleRenderer({
       {article.cover?.src ? (
         <figure className="article-renderer-cover">
           {article.cover.kind === "video" ? (
-            <video controls preload="metadata" src={article.cover.src}>
+            <video controls preload="metadata" src={resolveMediaUrl(article.cover.src)}>
               <track kind="captions" srcLang="en" label="English captions" />
             </video>
           ) : (
             <img
-              src={article.cover.src}
+              src={resolveMediaUrl(article.cover.src)}
               alt={article.cover.alt}
               loading="eager"
             />
@@ -472,7 +473,7 @@ export default function ArticleRenderer({
           if (block.type === "image")
             return (
               <figure key={key}>
-                <img src={block.src} alt={block.alt ?? ""} loading="lazy" />
+                <img src={resolveMediaUrl(block.src ?? "")} alt={block.alt ?? ""} loading="lazy" />
                 {block.caption ? (
                   <figcaption>{block.caption}</figcaption>
                 ) : null}
@@ -481,7 +482,7 @@ export default function ArticleRenderer({
           if (block.type === "video")
             return (
               <figure key={key}>
-                <video src={block.src} controls preload="metadata">
+                <video src={resolveMediaUrl(block.src ?? "")} controls preload="metadata">
                   <track
                     kind="captions"
                     srcLang="en"
@@ -494,7 +495,7 @@ export default function ArticleRenderer({
               </figure>
             );
           if (block.type === "audio")
-            return <VoiceNotePlayer key={key} src={block.src} label={block.label} transcript={block.transcript} />;
+            return <VoiceNotePlayer key={key} src={resolveMediaUrl(block.src ?? "")} label={block.label} transcript={block.transcript} />;
           if (block.type === "link")
             return <SmartLink key={key} block={block} />;
           if (block.type === "embed")
