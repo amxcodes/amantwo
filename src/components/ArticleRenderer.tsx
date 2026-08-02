@@ -431,7 +431,7 @@ export default function ArticleRenderer({
         </figure>
       ) : null}
 
-      {headings.length > 1 ? (
+      {headings.length > 0 ? (
         <nav className="article-index" aria-label="On this page">
           <details>
             <summary>

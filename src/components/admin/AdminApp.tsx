@@ -1272,7 +1272,7 @@ function SiteManager({
             Manage content
           </button>
           <button
-            className="studio-button studio-button-quiet"
+            className="studio-button studio-button-quiet studio-ai-settings-button"
             type="button"
             onClick={() => setAiSettingsOpen(true)}
           >

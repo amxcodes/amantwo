@@ -1495,3 +1495,109 @@
   .studio-collection-workspace { padding-inline: 11px; }
   .studio-collection-heading .studio-button { padding-inline: 8px; font-size: 10px; }
 }
+
+/* Final narrow-width toolbar/modal pass. Keep all actions reachable without
+   forcing labels through one another; the action row can be swiped quietly
+   when a device is narrower than the full control set. */
+@media (max-width: 760px) {
+  .studio-toolbar {
+    right: 10px;
+    left: 10px;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .studio-toolbar-brand { flex: 0 0 auto; }
+  .studio-toolbar-brand > a { font-size: 17px; }
+  .studio-toolbar-actions {
+    min-width: 0;
+    max-width: calc(100vw - 92px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .studio-toolbar-actions::-webkit-scrollbar { display: none; }
+  .studio-toolbar-actions > .studio-button { flex: 0 0 auto; }
+
+  /* Preview and sign-out remain available from the scrolled action row, while
+     the AI control is surfaced explicitly instead of being hidden as a quiet
+     button on mobile. */
+  .studio-toolbar-actions > .studio-ai-settings-button {
+    display: inline-flex;
+    color: #536579;
+    background: #edf1f1;
+  }
+
+  .studio-toolbar-actions > .studio-ai-settings-button::before {
+    content: "AI";
+    font: 600 10px "DM Mono", ui-monospace, monospace;
+    letter-spacing: .04em;
+  }
+
+  .studio-toolbar-actions > .studio-ai-settings-button { font-size: 0; }
+  .studio-toolbar-actions > .studio-ai-settings-button::before { font-size: 10px; }
+
+  .studio-collection-workspace .manager-collection article {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .studio-collection-workspace .manager-collection article > nav {
+    min-width: 0;
+    max-width: 42vw;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .studio-collection-workspace .manager-collection nav button,
+  .studio-collection-workspace .manager-collection nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .studio-collection-workspace .manager-collection nav .manager-writing-delete {
+    min-width: 58px;
+    padding-inline: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .studio-shell .manager-modal > footer {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  .studio-shell .manager-modal > footer > * { min-width: 0; }
+  .studio-shell .manager-modal > footer button {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .studio-shell .manager-modal > footer .manager-modal-delete {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .studio-shell .manager-modal > footer button:not(.manager-modal-delete) {
+    flex: 1 1 0;
+  }
+
+  .studio-shell .manager-confirm {
+    width: calc(100% - 24px);
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+    border-radius: 20px;
+  }
+
+  .studio-shell .manager-confirm footer {
+    flex-wrap: wrap;
+  }
+
+  .studio-shell .manager-confirm footer button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
+  }
+}

@@ -744,3 +744,81 @@
   .article-audio-attachment-row { align-items: stretch; }
   .article-audio-attachment-links { padding-left: .1rem; }
 }
+
+/* The drawer index is always reachable, but opening it must not be clipped by
+   the article's overflow container. The control stays compact on desktop and
+   becomes a contained sheet on narrow screens. */
+.article-renderer-drawer .article-index {
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.article-renderer-drawer .article-index details,
+.article-renderer-drawer .article-index summary,
+.article-renderer-drawer .article-index ol { pointer-events: auto; }
+
+.article-renderer-drawer .article-index details[open] ol {
+  position: fixed;
+  z-index: 150;
+  right: max(1rem, calc((100vw - 46rem) / 2));
+  bottom: 1rem;
+  left: auto;
+  width: min(25rem, calc(100vw - 2rem));
+  max-height: min(52dvh, 24rem);
+  overflow-y: auto;
+}
+
+@media (max-width: 620px) {
+  .article-renderer-drawer .article-index {
+    position: sticky;
+    bottom: calc(.65rem + env(safe-area-inset-bottom));
+    width: calc(100% - 1.25rem);
+    margin-bottom: calc(.65rem + env(safe-area-inset-bottom));
+  }
+
+  .article-renderer-drawer .article-index details {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .article-renderer-drawer .article-index details[open] {
+    position: static;
+    width: 100%;
+  }
+
+  .article-renderer-drawer .article-index details[open] summary {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    background: #172235;
+  }
+
+  .article-renderer-drawer .article-index details[open] ol {
+    position: fixed;
+    z-index: 150;
+    right: .65rem;
+    bottom: calc(.65rem + env(safe-area-inset-bottom));
+    left: .65rem;
+    width: auto;
+    max-width: none;
+    max-height: min(62dvh, 26rem);
+    margin: 0;
+    padding: .65rem .8rem 1rem 2rem;
+    overflow-y: auto;
+    border-radius: 1.15rem;
+    background: #172235;
+    box-shadow: 0 22px 56px rgb(23 34 53 / 28%);
+  }
+
+  .article-renderer-drawer .article-index details[open] a {
+    padding-block: .22rem;
+    line-height: 1.45;
+  }
+
+  .article-renderer-drawer .article-reader-tools {
+    top: 2.45rem;
+    width: calc(100% - 1.25rem);
+    padding-inline: 0;
+  }
+}
