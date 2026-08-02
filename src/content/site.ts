@@ -46,11 +46,76 @@ const projectSchema = z.object({
       alt: z.string().min(1),
     })
     .optional(),
+  mediaItems: z
+    .array(
+      z.object({
+        type: z.enum(["image", "video"]),
+        src: z.string().min(1),
+        alt: z.string().min(1),
+        caption: z.string().min(1).optional(),
+      }),
+    )
+    .optional(),
   links: z.object({
     live: z.url().optional(),
     github: z.url().optional(),
     figma: z.url().optional(),
   }),
+});
+
+const postBodyBlockSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("paragraph"), content: z.string().min(1) }),
+  z.object({ type: z.literal("heading"), content: z.string().min(1) }),
+  z.object({
+    type: z.literal("quote"),
+    content: z.string().min(1),
+    attribution: z.string().min(1).optional(),
+  }),
+  z.object({
+    type: z.literal("image"),
+    src: z.string().min(1),
+    alt: z.string().min(1),
+    caption: z.string().min(1).optional(),
+  }),
+  z.object({
+    type: z.literal("link"),
+    label: z.string().min(1),
+    href: z.url(),
+    description: z.string().min(1).optional(),
+  }),
+  z.object({ type: z.literal("divider") }),
+]);
+
+const postSchema = z.object({
+  slug: z.string().min(1),
+  meta: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  tone: z.enum(["blue", "orange", "yellow", "green"]),
+  readingTime: z.string().min(1),
+  publishedAt: z.string().min(1).optional(),
+  author: z
+    .object({
+      name: z.string().min(1),
+      role: z.string().min(1).optional(),
+    })
+    .optional(),
+  cover: z
+    .object({
+      src: z.string().min(1),
+      alt: z.string().min(1),
+      caption: z.string().min(1).optional(),
+    })
+    .optional(),
+  links: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        href: z.url(),
+      }),
+    )
+    .default([]),
+  body: z.array(postBodyBlockSchema).min(1),
 });
 
 export const siteSchema = z.object({
@@ -90,6 +155,7 @@ export const siteSchema = z.object({
   }),
   experience: z.array(timelineEntrySchema),
   education: z.array(timelineEntrySchema),
+  posts: z.array(postSchema).min(1),
   projects: z.array(projectSchema),
 });
 
@@ -270,6 +336,95 @@ export const siteData = siteSchema.parse({
       ],
     },
   ],
+  posts: [
+    {
+      slug: "systems-with-feeling",
+      meta: "Notes on making",
+      title: "Systems can be precise without feeling cold.",
+      summary:
+        "A few notes on keeping the human part present while building products that need to hold real complexity.",
+      tone: "blue",
+      readingTime: "4 min read",
+      publishedAt: "July 2026",
+      author: { name: "Aman Anu", role: "Author" },
+      links: [],
+      body: [
+        {
+          type: "paragraph",
+          content:
+            "The most useful systems rarely announce themselves. They make the next step clearer, remove a little friction, and leave enough room for a person to remain a person.",
+        },
+        {
+          type: "paragraph",
+          content:
+            "When I work on a product, I start with the small moments around the main task: the state someone sees when they are unsure, the hand-off between two people, and the language that makes an action feel safe to take.",
+        },
+        {
+          type: "quote",
+          content:
+            "Precision is not the opposite of feeling. It is often the thing that gives feeling a place to land.",
+        },
+      ],
+    },
+    {
+      slug: "the-space-before-motion",
+      meta: "Moving images",
+      title: "The space before motion is part of the story.",
+      summary:
+        "On pacing, restraint, and why a frame needs time to become an image rather than simply a transition.",
+      tone: "orange",
+      readingTime: "3 min read",
+      publishedAt: "July 2026",
+      author: { name: "Aman Anu", role: "Author" },
+      links: [],
+      body: [
+        {
+          type: "paragraph",
+          content:
+            "Motion is most convincing when it has a reason to begin. Before a cut, a gesture, or a camera move, there is usually a fraction of stillness doing quiet work.",
+        },
+        {
+          type: "paragraph",
+          content:
+            "I like to treat that pause as material. It gives an image weight, lets a detail register, and makes the movement that follows feel chosen instead of automatic.",
+        },
+        {
+          type: "quote",
+          content:
+            "The same idea carries into interfaces: let a person arrive before asking them to move.",
+        },
+      ],
+    },
+    {
+      slug: "building-in-public",
+      meta: "Working notes",
+      title: "Small experiments are how larger ideas earn trust.",
+      summary:
+        "A working practice for testing an interaction, a tool, or a visual direction before it has to carry a whole product.",
+      tone: "green",
+      readingTime: "5 min read",
+      publishedAt: "July 2026",
+      author: { name: "Aman Anu", role: "Author" },
+      links: [],
+      body: [
+        {
+          type: "paragraph",
+          content:
+            "A small experiment has a useful kind of honesty. It does not need to pretend to be a finished answer; it only needs to make one question easier to see.",
+        },
+        {
+          type: "paragraph",
+          content:
+            "That can mean a rough interface, a short film study, or a tool used for one very specific workflow. The point is not speed for its own sake. It is learning with enough clarity to know what deserves the next iteration.",
+        },
+        {
+          type: "quote",
+          content:
+            "Over time, those small proofs become a more dependable way to build.",
+        },
+      ],
+    },
+  ],
   projects: [
     {
       slug: "covena",
@@ -348,3 +503,4 @@ export const siteData = siteSchema.parse({
 
 export type SiteData = z.infer<typeof siteSchema>;
 export type Project = z.infer<typeof projectSchema>;
+export type Post = z.infer<typeof postSchema>;

@@ -1,0 +1,26 @@
+---
+import type { PublicArticle } from "./ArticleRenderer";
+import PublishedWritingCards from "./PublishedWritingCards";
+
+type ArticleCard = PublicArticle & { tone?: string };
+
+interface Props {
+  posts: ArticleCard[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section class="blog-section" id="writing" aria-labelledby="writing-title" data-reveal="section" data-scroll-label="Writing">
+  <div class="blog-heading">
+    <p>Notes in progress</p>
+    <h2 id="writing-title">A few things I&rsquo;m working through.</h2>
+    <span>Products, images, systems, and the details between them.</span>
+  </div>
+
+  <PublishedWritingCards
+    initialPosts={posts}
+    convexUrl={import.meta.env.PUBLIC_CONVEX_URL}
+    client:load
+  />
+</section>

@@ -11,6 +11,8 @@ function setupReveals() {
     return;
   }
 
+  document.documentElement.dataset.motion = "ready";
+
   animate(
     document.querySelectorAll<HTMLElement>(
       "[data-reveal='hero'], [data-reveal='header']",
@@ -18,6 +20,21 @@ function setupReveals() {
     { opacity: [0, 1], transform: ["translateY(10px)", "translateY(0px)"] },
     { duration: 0.42, delay: stagger(0.06), ease: [0.22, 1, 0.36, 1] },
   );
+
+  const revealProjects = () => {
+    const pending = document.querySelectorAll<HTMLElement>(
+      "[data-reveal='project']:not([data-reveal-ready])",
+    );
+    if (!pending.length) return;
+    pending.forEach((element) => {
+      element.dataset.revealReady = "true";
+    });
+    animate(
+      pending,
+      { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0px)"] },
+      { duration: 0.42, delay: stagger(0.045), ease: [0.22, 1, 0.36, 1] },
+    );
+  };
 
   inView(
     "[data-reveal='section']:not([data-github-activity])",
@@ -33,15 +50,18 @@ function setupReveals() {
 
   inView(
     ".project-scroller",
-    () => {
-      animate(
-        document.querySelectorAll<HTMLElement>("[data-reveal='project']"),
-        { opacity: [0, 1], transform: ["translateY(12px)", "translateY(0px)"] },
-        { duration: 0.42, delay: stagger(0.045), ease: [0.22, 1, 0.36, 1] },
-      );
-    },
+    revealProjects,
     { margin: "0px 0px -6% 0px" },
   );
+  revealProjects();
+  window.addEventListener("portfolio:content-mounted", revealProjects);
+  // Convex-backed islands hydrate after this module on slower devices.  A
+  // small, targeted observer keeps late cards from remaining at the global
+  // [data-reveal] opacity: 0 without re-running animations for old nodes.
+  const contentObserver = new MutationObserver((records) => {
+    if (records.some((record) => record.addedNodes.length > 0)) revealProjects();
+  });
+  contentObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function parseData<T>(value?: string): T | undefined {
@@ -371,6 +391,7 @@ function setupChronicleDetails() {
     );
     const preview = root.querySelector<HTMLElement>("[data-chronicle-preview]");
     if (!triggers.length || !preview) return;
+    document.body.append(preview);
 
     const previewMeta = preview.querySelector<HTMLElement>(
       "[data-chronicle-preview-meta]",
@@ -385,34 +406,31 @@ function setupChronicleDetails() {
     let closeTimer = 0;
     let activeTrigger: HTMLButtonElement | undefined;
     const positionPreview = (trigger?: HTMLButtonElement) => {
-      if (!trigger || !precisePointer.matches) {
-        preview.style.removeProperty("left");
-        preview.style.removeProperty("top");
-        return;
-      }
-
+      if (!trigger || !precisePointer.matches) return;
       const triggerBounds = trigger.getBoundingClientRect();
       const previewBounds = preview.getBoundingClientRect();
-      const gutter = 12;
-      const spaceAbove = triggerBounds.top - gutter;
-      const spaceBelow = window.innerHeight - triggerBounds.bottom - gutter;
-      const showBelow =
-        spaceAbove < previewBounds.height + 12 &&
-        spaceBelow > previewBounds.height + 12;
-      const left = Math.min(
-        Math.max(gutter, triggerBounds.left),
-        window.innerWidth - previewBounds.width - gutter,
+      const viewportWidth = document.documentElement.clientWidth;
+      const viewportHeight = document.documentElement.clientHeight;
+      const gutter = 14;
+      const gap = 10;
+      const left = Math.max(
+        gutter,
+        Math.min(
+          triggerBounds.left + 16,
+          viewportWidth - previewBounds.width - gutter,
+        ),
       );
-      const top = showBelow
-        ? Math.min(
-            window.innerHeight - previewBounds.height - gutter,
-            triggerBounds.bottom + 10,
-          )
-        : Math.max(gutter, triggerBounds.top - previewBounds.height - 10);
-
+      const preferredTop = triggerBounds.top - previewBounds.height - gap;
+      const canFitAbove = preferredTop >= gutter;
+      const top = canFitAbove
+        ? preferredTop
+        : Math.min(
+            triggerBounds.bottom + gap,
+            viewportHeight - previewBounds.height - gutter,
+          );
       preview.style.left = `${left}px`;
       preview.style.top = `${top}px`;
-      preview.dataset.placement = showBelow ? "below" : "above";
+      preview.dataset.placement = canFitAbove ? "above" : "below";
     };
     const setOpen = (open: boolean, trigger?: HTMLButtonElement) => {
       window.clearTimeout(closeTimer);
@@ -433,6 +451,7 @@ function setupChronicleDetails() {
       }
       if (!open) activeTrigger = undefined;
       root.dataset.open = String(open);
+      preview.dataset.open = String(open);
       preview.setAttribute("aria-hidden", String(!open));
       triggers.forEach((trigger) => {
         trigger.setAttribute(
@@ -481,6 +500,16 @@ function setupChronicleDetails() {
     document.addEventListener("pointerdown", (event) => {
       if (!root.contains(event.target as Node)) setOpen(false);
     });
+    window.addEventListener(
+      "resize",
+      () => positionPreview(activeTrigger),
+      { passive: true },
+    );
+    window.addEventListener(
+      "scroll",
+      () => positionPreview(activeTrigger),
+      { passive: true },
+    );
   });
 }
 

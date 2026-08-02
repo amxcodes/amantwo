@@ -1,7 +1,9 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
+  ...authTables,
   siteSettings: defineTable({
     key: v.string(),
     value: v.any(),
@@ -9,10 +11,11 @@ export default defineSchema({
   }).index("by_key", ["key"]),
 
   profiles: defineTable({
-    key: v.string(),
-    content: v.any(),
+    userId: v.id("users"),
+    role: v.union(v.literal("owner"), v.literal("editor")),
+    displayName: v.optional(v.string()),
     updatedAt: v.number(),
-  }).index("by_key", ["key"]),
+  }).index("by_userId", ["userId"]),
 
   pages: defineTable({
     slug: v.string(),
@@ -47,13 +50,136 @@ export default defineSchema({
     provider: v.literal("imagekit"),
     fileId: v.string(),
     url: v.string(),
-    kind: v.union(v.literal("image"), v.literal("video")),
+    kind: v.union(v.literal("image"), v.literal("video"), v.literal("audio")),
     alt: v.string(),
     width: v.optional(v.number()),
     height: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_fileId", ["fileId"])
+    .index("by_createdAt", ["createdAt"]),
+
+  articles: defineTable({
+    schemaVersion: v.optional(v.number()),
+    slug: v.string(),
+    title: v.string(),
+    summary: v.string(),
+    meta: v.string(),
+    readingTime: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("published"),
+      v.literal("archived"),
+    ),
+    cover: v.optional(v.any()),
+    narration: v.optional(v.any()),
+    body: v.any(),
+    seo: v.any(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    publishedAt: v.optional(v.number()),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_status", ["status"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  articleRevisions: defineTable({
+    articleId: v.id("articles"),
+    state: v.union(v.literal("draft"), v.literal("published")),
+    snapshot: v.any(),
+    label: v.string(),
+    createdAt: v.number(),
+    publishedAt: v.optional(v.number()),
+  })
+    .index("by_article", ["articleId"])
+    .index("by_state", ["state"]),
+
+  articleChangeSets: defineTable({
+    articleId: v.id("articles"),
+    jobId: v.id("aiJobs"),
+    userId: v.id("users"),
+    baseUpdatedAt: v.optional(v.number()),
+    state: v.union(
+      v.literal("ready"),
+      v.literal("applied"),
+      v.literal("dismissed"),
+      v.literal("stale"),
+    ),
+    proposal: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    appliedAt: v.optional(v.number()),
+  })
+    .index("by_article", ["articleId"])
+    .index("by_job", ["jobId"])
+    .index("by_user", ["userId"]),
+
+  aiProviders: defineTable({
+    provider: v.literal("gemini"),
+    label: v.string(),
+    model: v.string(),
+    researchModel: v.optional(v.string()),
+    priority: v.number(),
+    active: v.boolean(),
+    dailyLimit: v.number(),
+    usedToday: v.number(),
+    resetAt: v.number(),
+    failureCount: v.number(),
+    cooldownUntil: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_priority", ["active", "priority"]),
+
+  aiSecrets: defineTable({
+    providerId: v.id("aiProviders"),
+    ciphertext: v.string(),
+    keyHint: v.string(),
+    updatedAt: v.number(),
+  }).index("by_provider", ["providerId"]),
+
+  aiJobs: defineTable({
+    userId: v.id("users"),
+    articleId: v.optional(v.id("articles")),
+    mode: v.union(v.literal("chat"), v.literal("write"), v.literal("research")),
+    status: v.union(v.literal("queued"), v.literal("running"), v.literal("completed"), v.literal("failed")),
+    input: v.any(),
+    progress: v.optional(v.string()),
+    result: v.optional(v.any()),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  aiJobEvents: defineTable({
+    jobId: v.id("aiJobs"),
+    stage: v.string(),
+    message: v.string(),
+    createdAt: v.number(),
+  }).index("by_job", ["jobId"]),
+
+  researchSources: defineTable({
+    jobId: v.id("aiJobs"),
+    url: v.string(),
+    title: v.string(),
+    excerpt: v.string(),
+    fetchedAt: v.number(),
+    status: v.union(v.literal("ok"), v.literal("failed")),
+  }).index("by_job", ["jobId"]),
+
+  aiUsage: defineTable({
+    userId: v.id("users"),
+    provider: v.literal("gemini"),
+    model: v.string(),
+    jobId: v.id("aiJobs"),
+    ok: v.boolean(),
+    durationMs: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
     .index("by_createdAt", ["createdAt"]),
 
   publicRevisions: defineTable({

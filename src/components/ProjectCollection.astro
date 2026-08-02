@@ -58,7 +58,7 @@ const categories = categoryOptions
   .filter((category) => category.count > 0);
 const slots = ["lead", "stack", "feature", "wide"] as const;
 const projectPages = Array.from(
-  { length: Math.max(1, Math.ceil(projects.length / slots.length)) },
+  { length: Math.ceil(projects.length / slots.length) },
   (_, index) => projects.slice(index * slots.length, (index + 1) * slots.length),
 );
 const pageCount = projectPages.length;
@@ -80,7 +80,7 @@ const githubSkeletonCells = Array.from(
       ))}
     </nav>
 
-    <div class="work-browser-actions">
+    {projects.length ? <div class="work-browser-actions">
       <button class="work-order" type="button" data-project-sort-cycle aria-label="Change project order. Currently featured first.">
         <span aria-hidden="true">↕</span>
         <span>Order:</span>
@@ -97,10 +97,10 @@ const githubSkeletonCells = Array.from(
         </button>
         <span class="sr-only" aria-live="polite" data-project-position>1 / {pageCount}</span>
       </nav>
-    </div>
+    </div> : null}
   </div>
 
-  <div class="work-rail" id="work" data-project-rail>
+  {projects.length ? <div class="work-rail" id="work" data-project-rail>
     <div class="project-scroller" data-project-scroller tabindex="0" aria-label="Project pages. Use pagination or sorting controls to browse.">
       {projectPages.map((page, pageIndex) => (
         <section class="project-bento-page" data-project-page data-project-count={page.length} aria-label={`Project page ${pageIndex + 1}`}>
@@ -108,7 +108,12 @@ const githubSkeletonCells = Array.from(
         </section>
       ))}
     </div>
-  </div>
+  </div> : (
+    <div class="work-empty" id="work" role="status">
+      <span>No published projects yet.</span>
+      <small>Publish a project from the content studio and it will appear here.</small>
+    </div>
+  )}
   <ProjectDrawer client:load />
 </section>
 

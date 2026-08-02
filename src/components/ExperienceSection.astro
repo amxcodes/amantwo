@@ -1,12 +1,15 @@
 ---
 interface SegmentText {
+  id?: string;
   type: "text";
   value: string;
 }
 
 interface SegmentPill {
+  id?: string;
   type: "pill";
   label: string;
+  title?: string;
   detail: string;
   tone: "blue" | "orange" | "yellow" | "green";
 }
@@ -37,7 +40,7 @@ const { entries } = Astro.props;
                 class:list={["chronicle-keyword", `tone-${segment.tone}`]}
                 type="button"
                 data-chronicle-trigger
-                data-chronicle-preview-title={segment.label}
+                data-chronicle-preview-title={segment.title ?? segment.label}
                 data-chronicle-preview-detail={segment.detail}
                 data-chronicle-preview-meta={`${entry.period} · ${entry.location}`}
                 aria-expanded="false"

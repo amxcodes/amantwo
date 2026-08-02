@@ -1,5 +1,7 @@
 ---
 import AboutSection from "../components/AboutSection.astro";
+import BlogReader from "../components/BlogReader.tsx";
+import BlogSection from "../components/BlogSection.astro";
 import ChronicleDetailsDrawer from "../components/ChronicleDetailsDrawer.tsx";
 import EducationSection from "../components/EducationSection.astro";
 import ExperienceSection from "../components/ExperienceSection.astro";
@@ -9,19 +11,155 @@ import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { siteData } from "../content/site";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../convex/_generated/api";
+import type { PublicArticle } from "../components/ArticleRenderer";
+
+type ManagedSection = {
+  registryType: string;
+  content: Record<string, unknown>;
+};
+
+const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+let managedSections: ManagedSection[] | null = null;
+let managedArticles: PublicArticle[] | null = null;
+
+// The public page is backed by a published Convex revision. Avoid a browser,
+// proxy, or dev-server cache serving the previous revision after an admin
+// publish; the page still remains static-friendly when Convex is unavailable.
+Astro.response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+
+if (convexUrl) {
+  try {
+    const client = new ConvexHttpClient(convexUrl);
+    const [response, articles] = await Promise.all([
+      client.query(api.cms.publicHome, {}),
+      client.query(api.articles.publicList, {}),
+    ]);
+    managedSections = Array.isArray(response) ? response as ManagedSection[] : null;
+    managedArticles = Array.isArray(articles) && articles.length
+      ? articles as unknown as PublicArticle[]
+      : null;
+  } catch {
+    // A static build must remain available if Convex is temporarily unavailable.
+    managedSections = null;
+  }
+}
+
+const managedContent = (type: string) =>
+  managedSections?.find((section) => section.registryType === type)?.content;
+const hero = managedContent("hero");
+const projectsContent = managedContent("projects");
+const aboutContent = managedContent("about");
+const experienceContent = managedContent("experience");
+const educationContent = managedContent("education");
+const writingContent = managedContent("writing");
+const footerContent = managedContent("footer");
+
+const identity = (hero?.identity ?? siteData.identity) as typeof siteData.identity;
+const heroRoles = (hero?.roles ?? siteData.heroRoles) as typeof siteData.heroRoles;
+
+// Managed project records are intentionally flexible in Convex so the editor
+// can evolve without a migration. Normalize them at the public boundary so a
+// partially edited record cannot take down the whole home page, and preserve
+// the stored array order exactly (that order drives the bento pagination).
+const projectTones = new Set(["blue", "cream", "orange", "red", "yellow", "mist", "green"]);
+const projectLayouts = new Set(["folder", "compact", "note", "feature", "tile"]);
+const projectCategories = new Set(["product", "ai", "web", "mobile", "film", "experiment"]);
+const asText = (value: unknown, fallback: string) =>
+  typeof value === "string" && value.trim() ? value.trim() : fallback;
+const normalizeProjects = (value: unknown): typeof siteData.projects => {
+  if (!Array.isArray(value)) return siteData.projects;
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const raw = entry as Record<string, unknown>;
+    const title = asText(raw.title, "");
+    const slug = asText(raw.slug, "");
+    const summary = asText(raw.summary, "");
+    // An unfinished draft must never render as a broken card. It remains
+    // editable in the admin collection, but is omitted until complete.
+    if (!title || !slug || !summary) return [];
+    const categories = Array.isArray(raw.categories)
+      ? raw.categories.filter((item): item is string => typeof item === "string" && projectCategories.has(item))
+      : [];
+    const tags = Array.isArray(raw.tags)
+      ? raw.tags.map((item) => String(item).trim()).filter(Boolean)
+      : [];
+    const media = raw.media && typeof raw.media === "object"
+      ? raw.media as Record<string, unknown>
+      : undefined;
+    const links = raw.links && typeof raw.links === "object"
+      ? raw.links as Record<string, unknown>
+      : {};
+    return [{
+      slug,
+      eyebrow: asText(raw.eyebrow, "Project"),
+      title,
+      summary,
+      meta: asText(raw.meta, categories.join(" · ") || "Selected work"),
+      tone: projectTones.has(String(raw.tone)) ? String(raw.tone) as typeof siteData.projects[number]["tone"] : "cream",
+      layout: projectLayouts.has(String(raw.layout)) ? String(raw.layout) as typeof siteData.projects[number]["layout"] : "compact",
+      status: asText(raw.status, "In progress"),
+      categories: categories.length ? categories as typeof siteData.projects[number]["categories"] : ["product"],
+      detail: asText(raw.detail, summary),
+      caseStudy: asText(raw.caseStudy, summary),
+      tags: tags.length ? tags : ["Selected work"],
+      media: media && typeof media.src === "string" && media.src.trim()
+        ? {
+            type: media.type === "video" ? "video" as const : "image" as const,
+            src: media.src,
+            alt: asText(media.alt, title),
+          }
+        : undefined,
+      mediaItems: Array.isArray(raw.mediaItems)
+        ? raw.mediaItems.flatMap((item) => {
+            if (!item || typeof item !== "object") return [];
+            const candidate = item as Record<string, unknown>;
+            if (typeof candidate.src !== "string" || !candidate.src.trim()) return [];
+            return [{
+              type: candidate.type === "video" ? "video" as const : "image" as const,
+              src: candidate.src,
+              alt: asText(candidate.alt, title),
+              ...(typeof candidate.caption === "string" && candidate.caption.trim() ? { caption: candidate.caption } : {}),
+            }];
+          })
+        : undefined,
+      links: {
+        ...(typeof links.live === "string" && links.live.trim() ? { live: links.live } : {}),
+        ...(typeof links.github === "string" && links.github.trim() ? { github: links.github } : {}),
+        ...(typeof links.figma === "string" && links.figma.trim() ? { figma: links.figma } : {}),
+      },
+    }];
+  });
+};
+const projectSource = Array.isArray(projectsContent?.projects)
+  ? projectsContent.projects
+  : siteData.projects;
+const projects = normalizeProjects(projectSource);
+const about = (aboutContent ?? siteData.about) as typeof siteData.about;
+const experience = (Array.isArray(experienceContent?.entries) ? experienceContent.entries : siteData.experience) as typeof siteData.experience;
+const education = (Array.isArray(educationContent?.entries) ? educationContent.entries : siteData.education) as typeof siteData.education;
+const legacyPosts = (Array.isArray(writingContent?.posts) ? writingContent.posts : siteData.posts) as typeof siteData.posts;
+// When Convex is configured, do not paint the legacy notes while the managed
+// collection is loading. The writing island renders a short loading state
+// instead, preventing the default-to-CMS content flash.
+const posts = managedArticles ?? (convexUrl ? [] : legacyPosts);
+const footerEmail = typeof footerContent?.email === "string" ? footerContent.email : identity.email;
 ---
 
 <BaseLayout title="Aman Anu — Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
   <div class="page-shell">
-    <SiteHeader {...siteData.identity} />
+    <SiteHeader {...identity} />
     <main id="main-content">
-      <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
-      <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} />
-      <AboutSection {...siteData.about} />
-      <ExperienceSection entries={siteData.experience} />
-      <EducationSection entries={siteData.education} />
+      <ProfileHero {...identity} heroRoles={heroRoles} />
+      <ProjectCollection projects={projects} roles={siteData.roles} github={siteData.github} />
+      <AboutSection {...about} />
+      <ExperienceSection entries={experience} />
+      <EducationSection entries={education} />
+      <BlogSection posts={posts} />
       <ChronicleDetailsDrawer client:load />
+      <BlogReader client:load />
     </main>
-    <SiteFooter email={siteData.identity.email} />
+    <SiteFooter email={footerEmail} />
   </div>
 </BaseLayout>

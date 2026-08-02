@@ -1,0 +1,18 @@
+---
+import PublicArticleFallback from "../components/PublicArticleFallback.tsx";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { siteData } from "../content/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+---
+
+<BaseLayout title="Writing — Aman Anu" description="Notes on products, systems, and moving images.">
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} />
+    <main id="main-content" class="article-page article-fallback-page">
+      <PublicArticleFallback convexUrl={import.meta.env.PUBLIC_CONVEX_URL} client:load />
+    </main>
+    <SiteFooter email={siteData.identity.email} />
+  </div>
+</BaseLayout>

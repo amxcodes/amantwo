@@ -15,6 +15,12 @@ type DrawerProject = {
     src?: string;
     alt?: string;
   };
+  mediaItems?: Array<{
+    type?: "image" | "video";
+    src?: string;
+    alt?: string;
+    caption?: string;
+  }>;
 };
 
 const linkLabels: Record<string, string> = {
@@ -25,10 +31,12 @@ const linkLabels: Record<string, string> = {
 
 export default function ProjectDrawer() {
   const [project, setProject] = useState<DrawerProject | null>(null);
+  const [mediaIndex, setMediaIndex] = useState(0);
 
   useEffect(() => {
     const openProject = (event: Event) => {
       setProject((event as CustomEvent<DrawerProject>).detail);
+      setMediaIndex(0);
     };
 
     window.addEventListener("portfolio:open-project", openProject);
@@ -36,7 +44,9 @@ export default function ProjectDrawer() {
       window.removeEventListener("portfolio:open-project", openProject);
   }, []);
 
-  const media = project?.media?.src ? project.media : undefined;
+  const mediaItems = project?.mediaItems?.filter((item) => item.src) ?? [];
+  if (!mediaItems.length && project?.media?.src) mediaItems.push(project.media);
+  const media = mediaItems[mediaIndex];
 
   return (
     <Drawer.Root
@@ -60,23 +70,68 @@ export default function ProjectDrawer() {
               <span className="drawer-handle" aria-hidden="true" />
             </div>
             {media ? (
-              <div className="drawer-media">
-                {media.type === "video" ? (
-                  <video
-                    controls
-                    playsInline
-                    preload="metadata"
-                    src={media.src}
+              <div className="drawer-media-stack">
+                <div className="drawer-media">
+                  {media.type === "video" ? (
+                    <video
+                      controls
+                      playsInline
+                      preload="metadata"
+                      src={media.src}
+                    >
+                      <track
+                        kind="captions"
+                        srcLang="en"
+                        label="English captions"
+                      />
+                    </video>
+                  ) : (
+                    <img src={media.src} alt={media.alt ?? ""} />
+                  )}
+                </div>
+                {media.caption ? (
+                  <p className="drawer-media-caption">{media.caption}</p>
+                ) : null}
+                {mediaItems.length > 1 ? (
+                  <nav
+                    className="drawer-media-pagination"
+                    aria-label="Project media"
                   >
-                    <track
-                      kind="captions"
-                      srcLang="en"
-                      label="English captions"
-                    />
-                  </video>
-                ) : (
-                  <img src={media.src} alt={media.alt ?? ""} />
-                )}
+                    <button
+                      type="button"
+                      disabled={mediaIndex === 0}
+                      onClick={() =>
+                        setMediaIndex((index) => Math.max(0, index - 1))
+                      }
+                      aria-label="Previous media"
+                    >
+                      ←
+                    </button>
+                    <div>
+                      {mediaItems.map((item, index) => (
+                        <button
+                          key={item.src}
+                          type="button"
+                          aria-label={`Show media ${index + 1}`}
+                          aria-current={index === mediaIndex}
+                          onClick={() => setMediaIndex(index)}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={mediaIndex === mediaItems.length - 1}
+                      onClick={() =>
+                        setMediaIndex((index) =>
+                          Math.min(mediaItems.length - 1, index + 1),
+                        )
+                      }
+                      aria-label="Next media"
+                    >
+                      →
+                    </button>
+                  </nav>
+                ) : null}
               </div>
             ) : (
               <div className="drawer-media-empty">
@@ -92,12 +147,6 @@ export default function ProjectDrawer() {
             <div className="drawer-content">
               <div className="drawer-topline">
                 <p>{project?.eyebrow ?? "Selected work"}</p>
-                <Drawer.Close
-                  className="drawer-close"
-                  aria-label="Close project details"
-                >
-                  ×
-                </Drawer.Close>
               </div>
               <Drawer.Title id="project-drawer-title">
                 {project?.title ?? "Project"}

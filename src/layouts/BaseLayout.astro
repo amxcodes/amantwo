@@ -9,9 +9,14 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description: string;
+  canonicalPath?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, canonicalPath } = Astro.props;
+const canonicalUrl =
+  canonicalPath && Astro.site
+    ? new URL(canonicalPath, Astro.site).href
+    : undefined;
 ---
 
 <!doctype html>
@@ -23,6 +28,11 @@ const { title, description } = Astro.props;
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="description" content={description} />
+    {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
     <meta name="theme-color" content="#f5f3ed" />
     <link rel="preconnect" href="https://assets.watermelon.sh" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

@@ -1,0 +1,82 @@
+---
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "../../../convex/_generated/api";
+import ArticleRenderer, { type PublicArticle } from "../../components/ArticleRenderer";
+import PublicArticleFallback from "../../components/PublicArticleFallback";
+import "../../components/article-renderer.css";
+import SiteFooter from "../../components/SiteFooter.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import { siteData } from "../../content/site";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const slug = Astro.params.slug ?? "";
+const convexUrl = import.meta.env.PUBLIC_CONVEX_URL;
+let article: PublicArticle | null = null;
+let lookupFailed = false;
+
+// Published writing is read from Convex at request time. Do not let a stale
+// SSR response keep an updated article or slug hidden after publishing.
+Astro.response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+
+const normalizeSlug = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+if (convexUrl && slug) {
+  try {
+    const client = new ConvexHttpClient(convexUrl);
+    article = await client.query(api.articles.publicBySlug, { slug }) as unknown as PublicArticle | null;
+
+    // Older cards may still contain a short alias (for example `spider-man`)
+    // while the CMS record has since received a longer editorial slug. Keep
+    // those published links useful without weakening the published-only rule.
+    if (!article) {
+      const wanted = normalizeSlug(slug);
+      const published = await client.query(api.articles.publicList, {});
+      const match = (published as unknown as PublicArticle[]).find((candidate) => {
+        const candidateSlug = normalizeSlug(candidate.slug);
+        const titleSlug = normalizeSlug(candidate.title);
+        return candidateSlug === wanted || titleSlug === wanted || candidateSlug.endsWith(`-${wanted}`);
+      });
+      article = match ?? null;
+    }
+  } catch {
+    lookupFailed = true;
+    article = null;
+  }
+}
+
+// A stale slug should return readers to the writing index. If SSR cannot reach
+// Convex (a common case during local development), keep the route alive and
+// let the browser-side Convex client resolve the published article instead of
+// showing a misleading 404 shell.
+if (!article && !lookupFailed) return Astro.redirect("/#writing", 302);
+const title = article ? `${article.title} — Aman Anu` : "Writing — Aman Anu";
+const canonicalPath = `/writing/${article?.slug ?? slug}`;
+---
+
+<BaseLayout title={title} description={article?.summary ?? "Notes on products, systems, and moving images."} canonicalPath={canonicalPath}>
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} />
+    <main id="main-content" class="article-page article-page-server">
+      {article ? (
+        <>
+          <a class="article-back" href="/#writing">← Back to writing</a>
+          <ArticleRenderer article={article} variant="page" client:load />
+        </>
+      ) : lookupFailed ? (
+        <PublicArticleFallback convexUrl={convexUrl} client:load />
+      ) : (
+        <div class="article-fallback-state">
+          <h1>This note is not published.</h1>
+          <a href="/#writing">Back to writing</a>
+        </div>
+      )}
+    </main>
+    <SiteFooter email={siteData.identity.email} />
+  </div>
+</BaseLayout>
