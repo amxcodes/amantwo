@@ -594,6 +594,11 @@ const githubSkeletonCells = Array.from(
 
   const checkGithubSections = () => {
     githubFrame = 0;
+    // Start the reveal just before the section reaches the old 75% visibility
+    // point. This gives the intro enough runway while the user is approaching
+    // it, without changing the animation itself or eager-loading off-screen
+    // activity.
+    const githubRevealVisibility = 0.66;
     githubSections.forEach((section) => {
       if (section.dataset.githubInitialized === "true") return;
       const bounds = section.getBoundingClientRect();
@@ -602,7 +607,7 @@ const githubSkeletonCells = Array.from(
         Math.min(bounds.bottom, window.innerHeight) - Math.max(bounds.top, 0),
       );
       const requiredHeight =
-        Math.min(bounds.height, window.innerHeight) * 0.75;
+        Math.min(bounds.height, window.innerHeight) * githubRevealVisibility;
       if (visibleHeight < requiredHeight) return;
       playGithubIntro(section);
       void initializeGithubActivity(section);
