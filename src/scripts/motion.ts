@@ -351,7 +351,9 @@ function setupPortrait() {
     trigger.setAttribute("aria-expanded", String(open));
   };
   const scheduleClose = () => {
-    closeTimer = window.setTimeout(() => setOpen(false), 80);
+    // Give a precise pointer a short grace period to cross from the trigger
+    // to the preview without making the portrait flicker closed.
+    closeTimer = window.setTimeout(() => setOpen(false), 140);
   };
   root.addEventListener(
     "pointerenter",
