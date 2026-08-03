@@ -4021,14 +4021,23 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   }
 
   .work-filters {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
     justify-content: flex-start;
-    margin-inline: -20px;
-    padding-inline: 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
   }
 
   .work-browser {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     align-items: stretch;
     flex-direction: column;
     gap: 5px;
@@ -4037,18 +4046,32 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     border-radius: 16px;
   }
 
-  .work-filters::-webkit-scrollbar {
-    display: none;
-  }
-
   .work-filter {
     flex: 0 0 auto;
-    min-height: 44px;
+    min-height: 36px;
+    padding-inline: 10px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 
   .work-browser-actions {
+    width: 100%;
+    min-width: 0;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
     padding-inline: 2px;
+  }
+
+  .work-order {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .work-pagination {
+    flex: 0 0 auto;
   }
 
   .project-scroller {
