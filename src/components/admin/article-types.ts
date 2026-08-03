@@ -1,5 +1,6 @@
 export type ArticleStatus = "draft" | "published" | "archived";
 export type ArticleMediaKind = "image" | "video" | "audio";
+export type ArticleCardTone = "blue" | "orange" | "green" | "yellow";
 
 export type ArticleMedia = {
   src: string;
@@ -140,6 +141,7 @@ export type ArticleDocument = {
   summary: string;
   meta: string;
   readingTime: string;
+  tone?: ArticleCardTone;
   status: ArticleStatus;
   cover?: ArticleMedia;
   narration?: ArticleMedia;

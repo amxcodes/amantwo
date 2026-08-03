@@ -13,6 +13,13 @@ const articleStatus = v.union(
   v.literal("archived"),
 );
 
+const articleCardTone = v.union(
+  v.literal("blue"),
+  v.literal("orange"),
+  v.literal("green"),
+  v.literal("yellow"),
+);
+
 const mediaValue = v.object({
   src: v.string(),
   alt: v.string(),
@@ -82,6 +89,7 @@ const articleDocument = v.object({
   summary: v.string(),
   meta: v.string(),
   readingTime: v.string(),
+  tone: v.optional(articleCardTone),
   status: articleStatus,
   cover: v.optional(mediaValue),
   narration: v.optional(mediaValue),
@@ -281,6 +289,11 @@ function applyAiDocument(current: Record<string, unknown>, candidate: unknown) {
   if (!title) throw new ConvexError("The proposed article needs a title.");
   const summary = cleanText(next.summary, 2_000) ?? "";
   const meta = cleanText(next.meta, 300) ?? "";
+  const tone: "blue" | "orange" | "green" | "yellow" = next.tone === "orange" || next.tone === "green" || next.tone === "yellow" || next.tone === "blue"
+    ? next.tone
+    : current.tone === "orange" || current.tone === "green" || current.tone === "yellow" || current.tone === "blue"
+      ? current.tone
+      : "blue";
   const seoCandidate = next.seo && typeof next.seo === "object" ? next.seo as Record<string, unknown> : {};
   const currentSeo = current.seo && typeof current.seo === "object" ? current.seo as Record<string, unknown> : {};
   const slug = cleanText(next.slug, 120)?.trim() || slugify(title);
@@ -289,6 +302,7 @@ function applyAiDocument(current: Record<string, unknown>, candidate: unknown) {
     title,
     summary,
     meta,
+    tone,
     readingTime: automaticReadingTime(usableBody),
     cover: next.cover ?? current.cover,
     narration: next.narration ?? current.narration,
@@ -357,6 +371,7 @@ export const createDraft = mutation({
       summary: "",
       meta: "Working note",
       readingTime: "1 min read",
+      tone: "blue",
       status: "draft",
       body: [
         {

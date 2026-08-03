@@ -10,6 +10,10 @@ import { siteData } from "../../content/site";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { publicConvexUrl } from "../../lib/publicConfig";
 
+// This page reads the published article at request time in both local Astro
+// dev and Netlify SSR. Keep it explicit so it can never become a frozen page.
+export const prerender = false;
+
 const slug = Astro.params.slug ?? "";
 const convexUrl = publicConvexUrl;
 let article: PublicArticle | null = null;

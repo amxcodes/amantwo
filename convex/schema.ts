@@ -66,6 +66,14 @@ export default defineSchema({
     summary: v.string(),
     meta: v.string(),
     readingTime: v.string(),
+    // Presentation tone used by the writing cards on the public portfolio.
+    // Optional so existing articles continue to read as the default blue tone.
+    tone: v.optional(v.union(
+      v.literal("blue"),
+      v.literal("orange"),
+      v.literal("green"),
+      v.literal("yellow"),
+    )),
     status: v.union(
       v.literal("draft"),
       v.literal("published"),

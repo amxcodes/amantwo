@@ -13,6 +13,7 @@ import { api } from "../../../convex/_generated/api";
 import { siteData } from "../../content/site";
 import { publicConvexUrl } from "../../lib/publicConfig";
 import AiProviderSettings from "./AiProviderSettings";
+import SessionLoader from "./SessionLoader";
 import "./admin.css";
 
 type AdminSection = {
@@ -1664,7 +1665,7 @@ function Editor() {
   const replaceSections = useMutation(api.cms.replaceSections);
   const [notice, setNotice] = useState("");
   if (workspace === undefined)
-    return <main className="admin-loading">Loading your content studio…</main>;
+    return <SessionLoader message="Loading your content studio…" />;
   if (!workspace?.profile)
     return (
       <main className="admin-auth">
@@ -1703,9 +1704,7 @@ function Editor() {
       </main>
     );
   if (homeDetail === undefined)
-    return (
-      <main className="admin-loading">Loading your editable collections…</main>
-    );
+    return <SessionLoader message="Loading your editable collections…" />;
   if (!homeDetail)
     return (
       <main className="admin-auth">
@@ -1760,7 +1759,7 @@ function ConnectedAdmin() {
   return (
     <>
       <AuthLoading>
-        <main className="admin-loading">Checking secure session…</main>
+        <SessionLoader />
       </AuthLoading>
       <Unauthenticated>
         <Login />

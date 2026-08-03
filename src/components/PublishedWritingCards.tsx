@@ -61,7 +61,7 @@ function WritingGrid({
           key={post.slug}
         >
           <p>{post.meta}</p>
-          <h3>{post.title}</h3>
+          <h3 title={post.title}>{post.title}</h3>
           <span>{post.summary}</span>
           <div className="blog-card-actions">
             <a
@@ -116,7 +116,14 @@ function ManagedWritingGrid({ initialPosts }: { initialPosts: ArticleCard[] }) {
   }, [managed]);
 
   if (managed === undefined && !timedOut) {
-    return <WritingGrid initialPosts={initialPosts} posts={[]} loading />;
+    // The Astro server already supplied the request-time Convex result. Keep
+    // it visible while the client subscription connects instead of replacing
+    // it with a loading/seed state during hydration.
+    return initialPosts.length ? (
+      <WritingGrid initialPosts={initialPosts} posts={initialPosts} />
+    ) : (
+      <WritingGrid initialPosts={initialPosts} posts={[]} loading />
+    );
   }
 
   return (

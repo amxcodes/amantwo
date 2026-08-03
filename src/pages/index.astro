@@ -16,6 +16,11 @@ import { api } from "../../convex/_generated/api";
 import type { PublicArticle } from "../components/ArticleRenderer";
 import { publicConvexUrl } from "../lib/publicConfig";
 
+// Keep the published snapshot request-time in Astro dev and in Netlify's
+// server function. This prevents a future adapter change from prerendering a
+// stale build-time copy of the portfolio.
+export const prerender = false;
+
 type ManagedSection = {
   registryType: string;
   content: Record<string, unknown>;
@@ -24,6 +29,7 @@ type ManagedSection = {
 const convexUrl = publicConvexUrl;
 let managedSections: ManagedSection[] | null = null;
 let managedArticles: PublicArticle[] | null = null;
+let managedReadSucceeded = false;
 
 // The public page is backed by a published Convex revision. Avoid a browser,
 // proxy, or dev-server cache serving the previous revision after an admin
@@ -41,6 +47,7 @@ if (convexUrl) {
     managedArticles = Array.isArray(articles) && articles.length
       ? articles as unknown as PublicArticle[]
       : null;
+    managedReadSucceeded = true;
   } catch {
     // A static build must remain available if Convex is temporarily unavailable.
     managedSections = null;
@@ -144,7 +151,10 @@ const legacyPosts = (Array.isArray(writingContent?.posts) ? writingContent.posts
 // When Convex is configured, do not paint the legacy notes while the managed
 // collection is loading. The writing island renders a short loading state
 // instead, preventing the default-to-CMS content flash.
-const posts = managedArticles ?? (convexUrl ? [] : legacyPosts);
+// An empty published collection is valid. Only fall back to the local seed
+// when the Convex request failed, so a successful DB read never flashes old
+// content over the managed site.
+const posts = managedArticles ?? (managedReadSucceeded ? [] : legacyPosts);
 const footerEmail = typeof footerContent?.email === "string" ? footerContent.email : identity.email;
 ---
 

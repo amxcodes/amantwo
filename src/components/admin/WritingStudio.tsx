@@ -7,18 +7,21 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type RefObject, type SyntheticEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type RefObject, type SyntheticEvent } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { siteData } from "../../content/site";
 import { publicConvexUrl } from "../../lib/publicConfig";
 import AdminMediaUpload from "./AdminMediaUpload";
+import SessionLoader from "./SessionLoader";
 import StudioAiPanel from "./StudioAiPanel";
 import {
   type AiDocumentProposal,
   type ArticleBlock,
   type ArticleBlockType,
+  type ArticleMedia,
   type ArticleDocument,
+  type ArticleCardTone,
   type InlineAttachment,
   articleWordCount,
   articleReadingTime,
@@ -105,6 +108,74 @@ const clearCachedDraft = (articleId: string) => {
   } catch {
     // Ignore storage restrictions (private browsing, disabled storage, etc.).
   }
+};
+
+/**
+ * Keep the client payload deliberately narrow. Older drafts and AI proposals
+ * can carry presentation-only keys; Convex's strict validators should never
+ * have to reject an otherwise editable draft because of those keys.
+ */
+const persistableArticleDocument = (document: ArticleDocument): ArticleDocument => {
+  const media = (value?: ArticleMedia) => {
+    if (!value || typeof value.src !== "string") return undefined;
+    return {
+      src: value.src,
+      alt: typeof value.alt === "string" ? value.alt : "",
+      ...(typeof value.caption === "string" ? { caption: value.caption } : {}),
+      kind: value.kind,
+    } satisfies ArticleMedia;
+  };
+
+  const body = document.body.map((block) => {
+    const next: ArticleBlock = { id: block.id, type: block.type };
+    const fields = [
+      "content", "level", "attribution", "src", "alt", "caption", "label",
+      "href", "description", "provider", "display", "sourceId", "timestampStart",
+      "timestampEnd", "transcript", "language", "items", "variant",
+    ] as const;
+    for (const field of fields) {
+      const value = block[field];
+      if (value !== undefined) (next as Record<string, unknown>)[field] = value;
+    }
+    if (block.inlineAttachments?.length) {
+      next.inlineAttachments = block.inlineAttachments.map((attachment) => ({
+        id: attachment.id,
+        kind: attachment.kind,
+        label: attachment.label,
+        ...(attachment.href ? { href: attachment.href } : {}),
+        ...(attachment.src ? { src: attachment.src } : {}),
+        ...(attachment.alt !== undefined ? { alt: attachment.alt } : {}),
+        ...(attachment.transcript !== undefined ? { transcript: attachment.transcript } : {}),
+        ...(attachment.provider !== undefined ? { provider: attachment.provider } : {}),
+        ...(attachment.display !== undefined ? { display: attachment.display } : {}),
+        ...(attachment.sourceId !== undefined ? { sourceId: attachment.sourceId } : {}),
+      }));
+    }
+    if (block.highlights?.length) {
+      next.highlights = block.highlights.map(({ start, end, tone }) => ({ start, end, tone }));
+    }
+    return next;
+  });
+
+  return {
+    schemaVersion: document.schemaVersion ?? 2,
+    slug: document.slug,
+    title: document.title,
+    summary: document.summary,
+    meta: document.meta,
+    tone: document.tone ?? "blue",
+    readingTime: document.readingTime,
+    status: document.status,
+    ...(media(document.cover) ? { cover: media(document.cover) } : {}),
+    ...(media(document.narration) ? { narration: media(document.narration) } : {}),
+    body,
+    seo: {
+      title: document.seo.title,
+      description: document.seo.description,
+      canonicalPath: document.seo.canonicalPath,
+      ...(document.seo.ogImage ? { ogImage: document.seo.ogImage } : {}),
+    },
+  };
 };
 
 const inlineAttachmentFromUrl = (value: string): InlineAttachment | null => {
@@ -917,6 +988,8 @@ function Writer({
   const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
   const creating = useRef(false);
   const hydratedId = useRef<string | null>(null);
+  const latestDocument = useRef<ArticleDocument | null>(null);
+  const changeVersion = useRef(0);
 
   useEffect(() => {
     if (!createOnLoad || articleId || creating.current) return;
@@ -938,6 +1011,7 @@ function Writer({
       title: article.title,
       summary: article.summary,
       meta: article.meta,
+      tone: (article as unknown as { tone?: ArticleCardTone }).tone ?? "blue",
       readingTime: articleReadingTime(article.body as ArticleBlock[]),
       status: article.status,
       cover: article.cover,
@@ -952,22 +1026,55 @@ function Writer({
       ...hydratedDocument,
       readingTime: articleReadingTime(hydratedDocument.body),
     });
+    latestDocument.current = {
+      ...hydratedDocument,
+      readingTime: articleReadingTime(hydratedDocument.body),
+    };
+    changeVersion.current = 0;
     setSaveState(cachedDocument || editorialCleanupNeeded ? "dirty" : "saved");
   }, [article]);
 
   useEffect(() => {
+    latestDocument.current = document;
+  }, [document]);
+
+  const saveCurrentDraft = useCallback(async (nextDocument?: ArticleDocument) => {
+    const target = nextDocument ?? latestDocument.current;
+    if (!articleId || !target) return false;
+    const versionAtStart = changeVersion.current;
+    const payload = persistableArticleDocument(target);
+    setSaveState("saving");
+    try {
+      await saveDraft({ articleId, document: payload });
+      if (versionAtStart === changeVersion.current) {
+        clearCachedDraft(String(articleId));
+        setSaveState("saved");
+      } else {
+        setSaveState("dirty");
+      }
+      return true;
+    } catch (error) {
+      console.error("Writing studio draft save failed", error);
+      if (versionAtStart === changeVersion.current) setSaveState("error");
+      return false;
+    }
+  }, [articleId, saveDraft]);
+
+  useEffect(() => {
     if (!articleId || !document || saveState !== "dirty") return;
-    const timer = window.setTimeout(() => {
-      setSaveState("saving");
-      void saveDraft({ articleId, document })
-        .then(() => {
-          clearCachedDraft(String(articleId));
-          setSaveState("saved");
-        })
-        .catch(() => setSaveState("error"));
-    }, 900);
+    const timer = window.setTimeout(() => void saveCurrentDraft(document), 700);
     return () => window.clearTimeout(timer);
-  }, [articleId, document, saveDraft, saveState]);
+  }, [articleId, document, saveCurrentDraft, saveState]);
+
+  useEffect(() => {
+    const flushOnHide = () => {
+      if (window.document.visibilityState === "hidden" && saveState === "dirty") {
+        void saveCurrentDraft();
+      }
+    };
+    window.document.addEventListener("visibilitychange", flushOnHide);
+    return () => window.document.removeEventListener("visibilitychange", flushOnHide);
+  }, [saveCurrentDraft, saveState]);
 
   const change = (
     next: ArticleDocument | ((current: ArticleDocument) => ArticleDocument),
@@ -979,9 +1086,11 @@ function Writer({
         ...updated,
         readingTime: articleReadingTime(updated.body),
       };
+      latestDocument.current = normalized;
       if (articleId) cacheDraft(String(articleId), normalized);
       return normalized;
     });
+    changeVersion.current += 1;
     setSaveState("dirty");
   };
 
@@ -1188,9 +1297,7 @@ function Writer({
     );
   }
   if (!articleId || article === undefined || !document) {
-    return (
-      <main className="writer-loading">Preparing the writing studio…</main>
-    );
+    return <SessionLoader message="Preparing the writing studio…" />;
   }
   if (article === null) {
     return (
@@ -1200,10 +1307,10 @@ function Writer({
 
   const publishCurrent = async () => {
     setSaveState("saving");
-    const publishDocument = {
+    const publishDocument = persistableArticleDocument({
       ...document,
       readingTime: articleReadingTime(document.body),
-    };
+    });
     try {
       await publish({
         articleId,
@@ -1252,6 +1359,14 @@ function Writer({
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className="writer-tool-button writer-save-button"
+            onClick={() => void saveCurrentDraft()}
+            disabled={saveState === "saving" || saveState === "saved"}
+          >
+            {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save"}
+          </button>
           <button
             type="button"
             className="writer-tool-button"
@@ -1476,6 +1591,30 @@ function Writer({
               <span>Status</span>
               <strong data-status={document.status}>{document.status}</strong>
             </div>
+            <fieldset className="writer-card-tone">
+              <legend>Card color</legend>
+              <p>Choose the tone used for this note on the writing grid.</p>
+              <div className="writer-card-tone-grid" role="radiogroup" aria-label="Writing card color">
+                {([
+                  ["blue", "Sky"],
+                  ["orange", "Apricot"],
+                  ["green", "Sage"],
+                  ["yellow", "Butter"],
+                ] as const).map(([tone, label]) => (
+                  <button
+                    type="button"
+                    key={tone}
+                    className={`writer-card-tone-button tone-${tone}`}
+                    aria-label={`${label} card color`}
+                    aria-pressed={(document.tone ?? "blue") === tone}
+                    onClick={() => change({ ...document, tone: tone as ArticleCardTone })}
+                  >
+                    <i aria-hidden="true" />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <label>
               Slug
               <div className="writer-prefix-input">
@@ -1759,7 +1898,7 @@ function ConnectedWritingStudio() {
   return (
     <>
       <AuthLoading>
-        <main className="writer-loading">Checking the secure session…</main>
+        <SessionLoader />
       </AuthLoading>
       <Unauthenticated>
         <main className="writer-loading">

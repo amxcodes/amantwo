@@ -58,6 +58,7 @@ export type PublicArticle = {
   title: string;
   summary: string;
   readingTime: string;
+  tone?: "blue" | "orange" | "green" | "yellow";
   publishedAt?: string | number;
   author?: { name: string; role?: string };
   cover?: {

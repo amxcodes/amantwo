@@ -938,6 +938,71 @@ textarea.writer-inline-input,
   color: #365d35;
 }
 
+.writer-card-tone {
+  margin: 22px 0 24px;
+  padding: 0;
+  border: 0;
+}
+
+.writer-card-tone legend {
+  margin-bottom: 5px;
+  color: var(--writer-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.writer-card-tone > p {
+  margin: 0 0 11px;
+  color: var(--writer-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.writer-card-tone-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.writer-card-tone-button {
+  display: grid;
+  min-width: 0;
+  min-height: 52px;
+  place-items: center;
+  gap: 6px;
+  padding: 8px 5px;
+  border: 1px solid rgb(31 54 78 / 10%);
+  border-radius: 12px;
+  background: #fffefa;
+  color: #526a81;
+  cursor: pointer;
+  font-size: 10px;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.writer-card-tone-button i {
+  display: block;
+  width: 23px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--card-tone);
+}
+
+.writer-card-tone-button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--card-tone) 60%, #274764);
+  background: color-mix(in srgb, var(--card-tone) 18%, #fffefa);
+}
+
+.writer-card-tone-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, #6d9eb7 65%, transparent);
+  outline-offset: 2px;
+}
+
+.writer-card-tone-button.tone-blue { --card-tone: #9fc3df; }
+.writer-card-tone-button.tone-orange { --card-tone: #df8a64; }
+.writer-card-tone-button.tone-green { --card-tone: #a8c792; }
+.writer-card-tone-button.tone-yellow { --card-tone: #e7c966; }
+
 .writer-revisions {
   display: grid;
   gap: .55rem;
