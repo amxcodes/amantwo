@@ -568,7 +568,9 @@ li {
   aspect-ratio: 4 / 5;
   overflow: hidden;
   pointer-events: none;
-  visibility: hidden;
+  /* Keep the layer mounted while it fades out; toggling visibility here would
+     cut the transition off on touch devices. It is aria-hidden in the markup. */
+  visibility: visible;
   opacity: 0;
   translate: -8px -50%;
   scale: 0.96;
@@ -576,13 +578,12 @@ li {
   border-radius: 28px;
   box-shadow: none;
   transition-property: opacity, translate, scale;
-  transition-duration: 180ms, 260ms, 260ms;
+  transition-duration: 220ms, 280ms, 280ms;
   transition-delay: 0ms;
   transition-timing-function: ease-out, var(--ease-out), var(--ease-out);
 }
 
 .portrait-anchor[data-open="true"] .portrait-preview {
-  visibility: visible;
   opacity: 1;
   translate: 0 -50%;
   scale: 1;
@@ -3820,6 +3821,9 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
 
   .site-header {
     min-height: 70px;
+    /* Keep the global header above the portrait focus veil. */
+    position: relative;
+    z-index: 11;
   }
 
   .availability {
@@ -4045,26 +4049,31 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     padding-block: 66px 54px;
   }
 
-  /* On touch devices the portrait is a focused moment. A quiet veil keeps
-     hero copy from showing around the image while preserving the page below. */
+  /* The preview gets its own stacking layer; a viewport-wide veil would
+     incorrectly wash out the projects below the hero on small screens. */
   .profile-hero::after {
-    position: fixed;
-    z-index: 999;
-    inset: 0;
-    display: block;
-    content: "";
-    pointer-events: none;
-    opacity: 0;
-    background: rgb(245 243 237 / 78%);
-    transition: opacity 180ms ease-out;
+    display: none;
   }
 
-  .profile-hero:has(.portrait-anchor[data-open="true"])::after {
-    opacity: 1;
+  /* The preview is fixed to the viewport, so lift the entire hero stacking
+     context above the following sections while it is open. Without this,
+     project filters and lower copy can paint over the portrait. */
+  .profile-hero:has(.portrait-anchor[data-open="true"]) {
+    z-index: 10;
   }
 
   .profile-card {
+    position: relative;
+    z-index: 2;
     gap: 14px;
+  }
+
+  /* Motion reveals transform the heading, which creates a nested stacking
+     context. Keep that context above the supporting copy so the opaque photo
+     cannot be painted underneath the tagline or location line. */
+  .profile-card h1 {
+    position: relative;
+    z-index: 3;
   }
 
   .portrait-trigger {

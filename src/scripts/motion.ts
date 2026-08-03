@@ -345,15 +345,20 @@ function setupPortrait() {
     });
   if (root.dataset.hasPreview !== "true") return;
   let closeTimer = 0;
+  // Keep the preview open just long enough for a touch release or a precise
+  // pointer to settle. This prevents the mobile preview from snapping shut
+  // while the user is still moving toward it.
+  const getCloseDelay = () => (precisePointer.matches ? 170 : 230);
   const setOpen = (open: boolean) => {
     window.clearTimeout(closeTimer);
     root.dataset.open = String(open);
     trigger.setAttribute("aria-expanded", String(open));
   };
   const scheduleClose = () => {
-    // Give a precise pointer a short grace period to cross from the trigger
-    // to the preview without making the portrait flicker closed.
-    closeTimer = window.setTimeout(() => setOpen(false), 140);
+    // Give both pointer types a small grace period so the close animation is
+    // intentional rather than a side effect of leaving the trigger.
+    window.clearTimeout(closeTimer);
+    closeTimer = window.setTimeout(() => setOpen(false), getCloseDelay());
   };
   root.addEventListener(
     "pointerenter",
@@ -379,7 +384,7 @@ function setupPortrait() {
   );
   document.addEventListener(
     "pointerdown",
-    (event) => !root.contains(event.target as Node) && setOpen(false),
+    (event) => !root.contains(event.target as Node) && scheduleClose(),
   );
 }
 
