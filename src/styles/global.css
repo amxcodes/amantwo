@@ -4023,14 +4023,17 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   .work-filters {
     display: flex;
     flex: 0 1 auto;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-start;
     gap: 4px;
     width: 100%;
     min-width: 0;
     margin-inline: 0;
     padding-inline: 0;
-    overflow: visible;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
   }
 
   .work-browser {
@@ -4052,6 +4055,15 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     padding-inline: 10px;
     font-size: 11px;
     white-space: nowrap;
+  }
+
+  /* Keep the compact mobile rail to the primary project filters. */
+  .work-filter[data-project-filter="experiment"] {
+    display: none;
+  }
+
+  .work-filters::-webkit-scrollbar {
+    display: none;
   }
 
   .work-browser-actions {
@@ -4083,10 +4095,30 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   }
   .project-bento-page {
     flex-basis: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(180px, auto));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(210px, auto);
     gap: 10px;
     padding-inline: 1px;
+  }
+
+  /* A single mobile column keeps every filtered result predictable and
+     prevents bento spans from creating uneven card heights. */
+  .project-bento-page .bento-slot-lead,
+  .project-bento-page .bento-slot-stack,
+  .project-bento-page .bento-slot-feature,
+  .project-bento-page .bento-slot-practice,
+  .project-bento-page .bento-slot-wide {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .project-bento-page .project-card {
+    min-height: clamp(210px, 58vw, 250px) !important;
+  }
+
+  .project-bento-page .project-card-action {
+    padding: 20px !important;
   }
 
   .project-bento-page--featured .bento-slot-lead {
