@@ -373,20 +373,52 @@ export default function ArticleRenderer({
         Math.max(12, rect.right - width),
         Math.max(12, window.innerWidth - width - 12),
       );
-      const roomAbove = Math.max(0, rect.top - 24);
-      const roomBelow = Math.max(0, window.innerHeight - rect.bottom - 24);
-      const opensAbove = roomAbove >= Math.min(360, roomBelow);
-      const maxHeight = Math.max(
-        140,
-        Math.min(360, opensAbove ? roomAbove : roomBelow),
+      const viewportPadding = 12;
+      const menuGap = 8;
+      const availableAbove = Math.max(
+        0,
+        rect.top - menuGap - viewportPadding,
       );
+      const availableBelow = Math.max(
+        0,
+        window.innerHeight - rect.bottom - menuGap - viewportPadding,
+      );
+      const opensAbove = availableAbove >= availableBelow;
+      const availableRoom = opensAbove ? availableAbove : availableBelow;
+      const viewportRoom = Math.max(
+        96,
+        window.innerHeight - viewportPadding * 2,
+      );
+      // If the trigger is pressed against an edge, use the full safe viewport
+      // rather than allowing a tiny menu to spill past the drawer/window.
+      const maxHeight =
+        availableRoom < 96
+          ? Math.min(360, viewportRoom)
+          : Math.min(360, availableRoom);
       setIndexMenuStyle({
         left,
         width,
         maxHeight,
-        ...(opensAbove
-          ? { bottom: Math.max(12, window.innerHeight - rect.top + 8) }
-          : { top: Math.min(window.innerHeight - 100, rect.bottom + 8) }),
+        ...(availableRoom < 96
+          ? {
+              top: viewportPadding,
+              bottom: undefined,
+            }
+          : opensAbove
+            ? {
+                top: undefined,
+                bottom: Math.max(
+                  viewportPadding,
+                  window.innerHeight - rect.top + menuGap,
+                ),
+              }
+            : {
+                top: Math.min(
+                  window.innerHeight - viewportPadding - 96,
+                  rect.bottom + menuGap,
+                ),
+                bottom: undefined,
+              }),
       });
       setIndexMenuReady(true);
     };
@@ -652,6 +684,10 @@ export default function ArticleRenderer({
               data-positioned={indexMenuReady ? "true" : "false"}
               style={indexMenuStyle}
               onPointerDown={(event) => event.stopPropagation()}
+              onPointerMove={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+              onTouchMove={(event) => event.stopPropagation()}
+              onWheel={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="article-index-popover-header">
