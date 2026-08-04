@@ -675,6 +675,11 @@ export const publicCards = query({
         readingTime: article.readingTime,
         tone: article.tone,
         publishedAt: article.publishedAt,
+        // Keep the first media frame with the lightweight card record so a
+        // reader can paint its drawer immediately. The article body remains
+        // behind publicBySlug, so collection payloads stay bounded.
+        cover: article.cover,
+        narration: article.narration,
       })),
     };
   },

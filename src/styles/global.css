@@ -3408,6 +3408,14 @@ li {
   animation-delay: 180ms;
 }
 
+/* Keep the request-time skeleton from flashing as a finished chart. The
+   panel can reveal with the section intro, but the graph itself stays quiet
+   until the real cells have been built off-DOM and swapped in together. */
+.github-graph-grid--loading {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .github-graph-cell {
   position: relative;
   width: var(--github-cell-size);
@@ -4850,90 +4858,39 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
   .blog-reader-inline-link { padding: 12px 14px; }
 }
 
-/* Keep public sheets on one compositor-friendly motion curve. Vaul still
-   owns the drag physics; this only removes the abrupt snap at the start/end
-   of an open or close. */
-.project-drawer[data-vaul-drawer],
-.blog-reader[data-vaul-drawer] {
-  transition-property: transform, opacity, filter;
-  transition-duration: 420ms;
-  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-}
-
-/* Blog sheets use an explicit translate animation so their exit is always a
-   downward movement, even when the article body is still resolving. Vaul's
-   drag transform remains authoritative while .vaul-dragging is present. */
-.blog-reader[data-vaul-drawer][data-state="open"] {
-  animation-name: blog-reader-slide-from-bottom;
-  animation-fill-mode: both;
-  will-change: transform;
-}
-
-.blog-reader[data-vaul-drawer][data-state="closed"] {
-  animation-name: blog-reader-slide-to-bottom;
-  animation-fill-mode: both;
-  will-change: transform;
-}
-
-.project-drawer[data-vaul-drawer][data-state="open"] {
-  animation-name: project-drawer-slide-from-bottom;
-  animation-fill-mode: both;
-  will-change: transform;
-}
-
-.project-drawer[data-vaul-drawer][data-state="closed"] {
-  animation-name: project-drawer-slide-to-bottom;
-  animation-fill-mode: both;
-  will-change: transform;
-}
-
-@keyframes blog-reader-slide-from-bottom {
-  from { transform: translate3d(0, 100%, 0); }
-  to { transform: translate3d(0, 0, 0); }
-}
-
-@keyframes blog-reader-slide-to-bottom {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 100%, 0); }
-}
-
-@keyframes project-drawer-slide-from-bottom {
-  from { transform: translate3d(0, 100%, 0); }
-  to { transform: translate3d(0, 0, 0); }
-}
-
-@keyframes project-drawer-slide-to-bottom {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, 100%, 0); }
-}
-
-/* The sheet itself should leave through the same downward path it entered;
-   only the scrim fades. Keeping the content opaque prevents a distracting
-   cross-fade while Vaul animates its translate3d close keyframe. */
+/* Let Vaul remain the single owner of sheet transforms. Its release logic
+   applies the drag offset inline, then selects the native slide-to-bottom
+   keyframe when the threshold/velocity is met. A second transform animation
+   here can fight that inline value, which is why drag-to-dismiss used to feel
+   stuck or fall back to an instant unmount. We only tune the shared curve. */
 .project-drawer[data-vaul-drawer][data-state="open"],
 .project-drawer[data-vaul-drawer][data-state="closed"],
 .blog-reader[data-vaul-drawer][data-state="open"],
 .blog-reader[data-vaul-drawer][data-state="closed"] {
   opacity: 1;
   filter: none;
+  transition-property: transform;
+  transition-duration: 500ms;
+  transition-timing-function: cubic-bezier(.32, .72, 0, 1);
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(.32, .72, 0, 1);
 }
 
 .project-drawer-overlay[data-vaul-overlay],
 .blog-reader-overlay[data-vaul-overlay] {
+  transition-property: opacity;
   transition-duration: 260ms;
   transition-timing-function: cubic-bezier(.22, 1, .36, 1);
   animation-duration: 260ms;
   animation-timing-function: cubic-bezier(.22, 1, .36, 1);
 }
 
+/* During an active pointer/touch gesture Vaul owns transform and transition
+   inline. Do not let CSS animations or easing override that live position. */
 .project-drawer[data-vaul-drawer].vaul-dragging,
-.blog-reader[data-vaul-drawer].vaul-dragging,
-.project-drawer-overlay[data-vaul-overlay].vaul-dragging,
-.blog-reader-overlay[data-vaul-overlay].vaul-dragging {
-  transition: none;
-  animation: none;
+.blog-reader[data-vaul-drawer].vaul-dragging {
+  transition: none !important;
+  animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

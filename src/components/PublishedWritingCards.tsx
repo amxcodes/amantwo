@@ -10,7 +10,15 @@ import ArticleShareButton from "./ArticleShareButton";
 
 export type ArticleCard = Pick<
   PublicArticle,
-  "slug" | "meta" | "title" | "summary" | "readingTime" | "tone" | "publishedAt"
+  | "slug"
+  | "meta"
+  | "title"
+  | "summary"
+  | "readingTime"
+  | "tone"
+  | "publishedAt"
+  | "cover"
+  | "narration"
 >;
 
 const HOME_WRITING_PAGE_SIZE = 6;
@@ -34,7 +42,9 @@ const samePostSet = (left: ArticleCard[], right: ArticleCard[]) =>
       post.summary === other?.summary &&
       post.tone === other?.tone &&
       post.readingTime === other?.readingTime &&
-      post.publishedAt === other?.publishedAt
+      post.publishedAt === other?.publishedAt &&
+      post.cover?.src === other?.cover?.src &&
+      post.narration?.src === other?.narration?.src
     );
   });
 

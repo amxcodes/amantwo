@@ -168,6 +168,7 @@ function useReaderState(
       // Open immediately from the lightweight card metadata. The body query
       // resolves during the sheet's entrance animation, while intent-based
       // prefetch makes repeat and pointer/focus opens effectively instant.
+      prefetchArticleAssets(next);
       setPost(
         cached ??
           (Array.isArray(next.body) ? next : { ...next, body: [] }),
@@ -194,7 +195,7 @@ function useReaderState(
       setPost(null);
       closingRef.current = false;
       clearPostTimerRef.current = null;
-    }, 460);
+    }, 520);
   };
 
   return { post, close };
@@ -214,6 +215,10 @@ function BlogReaderShell({
   return (
     <Drawer.Root
       open={open}
+      direction="bottom"
+      dismissible
+      handleOnly={false}
+      scrollLockTimeout={120}
       closeThreshold={0.24}
       onOpenChange={(open) => !open && close()}
     >
@@ -234,7 +239,7 @@ function BlogReaderShell({
               <span className="drawer-handle" />
             </div>
             {post ? <ArticleRenderer article={post} variant="drawer" /> : null}
-            {loading ? (
+            {loading && !post ? (
               <div
                 className={`blog-reader-loading${post ? "" : " blog-reader-loading-page"}`}
                 aria-live="polite"
@@ -271,8 +276,14 @@ function BlogReaderConvex({ client }: { client: ConvexReactClient }) {
 
   useEffect(() => {
     const prefetch = (event: Event) => {
-      const slug = (event as CustomEvent<{ slug?: string }>).detail?.slug;
+      const detail = (event as CustomEvent<
+        Partial<PublicArticle> & { slug?: string }
+      >).detail;
+      const slug = detail?.slug;
       if (slug) void prefetchArticle(client, slug);
+      // Card records carry cover/narration metadata. Warm those assets
+      // immediately, without waiting for the full body query.
+      if (detail?.slug) prefetchArticleAssets(detail as PublicArticle);
     };
     window.addEventListener("portfolio:prefetch-post", prefetch);
     return () => window.removeEventListener("portfolio:prefetch-post", prefetch);

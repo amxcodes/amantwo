@@ -77,7 +77,7 @@ export default function ProjectDrawer() {
     clearProjectTimerRef.current = setTimeout(() => {
       setProject(null);
       clearProjectTimerRef.current = null;
-    }, 460);
+    }, 520);
   };
 
   useEffect(() => {
@@ -126,6 +126,10 @@ export default function ProjectDrawer() {
   return (
     <Drawer.Root
       open={open}
+      direction="bottom"
+      dismissible
+      handleOnly={false}
+      scrollLockTimeout={120}
       closeThreshold={0.22}
       onOpenChange={(nextOpen) => {
         if (nextOpen) {
