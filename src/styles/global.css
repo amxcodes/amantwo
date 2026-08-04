@@ -3920,6 +3920,7 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   .blog-card {
     height: auto;
     min-height: 300px;
+    padding-block-end: 34px;
     border-radius: 1.8rem 1.95rem 1.75rem 1.9rem;
   }
 
@@ -3927,7 +3928,7 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     max-width: 100%;
     margin: 30px 0 14px;
     font-size: clamp(29px, 8vw, 38px);
-    line-height: 1.04;
+    line-height: 1.08;
     overflow-wrap: break-word;
     word-break: normal;
     -webkit-line-clamp: 4;
@@ -3936,13 +3937,16 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   .blog-card > span {
     max-width: 34ch;
     font-size: 12.5px;
-    line-height: 1.5;
+    line-height: 1.58;
+    padding-block-end: 0.08em;
     overflow-wrap: break-word;
     -webkit-line-clamp: 5;
   }
 
   .blog-card-actions {
     align-items: stretch;
+    flex-shrink: 0;
+    padding-top: 22px;
   }
 
   .blog-card-actions .blog-card-read,
