@@ -647,6 +647,8 @@ export default function ArticleRenderer({
               src={resolveMediaUrl(article.cover.src)}
               alt={article.cover.alt}
               loading="eager"
+              decoding="async"
+              fetchPriority="high"
             />
           )}
           {article.cover.caption ? (

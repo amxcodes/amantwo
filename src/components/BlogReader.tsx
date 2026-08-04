@@ -1,8 +1,9 @@
 import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { api } from "../../convex/_generated/api";
 import ArticleRenderer, { type PublicArticle } from "./ArticleRenderer";
+import { resolveMediaUrl } from "../lib/media";
 
 type Props = {
   convexUrl?: string;
@@ -10,6 +11,53 @@ type Props = {
 
 const articleCache = new Map<string, PublicArticle>();
 const articleRequests = new Map<string, Promise<PublicArticle | null>>();
+const prefetchedArticleAssets = new Set<string>();
+
+const prefetchArticleAssets = (article: PublicArticle) => {
+  if (typeof window === "undefined") return;
+
+  const assets: Array<{
+    src?: string;
+    kind: "image" | "video" | "audio";
+  }> = [];
+  if (article.cover?.src) {
+    assets.push({
+      src: article.cover.src,
+      kind: article.cover.kind === "video" ? "video" : "image",
+    });
+  }
+  if (article.narration?.src) {
+    assets.push({ src: article.narration.src, kind: "audio" });
+  }
+  for (const block of article.body ?? []) {
+    if (!block.src || !["image", "video", "audio"].includes(block.type)) continue;
+    assets.push({
+      src: block.src,
+      kind: block.type as "image" | "video" | "audio",
+    });
+    if (assets.length >= 4) break;
+  }
+
+  for (const asset of assets) {
+    const url = resolveMediaUrl(asset.src ?? "");
+    if (!url || prefetchedArticleAssets.has(url)) continue;
+    prefetchedArticleAssets.add(url);
+
+    if (asset.kind === "image") {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = url;
+      continue;
+    }
+
+    // Metadata preloading makes the drawer's first paint independent from a
+    // later media request, without eagerly downloading the entire asset.
+    const media =
+      asset.kind === "audio" ? new Audio() : document.createElement("video");
+    media.preload = "metadata";
+    media.src = url;
+  }
+};
 
 const prefetchArticle = (client: ConvexReactClient, slug: string) => {
   const cached = articleCache.get(slug);
@@ -22,7 +70,10 @@ const prefetchArticle = (client: ConvexReactClient, slug: string) => {
     .query(api.articles.publicBySlug, { slug })
     .then((article) => {
       const resolved = article as unknown as PublicArticle | null;
-      if (resolved) articleCache.set(slug, resolved);
+      if (resolved) {
+        articleCache.set(slug, resolved);
+        prefetchArticleAssets(resolved);
+      }
       return resolved;
     })
     .finally(() => articleRequests.delete(slug));
@@ -66,20 +117,42 @@ function useReaderState(
   readCachedArticle?: (slug: string) => PublicArticle | undefined,
 ) {
   const [post, setPost] = useState<PublicArticle | null>(null);
+  const clearPostTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closingRef = useRef(false);
+
+  const cancelPendingPostClear = () => {
+    if (clearPostTimerRef.current === null) return;
+    clearTimeout(clearPostTimerRef.current);
+    clearPostTimerRef.current = null;
+  };
 
   useEffect(() => {
-    if (!requestedSlug) setPost(null);
+    if (requestedSlug) {
+      closingRef.current = false;
+      cancelPendingPostClear();
+      return;
+    }
+    // Keep the article mounted while the sheet translates off-screen. This
+    // prevents the close from looking like a fade or a blank flash.
+    if (!closingRef.current) setPost(null);
   }, [requestedSlug]);
+
+  useEffect(() => () => cancelPendingPostClear(), []);
 
   useEffect(() => {
     if (!requestedSlug || queriedArticle === undefined) return;
     if (queriedArticle) {
+      closingRef.current = false;
+      cancelPendingPostClear();
       articleCache.set(queriedArticle.slug, queriedArticle);
+      prefetchArticleAssets(queriedArticle);
       setPost(queriedArticle);
       return;
     }
 
     // A stale or unpublished shared URL should not leave an empty drawer open.
+    closingRef.current = false;
+    cancelPendingPostClear();
     setPost(null);
     setRequestedSlug(null);
     updatePostQuery(null, "replaceState");
@@ -89,6 +162,8 @@ function useReaderState(
     const openPost = (event: Event) => {
       const next = (event as CustomEvent<PublicArticle>).detail;
       if (!next?.slug) return;
+      closingRef.current = false;
+      cancelPendingPostClear();
       const cached = readCachedArticle?.(next.slug);
       // Open immediately from the lightweight card metadata. The body query
       // resolves during the sheet's entrance animation, while intent-based
@@ -106,9 +181,20 @@ function useReaderState(
   }, [readCachedArticle, setRequestedSlug]);
 
   const close = () => {
-    setPost(null);
+    if (!post) {
+      setRequestedSlug(null);
+      updatePostQuery(null, "replaceState");
+      return;
+    }
+    closingRef.current = true;
+    cancelPendingPostClear();
     setRequestedSlug(null);
     updatePostQuery(null, "replaceState");
+    clearPostTimerRef.current = setTimeout(() => {
+      setPost(null);
+      closingRef.current = false;
+      clearPostTimerRef.current = null;
+    }, 460);
   };
 
   return { post, close };

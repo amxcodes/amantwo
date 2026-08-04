@@ -76,7 +76,10 @@
 }
 
 html {
+  /* Native anchor easing keeps navigation smooth without intercepting wheel
+     input or maintaining a second animation loop for the whole document. */
   scroll-behavior: smooth;
+  overscroll-behavior-x: none;
   scrollbar-width: none;
 }
 
@@ -769,7 +772,12 @@ li {
   scrollbar-width: none;
   scroll-behavior: smooth;
   scroll-padding-inline: var(--project-rail-gutter);
-  scroll-snap-type: x mandatory;
+  /* Proximity keeps the rail feeling like native momentum on trackpads and
+     touch, while still settling a deliberate page change on its nearest
+     boundary. Mandatory snapping can force a fast gesture to stop at every
+     page and reads as a stutter. */
+  scroll-snap-type: x proximity;
+  scroll-snap-stop: normal;
 }
 
 .project-scroller::-webkit-scrollbar {
@@ -786,7 +794,7 @@ li {
   gap: 12px;
   min-width: 0;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
 }
 
 .project-card {
@@ -1525,6 +1533,7 @@ li {
   padding: 0;
   max-height: min(88dvh, 820px);
   overflow-y: auto;
+  scroll-behavior: smooth;
   overscroll-behavior: contain;
   scrollbar-width: none;
   background: var(--paper);
@@ -2830,6 +2839,7 @@ li {
   position: relative;
   max-height: min(94dvh, 940px);
   overflow-y: auto;
+  scroll-behavior: smooth;
   overscroll-behavior: contain;
   scrollbar-width: none;
   color: var(--ink);
@@ -3416,6 +3426,11 @@ li {
   transition-timing-function: ease-out;
 }
 
+.github-graph-cell[data-github-enter="true"] {
+  animation: github-cell-enter 520ms cubic-bezier(0.22, 1, 0.36, 1)
+    var(--github-enter-delay, 0ms) both;
+}
+
 .github-graph-cell-fill {
   position: absolute;
   inset: 0;
@@ -3428,6 +3443,16 @@ li {
 .github-graph-cell-fill[data-ambient="true"] {
   animation: github-cell-twinkle var(--github-ambient-duration, 3s) ease-in-out
     var(--github-ambient-delay, 0ms) infinite;
+}
+
+/* Keep the existing ambient rhythm in view, but release its compositor work
+   once the whole GitHub section is outside the reader's viewport. */
+[data-github-activity]:not([data-github-visible="true"])
+  :where(
+    .github-graph-cell[data-github-enter="true"],
+    .github-graph-cell-fill[data-ambient="true"]
+  ) {
+  animation-play-state: paused;
 }
 
 .github-graph-cell:focus-visible {
@@ -3498,6 +3523,18 @@ li {
   }
 }
 
+@keyframes github-cell-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.68);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes github-cell-twinkle {
   0%,
   100% {
@@ -3518,6 +3555,7 @@ li {
     translate: 0;
     transition-duration: 0ms;
     transition-delay: 0ms;
+    animation: none;
   }
 
   .github-graph-cell-fill[data-ambient="true"] {
@@ -3813,7 +3851,7 @@ li {
 /* Keep dynamic CMS islands visible if the motion module is delayed or fails;
    only project cards wait for their targeted reveal observer. */
 [data-reveal] { opacity: 1; }
-html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opacity: 0; }
+html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reveal-ready]) { opacity: 0; }
 
 @media (max-width: 900px) {
   .profile-hero {
@@ -4356,6 +4394,11 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
     scroll-behavior: auto;
   }
 
+  .project-drawer-panel,
+  .blog-reader-panel {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -4805,4 +4848,100 @@ html[data-motion="ready"] [data-reveal="project"]:not([data-reveal-ready]) { opa
   .blog-reader-copy h3 { font-size: 1.38em; overflow-wrap: anywhere; }
   .blog-reader-inline-image img { max-height: 48dvh; border-radius: 14px; }
   .blog-reader-inline-link { padding: 12px 14px; }
+}
+
+/* Keep public sheets on one compositor-friendly motion curve. Vaul still
+   owns the drag physics; this only removes the abrupt snap at the start/end
+   of an open or close. */
+.project-drawer[data-vaul-drawer],
+.blog-reader[data-vaul-drawer] {
+  transition-property: transform, opacity, filter;
+  transition-duration: 420ms;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Blog sheets use an explicit translate animation so their exit is always a
+   downward movement, even when the article body is still resolving. Vaul's
+   drag transform remains authoritative while .vaul-dragging is present. */
+.blog-reader[data-vaul-drawer][data-state="open"] {
+  animation-name: blog-reader-slide-from-bottom;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.blog-reader[data-vaul-drawer][data-state="closed"] {
+  animation-name: blog-reader-slide-to-bottom;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.project-drawer[data-vaul-drawer][data-state="open"] {
+  animation-name: project-drawer-slide-from-bottom;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.project-drawer[data-vaul-drawer][data-state="closed"] {
+  animation-name: project-drawer-slide-to-bottom;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+@keyframes blog-reader-slide-from-bottom {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes blog-reader-slide-to-bottom {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, 100%, 0); }
+}
+
+@keyframes project-drawer-slide-from-bottom {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes project-drawer-slide-to-bottom {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, 100%, 0); }
+}
+
+/* The sheet itself should leave through the same downward path it entered;
+   only the scrim fades. Keeping the content opaque prevents a distracting
+   cross-fade while Vaul animates its translate3d close keyframe. */
+.project-drawer[data-vaul-drawer][data-state="open"],
+.project-drawer[data-vaul-drawer][data-state="closed"],
+.blog-reader[data-vaul-drawer][data-state="open"],
+.blog-reader[data-vaul-drawer][data-state="closed"] {
+  opacity: 1;
+  filter: none;
+}
+
+.project-drawer-overlay[data-vaul-overlay],
+.blog-reader-overlay[data-vaul-overlay] {
+  transition-duration: 260ms;
+  transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+.project-drawer[data-vaul-drawer].vaul-dragging,
+.blog-reader[data-vaul-drawer].vaul-dragging,
+.project-drawer-overlay[data-vaul-overlay].vaul-dragging,
+.blog-reader-overlay[data-vaul-overlay].vaul-dragging {
+  transition: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-drawer[data-vaul-drawer],
+  .blog-reader[data-vaul-drawer],
+  .project-drawer-overlay[data-vaul-overlay],
+  .blog-reader-overlay[data-vaul-overlay] {
+    transition: none;
+    animation: none;
+  }
 }

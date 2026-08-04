@@ -6,6 +6,11 @@ const precisePointer = window.matchMedia(
 );
 
 function setupReveals() {
+  // The editor and admin manager use the same document layout but not the
+  // public reveal system. Avoid observing their large, frequently-mutating
+  // DOM (typing, autosave, panel changes) altogether.
+  if (!document.querySelector(".page-shell")) return;
+
   if (reducedMotion.matches) {
     document.documentElement.dataset.motion = "reduced";
     return;
@@ -21,15 +26,14 @@ function setupReveals() {
     { duration: 0.42, delay: stagger(0.06), ease: [0.22, 1, 0.36, 1] },
   );
 
-  let managedWritingHydrated = false;
-
-  const revealProjects = (includeManagedWriting = managedWritingHydrated) => {
-    const selector = includeManagedWriting
-      ? "[data-reveal='project']:not([data-reveal-ready])"
-      : "[data-reveal='project']:not(.blog-card):not([data-reveal-ready])";
-    const pending = document.querySelectorAll<HTMLElement>(
-      selector,
-    );
+  const revealProjects = () => {
+    // Writing cards are React-owned and can be replaced by a live Convex
+    // response. Never add reveal attributes or replay an entrance animation
+    // to them while the reader is scrolling; the SSR shell is already the
+    // stable visual state.
+    const selector =
+      "[data-reveal='project']:not(.blog-card):not([data-reveal-ready])";
+    const pending = document.querySelectorAll<HTMLElement>(selector);
     if (!pending.length) return;
     pending.forEach((element) => {
       element.dataset.revealReady = "true";
@@ -53,26 +57,10 @@ function setupReveals() {
     { margin: "0px 0px -8% 0px" },
   );
 
-  inView(
-    ".project-scroller",
-    () => revealProjects(),
-    { margin: "0px 0px -6% 0px" },
-  );
+  inView(".project-scroller", () => revealProjects(), {
+    margin: "0px 0px -6% 0px",
+  });
   revealProjects();
-  window.addEventListener("portfolio:content-mounted", () => {
-    // React owns the writing-card markup. Wait for its post-hydration signal
-    // before adding reveal attributes, otherwise the browser DOM no longer
-    // matches the server snapshot when React hydrates the island.
-    managedWritingHydrated = true;
-    revealProjects(true);
-  });
-  // Convex-backed islands hydrate after this module on slower devices.  A
-  // small, targeted observer keeps late cards from remaining at the global
-  // [data-reveal] opacity: 0 without re-running animations for old nodes.
-  const contentObserver = new MutationObserver((records) => {
-    if (records.some((record) => record.addedNodes.length > 0)) revealProjects();
-  });
-  contentObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function parseData<T>(value?: string): T | undefined {
@@ -267,38 +255,58 @@ function setupProjects() {
   section
     .querySelectorAll<HTMLButtonElement>("[data-project-open]")
     .forEach((button) => {
-      button.addEventListener("click", () => {
+      const getProjectDetail = () => {
         const card = button.closest<HTMLElement>("[data-project-card]");
-        if (!card) return;
+        if (!card) return undefined;
+        return {
+          eyebrow: card.dataset.projectEyebrow,
+          title: card.dataset.projectTitle,
+          summary: card.dataset.projectSummary,
+          caseStudy: card.dataset.projectCaseStudy,
+          meta: card.dataset.projectMeta,
+          status: card.dataset.projectStatus,
+          tags: parseData<string[]>(card.dataset.projectTags),
+          links: parseData<Record<string, string>>(card.dataset.projectLinks),
+          media: card.dataset.projectMedia
+            ? {
+                type: card.dataset.projectMediaType,
+                src: card.dataset.projectMedia,
+                alt: card.dataset.projectMediaLabel,
+              }
+            : undefined,
+        };
+      };
+      const prefetch = () => {
+        const detail = getProjectDetail();
+        if (detail) {
+          window.dispatchEvent(
+            new CustomEvent("portfolio:prefetch-project", { detail }),
+          );
+        }
+      };
+      button.addEventListener("pointerenter", prefetch, { passive: true });
+      button.addEventListener("pointerdown", prefetch, { passive: true });
+      button.addEventListener("focus", prefetch);
+      button.addEventListener("click", () => {
+        const detail = getProjectDetail();
+        if (!detail) return;
         window.dispatchEvent(
-          new CustomEvent("portfolio:open-project", {
-            detail: {
-              eyebrow: card.dataset.projectEyebrow,
-              title: card.dataset.projectTitle,
-              summary: card.dataset.projectSummary,
-              caseStudy: card.dataset.projectCaseStudy,
-              meta: card.dataset.projectMeta,
-              status: card.dataset.projectStatus,
-              tags: parseData<string[]>(card.dataset.projectTags),
-              links: parseData<Record<string, string>>(
-                card.dataset.projectLinks,
-              ),
-              media: card.dataset.projectMedia
-                ? {
-                    type: card.dataset.projectMediaType,
-                    src: card.dataset.projectMedia,
-                    alt: card.dataset.projectMediaLabel,
-                  }
-                : undefined,
-            },
-          }),
+          new CustomEvent("portfolio:open-project", { detail }),
         );
       });
     });
 
   scroller.addEventListener("scroll", requestPagination, { passive: true });
+  // `scrollend` fires after native momentum/snap has settled. It gives the
+  // pagination indicator one exact final update without adding another
+  // animation loop to the wheel or touch path.
+  scroller.addEventListener("scrollend", updatePagination, { passive: true });
   new ResizeObserver(requestPagination).observe(scroller);
-  arrangeProjects();
+  // The SSR rail is already in featured order. Avoid tearing down and
+  // re-appending every card on startup; that synchronous rebuild is visible
+  // as a small jump when the reader first reaches Work.
+  renderDots();
+  requestPagination();
 }
 
 function setupChromaticText() {
@@ -423,6 +431,7 @@ function setupChronicleDetails() {
 
     let closeTimer = 0;
     let activeTrigger: HTMLButtonElement | undefined;
+    let positionFrame = 0;
     const positionPreview = (trigger?: HTMLButtonElement) => {
       if (!trigger || !precisePointer.matches) return;
       const triggerBounds = trigger.getBoundingClientRect();
@@ -481,6 +490,13 @@ function setupChronicleDetails() {
     const scheduleClose = () => {
       closeTimer = window.setTimeout(() => setOpen(false), 90);
     };
+    const requestPosition = () => {
+      if (positionFrame || !activeTrigger) return;
+      positionFrame = window.requestAnimationFrame(() => {
+        positionFrame = 0;
+        positionPreview(activeTrigger);
+      });
+    };
 
     root.addEventListener("pointerleave", () => {
       if (precisePointer.matches) scheduleClose();
@@ -518,16 +534,8 @@ function setupChronicleDetails() {
     document.addEventListener("pointerdown", (event) => {
       if (!root.contains(event.target as Node)) setOpen(false);
     });
-    window.addEventListener(
-      "resize",
-      () => positionPreview(activeTrigger),
-      { passive: true },
-    );
-    window.addEventListener(
-      "scroll",
-      () => positionPreview(activeTrigger),
-      { passive: true },
-    );
+    window.addEventListener("resize", requestPosition, { passive: true });
+    window.addEventListener("scroll", requestPosition, { passive: true });
   });
 }
 
@@ -568,7 +576,7 @@ function setupEdgeScrollRail() {
 
   let activeIndex = 0;
   let hoverIndex = -1;
-  let frame = 0;
+  const visibility = new Map<number, IntersectionObserverEntry>();
 
   const applyRailState = (displayedIndex = hoverIndex) => {
     buttons.forEach((button, index) => {
@@ -596,25 +604,28 @@ function setupEdgeScrollRail() {
     applyRailState(index);
   };
 
-  const updateActiveSection = () => {
-    frame = 0;
-    const viewportPoint = window.innerHeight * 0.45;
-    activeIndex = sections.reduce((closest, section, index) => {
-      const currentDistance = Math.abs(
-        section.getBoundingClientRect().top - viewportPoint,
-      );
-      const closestDistance = Math.abs(
-        sections[closest].getBoundingClientRect().top - viewportPoint,
-      );
-      return currentDistance < closestDistance ? index : closest;
-    }, 0);
-    applyRailState();
-  };
+  // IntersectionObserver receives the browser's already-computed geometry.
+  // Unlike a scroll listener that calls getBoundingClientRect each frame, it
+  // does not force synchronous layout while the page is moving.
+  const sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const sectionIndex = sections.indexOf(entry.target as HTMLElement);
+        if (sectionIndex < 0) return;
+        visibility.set(sectionIndex, entry);
+      });
 
-  const requestActiveSection = () => {
-    if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
-  };
-
+      const visible = [...visibility.entries()]
+        .filter(([, entry]) => entry.isIntersecting)
+        .sort(([, a], [, b]) => b.intersectionRatio - a.intersectionRatio);
+      if (visible.length) activeIndex = visible[0][0];
+      applyRailState();
+    },
+    {
+      rootMargin: "-35% 0px -35% 0px",
+      threshold: [0, 0.25, 0.5, 0.75, 1],
+    },
+  );
   rail.addEventListener("pointerleave", () => {
     hoverIndex = -1;
     applyRailState();
@@ -628,9 +639,7 @@ function setupEdgeScrollRail() {
 
   rail.replaceChildren(...buttons);
   rail.dataset.ready = "true";
-  window.addEventListener("scroll", requestActiveSection, { passive: true });
-  window.addEventListener("resize", requestActiveSection, { passive: true });
-  updateActiveSection();
+  sections.forEach((section) => sectionObserver.observe(section));
 }
 
 function setYear() {

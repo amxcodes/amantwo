@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { resolveMediaUrl } from "../lib/media";
 
@@ -30,38 +30,110 @@ const linkLabels: Record<string, string> = {
   figma: "Figma",
 };
 
+const prefetchedProjectMedia = new Set<string>();
+
+const prefetchProjectMedia = (project: DrawerProject) => {
+  if (typeof window === "undefined") return;
+  const sources = [
+    ...(project.mediaItems ?? []),
+    ...(project.media ? [project.media] : []),
+  ];
+  for (const item of sources) {
+    if (!item.src) continue;
+    const src = resolveMediaUrl(item.src);
+    if (!src || prefetchedProjectMedia.has(src)) continue;
+    prefetchedProjectMedia.add(src);
+    if (item.type === "video") {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = src;
+    } else {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+    }
+  }
+};
+
 export default function ProjectDrawer() {
   const [project, setProject] = useState<DrawerProject | null>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [open, setOpen] = useState(false);
+  const clearProjectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const cancelPendingProjectClear = () => {
+    if (clearProjectTimerRef.current === null) return;
+    clearTimeout(clearProjectTimerRef.current);
+    clearProjectTimerRef.current = null;
+  };
+
+  const close = () => {
+    cancelPendingProjectClear();
+    setOpen(false);
+    // Keep the current media and copy mounted while Vaul runs the downward
+    // exit animation. Clearing it immediately causes a visible content flash.
+    clearProjectTimerRef.current = setTimeout(() => {
+      setProject(null);
+      clearProjectTimerRef.current = null;
+    }, 460);
+  };
 
   useEffect(() => {
     const openProject = (event: Event) => {
-      setProject((event as CustomEvent<DrawerProject>).detail);
+      const next = (event as CustomEvent<DrawerProject>).detail;
+      if (!next) return;
+      cancelPendingProjectClear();
+      prefetchProjectMedia(next);
+      setProject(next);
       setMediaIndex(0);
+      setOpen(true);
+    };
+
+    const prefetch = (event: Event) => {
+      const next = (event as CustomEvent<DrawerProject>).detail;
+      if (next) prefetchProjectMedia(next);
     };
 
     window.addEventListener("portfolio:open-project", openProject);
-    return () =>
+    window.addEventListener("portfolio:prefetch-project", prefetch);
+    return () => {
+      cancelPendingProjectClear();
       window.removeEventListener("portfolio:open-project", openProject);
+      window.removeEventListener("portfolio:prefetch-project", prefetch);
+    };
   }, []);
 
-  const mediaItems = project?.mediaItems
-    ?.filter((item) => item.src)
-    .map((item) => ({ ...item, src: resolveMediaUrl(item.src ?? "") })) ?? [];
-  if (!mediaItems.length && project?.media?.src) {
-    mediaItems.push({
-      ...project.media,
-      src: resolveMediaUrl(project.media.src),
-    });
-  }
+  const mediaItems = useMemo(() => {
+    const items =
+      project?.mediaItems
+        ?.filter((item) => item.src)
+        .map((item) => ({
+          ...item,
+          src: resolveMediaUrl(item.src ?? ""),
+        })) ?? [];
+    if (!items.length && project?.media?.src) {
+      items.push({
+        ...project.media,
+        src: resolveMediaUrl(project.media.src),
+      });
+    }
+    return items;
+  }, [project]);
   const media = mediaItems[mediaIndex];
 
   return (
     <Drawer.Root
-      open={Boolean(project)}
+      open={open}
       closeThreshold={0.22}
-      onOpenChange={(open) => {
-        if (!open) setProject(null);
+      onOpenChange={(nextOpen) => {
+        if (nextOpen) {
+          cancelPendingProjectClear();
+          setOpen(true);
+          return;
+        }
+        close();
       }}
     >
       <Drawer.Portal>
@@ -94,7 +166,13 @@ export default function ProjectDrawer() {
                       />
                     </video>
                   ) : (
-                    <img src={media.src} alt={media.alt ?? ""} />
+                    <img
+                      src={media.src}
+                      alt={media.alt ?? ""}
+                      loading="eager"
+                      decoding="async"
+                      fetchPriority="high"
+                    />
                   )}
                 </div>
                 {media.caption ? (

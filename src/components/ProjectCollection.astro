@@ -408,16 +408,38 @@ const githubSkeletonCells = Array.from(
       return;
     }
 
+    // Ambient cell motion is intentionally unchanged while the graph is in
+    // view, but it should not keep hundreds of animations ticking while the
+    // reader is looking at another section. Keep a small runway so the graph
+    // is already settled when it enters the viewport.
+    section.dataset.githubVisible = "false";
+    const githubVisibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        section.dataset.githubVisible = String(entry?.isIntersecting ?? false);
+      },
+      { rootMargin: "140px 0px", threshold: 0 },
+    );
+    githubVisibilityObserver.observe(section);
+
     try {
       const cells = buildGithubCells(
         recentGithubActivity(await requestGithubActivity(account)),
       );
       if (cells.length === 0) throw new Error("No contribution cells.");
 
-      grid.querySelectorAll("[data-github-skeleton]").forEach((cell) => {
-        cell.remove();
-      });
-      grid.classList.remove("github-graph-grid--loading");
+      const fragment = document.createDocumentFragment();
+      const renderedFragment = document.createDocumentFragment();
+      // Build the complete grid off-DOM. Appending 180+ cells one-by-one to a
+      // live CSS grid forces repeated layout/paint work during a scroll.
+      // Keeping the legend and swapping one fragment preserves the exact
+      // visual geometry without the frame spike.
+      const statusLegend = grid.querySelector("[data-github-status]");
+      const appendRenderedCells = () => {
+        renderedCells.forEach((cell) => renderedFragment.append(cell));
+        if (statusLegend) fragment.append(statusLegend);
+        fragment.append(renderedFragment);
+        grid.replaceChildren(fragment);
+      };
       status.textContent = `GitHub activity for ${account}`;
       total.textContent = cells
         .reduce((sum, contribution) => sum + contribution.count, 0)
@@ -432,6 +454,7 @@ const githubSkeletonCells = Array.from(
 
       const renderedCells: HTMLButtonElement[] = [];
       let tooltipHideTimer: number | undefined;
+      let interactionActive = false;
       const hideTooltip = () => {
         if (tooltipHideTimer !== undefined) {
           window.clearTimeout(tooltipHideTimer);
@@ -443,6 +466,11 @@ const githubSkeletonCells = Array.from(
       };
 
       const resetGithubInteraction = () => {
+        if (!interactionActive) {
+          hideTooltip();
+          return;
+        }
+        interactionActive = false;
         activityLabel.textContent = "Move across the graph";
         resetGithubProximity(renderedCells);
         hideTooltip();
@@ -464,7 +492,14 @@ const githubSkeletonCells = Array.from(
         }
         resetGithubInteraction();
       };
-      const handleWindowScroll = () => dismissTransientTooltip();
+      let dismissFrame = 0;
+      const handleWindowScroll = () => {
+        if (dismissFrame) return;
+        dismissFrame = window.requestAnimationFrame(() => {
+          dismissFrame = 0;
+          dismissTransientTooltip();
+        });
+      };
       const handleDocumentVisibility = () => {
         if (document.visibilityState !== "visible") resetGithubInteraction();
       };
@@ -512,6 +547,7 @@ const githubSkeletonCells = Array.from(
             clientY: number;
           },
         ) => {
+          interactionActive = true;
           activityLabel.textContent = label;
           updateGithubProximity(renderedCells, weekIndex, dayIndex);
           const rect = button.getBoundingClientRect();
@@ -537,38 +573,20 @@ const githubSkeletonCells = Array.from(
         button.addEventListener("focus", () => {
           showActivity();
         });
-        button.addEventListener("blur", hideTooltip);
-        grid.append(button);
-
+        button.addEventListener("blur", resetGithubInteraction);
         if (reducedMotion) {
           button.dataset.entered = "true";
         } else {
-          const entrance = button.animate(
-            [
-              {
-                opacity: 0,
-                transform: "translateY(5px) scale(0.68)",
-              },
-              {
-                opacity: 1,
-                transform: "translateY(0) scale(1)",
-              },
-            ],
-            {
-              duration: 520,
-              delay: entranceDelay,
-              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-              fill: "both",
-            },
-          );
-          void entrance.finished
-            .catch(() => undefined)
-            .then(() => {
-              entrance.cancel();
-              button.dataset.entered = "true";
-            });
+          // Keep the staggered entrance identical, but let the browser run it
+          // as a CSS animation instead of creating one Web Animation + Promise
+          // per cell (there can be hundreds of cells in the six-month grid).
+          button.dataset.githubEnter = "true";
+          button.style.setProperty("--github-enter-delay", `${entranceDelay}ms`);
         }
       });
+
+      appendRenderedCells();
+      grid.classList.remove("github-graph-grid--loading");
 
       grid.addEventListener("mouseleave", () => {
         resetGithubInteraction();
@@ -620,51 +638,34 @@ const githubSkeletonCells = Array.from(
   const githubSections = [
     ...document.querySelectorAll<HTMLElement>("[data-github-activity]"),
   ];
-  githubSections.forEach((section) => {
-    const account = section.dataset.githubAccount;
-    if (account) {
-      void requestGithubActivity(account).catch(() => undefined);
-    }
-  });
-  let githubFrame = 0;
-
-  const checkGithubSections = () => {
-    githubFrame = 0;
-    // Start the reveal just before the section reaches the old 75% visibility
-    // point. This gives the intro enough runway while the user is approaching
-    // it, without changing the animation itself or eager-loading off-screen
-    // activity.
+  if (githubSections.length) {
+    // IntersectionObserver delivers the intersection rectangle that the
+    // browser already computed for scroll. Reading getBoundingClientRect on
+    // every scroll frame forced a synchronous layout right beside the smooth
+    // scroll loop, which is exactly the kind of work that produces a jump.
+    // Keep the existing ~66% runway, but make the decision in the observer
+    // callback without any scroll listener or layout read.
     const githubRevealVisibility = 0.66;
-    githubSections.forEach((section) => {
-      if (section.dataset.githubInitialized === "true") return;
-      const bounds = section.getBoundingClientRect();
-      const visibleHeight = Math.max(
-        0,
-        Math.min(bounds.bottom, window.innerHeight) - Math.max(bounds.top, 0),
-      );
-      const requiredHeight =
-        Math.min(bounds.height, window.innerHeight) * githubRevealVisibility;
-      if (visibleHeight < requiredHeight) return;
-      playGithubIntro(section);
-      void initializeGithubActivity(section);
-    });
-    if (
-      githubSections.every(
-        (section) => section.dataset.githubInitialized === "true",
-      )
-    ) {
-      window.removeEventListener("scroll", requestGithubCheck);
-      window.removeEventListener("resize", requestGithubCheck);
-    }
-  };
-
-  const requestGithubCheck = () => {
-    if (!githubFrame)
-      githubFrame = window.requestAnimationFrame(checkGithubSections);
-  };
-
-  window.addEventListener("scroll", requestGithubCheck, { passive: true });
-  window.addEventListener("resize", requestGithubCheck, { passive: true });
-  window.addEventListener("pageshow", requestGithubCheck, { once: true });
-  requestGithubCheck();
+    const githubRevealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const section = entry.target as HTMLElement;
+          if (section.dataset.githubInitialized === "true") {
+            githubRevealObserver.unobserve(section);
+            return;
+          }
+          const rootHeight = entry.rootBounds?.height ?? window.innerHeight;
+          const requiredHeight =
+            Math.min(entry.boundingClientRect.height, rootHeight) *
+            githubRevealVisibility;
+          if (entry.intersectionRect.height < requiredHeight) return;
+          playGithubIntro(section);
+          void initializeGithubActivity(section);
+          githubRevealObserver.unobserve(section);
+        });
+      },
+      { threshold: [0, githubRevealVisibility] },
+    );
+    githubSections.forEach((section) => githubRevealObserver.observe(section));
+  }
 </script>

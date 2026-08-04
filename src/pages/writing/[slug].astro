@@ -36,19 +36,6 @@ if (convexUrl && slug) {
     const client = new ConvexHttpClient(convexUrl);
     article = await client.query(api.articles.publicBySlug, { slug }) as unknown as PublicArticle | null;
 
-    // Older cards may still contain a short alias (for example `spider-man`)
-    // while the CMS record has since received a longer editorial slug. Keep
-    // those published links useful without weakening the published-only rule.
-    if (!article) {
-      const wanted = normalizeSlug(slug);
-      const published = await client.query(api.articles.publicList, {});
-      const match = (published as unknown as PublicArticle[]).find((candidate) => {
-        const candidateSlug = normalizeSlug(candidate.slug);
-        const titleSlug = normalizeSlug(candidate.title);
-        return candidateSlug === wanted || titleSlug === wanted || candidateSlug.endsWith(`-${wanted}`);
-      });
-      article = match ?? null;
-    }
   } catch {
     lookupFailed = true;
     article = null;
@@ -61,7 +48,7 @@ if (convexUrl && slug) {
 // showing a misleading 404 shell.
 if (!article && !lookupFailed) return Astro.redirect("/#writing", 302);
 const title = article ? `${article.title} — Aman Anu` : "Writing — Aman Anu";
-const canonicalPath = `/writing/${article?.slug ?? slug}`;
+const canonicalPath = `/writing/${article?.slug ?? normalizeSlug(slug)}`;
 ---
 
 <BaseLayout title={title} description={article?.summary ?? "Notes on products, systems, and moving images."} canonicalPath={canonicalPath}>
@@ -71,7 +58,10 @@ const canonicalPath = `/writing/${article?.slug ?? slug}`;
       {article ? (
         <>
           <a class="article-back" href="/#writing">← Back to writing</a>
-          <ArticleRenderer article={article} variant="page" client:load />
+          <!-- Keep the server-rendered article immediately visible. The
+               reader controls hydrate once the browser is idle, avoiding a
+               large React startup cost on the first article paint. -->
+          <ArticleRenderer article={article} variant="page" client:idle />
         </>
       ) : lookupFailed ? (
         <PublicArticleFallback convexUrl={convexUrl} client:load />

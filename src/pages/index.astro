@@ -37,22 +37,30 @@ let managedReadSucceeded = false;
 Astro.response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
 
 if (convexUrl) {
-  try {
-    const client = new ConvexHttpClient(convexUrl);
-    const [response, articles] = await Promise.all([
-      client.query(api.cms.publicHome, {}),
-      client.query(api.articles.publicCards, {
-        paginationOpts: { numItems: 6, cursor: null },
-      }),
-    ]);
-    managedSections = Array.isArray(response) ? response as ManagedSection[] : null;
+  const client = new ConvexHttpClient(convexUrl);
+  // Keep the home snapshot and writing collection independent. A stale or
+  // temporarily unavailable articles function must not make the project rail
+  // silently fall back to the local seed (this was especially confusing in
+  // Astro dev, where one old Convex function could poison the whole Promise).
+  const [homeResult, articlesResult] = await Promise.allSettled([
+    client.query(api.cms.publicHome, {}),
+    client.query(api.articles.publicCards, {
+      paginationOpts: { numItems: 6, cursor: null },
+    }),
+  ]);
+
+  if (homeResult.status === "fulfilled") {
+    const response = homeResult.value;
+    managedSections = Array.isArray(response)
+      ? (response as ManagedSection[])
+      : null;
+  }
+  if (articlesResult.status === "fulfilled") {
+    const articles = articlesResult.value;
     managedArticles = Array.isArray(articles.page) && articles.page.length
-      ? articles.page as unknown as ArticleCard[]
+      ? (articles.page as unknown as ArticleCard[])
       : null;
     managedReadSucceeded = true;
-  } catch {
-    // A static build must remain available if Convex is temporarily unavailable.
-    managedSections = null;
   }
 }
 

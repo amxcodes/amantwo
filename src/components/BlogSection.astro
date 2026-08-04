@@ -16,6 +16,9 @@ const { posts } = Astro.props;
     <span>Products, images, systems, and the details between them.</span>
   </div>
 
+  <!-- Hydrate the SSR shell immediately so the cards are interactive before
+       the reader reaches Writing. The island keeps its live Convex query
+       paused until an idle callback, so hydration never competes with scroll. -->
   <PublishedWritingCards
     initialPosts={posts}
     convexUrl={publicConvexUrl}
