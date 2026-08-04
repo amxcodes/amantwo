@@ -174,6 +174,8 @@ function InlineAttachmentPill({
       <span className="article-inline-pill article-inline-pill-audio">
         <button
           type="button"
+          data-vaul-no-drag
+          onPointerDown={(event) => event.stopPropagation()}
           onClick={() => {
             const audio = audioRef.current;
             if (!audio) return;
@@ -203,6 +205,8 @@ function InlineAttachmentPill({
       href={href}
       target="_blank"
       rel="noreferrer"
+      data-vaul-no-drag
+      onPointerDown={(event) => event.stopPropagation()}
     >
       <span aria-hidden="true">{icon}</span>
       {attachment.label || attachment.kind}
@@ -277,6 +281,8 @@ function SmartLink({ block }: { block: PublicArticleBlock }) {
       href={href}
       target="_blank"
       rel="noreferrer"
+      data-vaul-no-drag
+      onPointerDown={(event) => event.stopPropagation()}
     >
       <span className="article-smart-link-domain">
         <i aria-hidden="true">↗</i>
@@ -304,7 +310,12 @@ function RichEmbed({ block }: { block: PublicArticleBlock }) {
             loading="lazy"
           />
         ) : (
-          <button type="button" onClick={() => setActive(true)}>
+          <button
+            type="button"
+            data-vaul-no-drag
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => setActive(true)}
+          >
             <span>▶</span>
             <strong>{block.label || "Play embedded video"}</strong>
             {start ? (
@@ -645,6 +656,7 @@ export default function ArticleRenderer({
           {article.cover.kind === "video" ? (
             <video
               controls
+              data-vaul-no-drag
               preload="metadata"
               src={resolveMediaUrl(article.cover.src)}
             >
@@ -787,6 +799,7 @@ export default function ArticleRenderer({
                 <video
                   src={resolveMediaUrl(block.src ?? "")}
                   controls
+                  data-vaul-no-drag
                   preload="metadata"
                 >
                   <track
@@ -860,6 +873,8 @@ export default function ArticleRenderer({
               href={link.href}
               target="_blank"
               rel="noreferrer"
+              data-vaul-no-drag
+              onPointerDown={(event) => event.stopPropagation()}
             >
               {link.label}
               <span>↗</span>

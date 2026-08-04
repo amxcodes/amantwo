@@ -71,6 +71,8 @@ export default function ArticleShareButton({
     <button
       className={`article-share-button ${className}`.trim()}
       type="button"
+      data-vaul-no-drag
+      onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();

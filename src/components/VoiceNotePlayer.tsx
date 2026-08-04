@@ -79,7 +79,11 @@ export default function VoiceNotePlayer({ src, label, transcript, links }: Props
   };
 
   return (
-    <div className="article-audio-attachment-row">
+    <div
+      className="article-audio-attachment-row"
+      data-vaul-no-drag
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       <figure
         className={`article-audio-control${playing ? " is-playing" : ""}`}
         style={{ "--audio-progress": `${progress}%` } as CSSProperties}
@@ -91,6 +95,7 @@ export default function VoiceNotePlayer({ src, label, transcript, links }: Props
       <button
         className="article-audio-control-play"
         type="button"
+        data-vaul-no-drag
         onClick={togglePlayback}
         aria-label={`${playing ? "Pause" : "Play"} ${readableLabel(label)}`}
       >
@@ -130,6 +135,7 @@ export default function VoiceNotePlayer({ src, label, transcript, links }: Props
           <input
             className="article-audio-control-range"
             type="range"
+            data-vaul-no-drag
             min="0"
             max={duration || 0}
             step="0.01"
@@ -144,16 +150,29 @@ export default function VoiceNotePlayer({ src, label, transcript, links }: Props
         </div>
       </div>
       {transcript ? (
-        <details className="article-audio-control-transcript">
-          <summary>Transcript</summary>
+        <details
+          className="article-audio-control-transcript"
+          data-vaul-no-drag
+        >
+          <summary data-vaul-no-drag>Transcript</summary>
           <p>{transcript}</p>
         </details>
       ) : null}
       </figure>
       {links?.length ? (
-        <nav className="article-audio-attachment-links" aria-label="Attached links">
+        <nav
+          className="article-audio-attachment-links"
+          aria-label="Attached links"
+          data-vaul-no-drag
+        >
           {links.slice(0, 3).map((link) => (
-            <a key={link.href} href={link.href} target="_blank" rel="noreferrer">
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              data-vaul-no-drag
+            >
               <span aria-hidden="true">↗</span>{link.label}
             </a>
           ))}

@@ -160,6 +160,7 @@ export default function ProjectDrawer() {
                     <video
                       controls
                       playsInline
+                      data-vaul-no-drag
                       preload="metadata"
                       src={media.src}
                     >
@@ -186,9 +187,12 @@ export default function ProjectDrawer() {
                   <nav
                     className="drawer-media-pagination"
                     aria-label="Project media"
+                    data-vaul-no-drag
+                    onPointerDown={(event) => event.stopPropagation()}
                   >
                     <button
                       type="button"
+                      data-vaul-no-drag
                       disabled={mediaIndex === 0}
                       onClick={() =>
                         setMediaIndex((index) => Math.max(0, index - 1))
@@ -202,6 +206,7 @@ export default function ProjectDrawer() {
                         <button
                           key={item.src}
                           type="button"
+                          data-vaul-no-drag
                           aria-label={`Show media ${index + 1}`}
                           aria-current={index === mediaIndex}
                           onClick={() => setMediaIndex(index)}
@@ -210,6 +215,7 @@ export default function ProjectDrawer() {
                     </div>
                     <button
                       type="button"
+                      data-vaul-no-drag
                       disabled={mediaIndex === mediaItems.length - 1}
                       onClick={() =>
                         setMediaIndex((index) =>
@@ -262,10 +268,21 @@ export default function ProjectDrawer() {
                 </ul>
               ) : null}
               {project?.links ? (
-                <nav className="drawer-links" aria-label="Project links">
+                <nav
+                  className="drawer-links"
+                  aria-label="Project links"
+                  data-vaul-no-drag
+                  onPointerDown={(event) => event.stopPropagation()}
+                >
                   {Object.entries(project.links).map(([key, href]) =>
                     href && linkLabels[key] ? (
-                      <a key={key} href={href} target="_blank" rel="noreferrer">
+                      <a
+                        key={key}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-vaul-no-drag
+                      >
                         {linkLabels[key]} ↗
                       </a>
                     ) : null,
