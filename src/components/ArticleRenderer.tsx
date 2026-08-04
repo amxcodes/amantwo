@@ -562,8 +562,10 @@ export default function ArticleRenderer({
           <button
             className="article-reader-trigger"
             type="button"
+            data-vaul-no-drag
             aria-expanded={preferencesOpen}
             aria-controls="article-reader-preferences"
+            onPointerDown={(event) => event.stopPropagation()}
             onClick={() => setPreferencesOpen((open) => !open)}
           >
             <span aria-hidden="true">Aa</span>
@@ -574,6 +576,8 @@ export default function ArticleRenderer({
             <div
               className="article-reader-preferences"
               id="article-reader-preferences"
+              data-vaul-no-drag
+              onPointerDown={(event) => event.stopPropagation()}
             >
               <fieldset>
                 <legend>Text size</legend>
@@ -581,6 +585,7 @@ export default function ArticleRenderer({
                   <button
                     type="button"
                     key={value}
+                    data-vaul-no-drag
                     aria-pressed={textSize === value}
                     onClick={() => setTextSize(value)}
                   >
@@ -594,6 +599,7 @@ export default function ArticleRenderer({
                   <button
                     type="button"
                     key={value}
+                    data-vaul-no-drag
                     aria-pressed={measure === value}
                     onClick={() => setMeasure(value)}
                   >
@@ -607,6 +613,7 @@ export default function ArticleRenderer({
                   <button
                     type="button"
                     key={value}
+                    data-vaul-no-drag
                     aria-pressed={typeface === value}
                     onClick={() => setTypeface(value)}
                   >
@@ -620,6 +627,7 @@ export default function ArticleRenderer({
                   <button
                     type="button"
                     key={value}
+                    data-vaul-no-drag
                     aria-pressed={spacing === value}
                     onClick={() => setSpacing(value)}
                   >
@@ -663,8 +671,10 @@ export default function ArticleRenderer({
             className="article-index-trigger"
             ref={indexTriggerRef}
             type="button"
+            data-vaul-no-drag
             aria-expanded={indexOpen}
             aria-controls="article-index-popover"
+            onPointerDown={(event) => event.stopPropagation()}
             onClick={() => {
               setIndexMenuReady(false);
               setIndexOpen((open) => !open);
@@ -684,6 +694,7 @@ export default function ArticleRenderer({
               id="article-index-popover"
               role="dialog"
               aria-label="Article index"
+              data-vaul-no-drag
               data-positioned={indexMenuReady ? "true" : "false"}
               style={indexMenuStyle}
               onPointerDown={(event) => event.stopPropagation()}
@@ -702,6 +713,7 @@ export default function ArticleRenderer({
                   <li key={heading.id}>
                     <a
                       href={`#${heading.id}`}
+                      data-vaul-no-drag
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
