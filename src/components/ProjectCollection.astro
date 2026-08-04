@@ -426,17 +426,55 @@ const githubSkeletonCells = Array.from(
         .filter((contribution) => contribution.count > 0)
         .length.toLocaleString("en");
 
-      const renderedCells: HTMLButtonElement[] = [];
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
 
+      const renderedCells: HTMLButtonElement[] = [];
+      let tooltipHideTimer: number | undefined;
       const hideTooltip = () => {
+        if (tooltipHideTimer !== undefined) {
+          window.clearTimeout(tooltipHideTimer);
+        }
         tooltip.dataset.visible = "false";
-        window.setTimeout(() => {
+        tooltipHideTimer = window.setTimeout(() => {
           if (tooltip.dataset.visible === "false") tooltip.hidden = true;
         }, 140);
       };
+
+      const resetGithubInteraction = () => {
+        activityLabel.textContent = "Move across the graph";
+        resetGithubProximity(renderedCells);
+        hideTooltip();
+      };
+
+      // Touch devices can keep the tapped cell focused after the user moves
+      // on, so mouseleave/blur alone are not enough to dismiss the tooltip.
+      // Treat outside taps, scrolling, viewport changes, and tab switches as
+      // an intentional end to the transient interaction.
+      const dismissTransientTooltip = (event?: Event) => {
+        if (event?.type === "pointerdown") {
+          const target = event.target;
+          if (
+            target instanceof Element &&
+            target.closest(".github-graph-cell")
+          ) {
+            return;
+          }
+        }
+        resetGithubInteraction();
+      };
+      const handleWindowScroll = () => dismissTransientTooltip();
+      const handleDocumentVisibility = () => {
+        if (document.visibilityState !== "visible") resetGithubInteraction();
+      };
+      document.addEventListener("pointerdown", dismissTransientTooltip, true);
+      window.addEventListener("scroll", handleWindowScroll, {
+        passive: true,
+      });
+      window.addEventListener("resize", handleWindowScroll, { passive: true });
+      window.addEventListener("blur", handleWindowScroll);
+      document.addEventListener("visibilitychange", handleDocumentVisibility);
 
       cells.forEach((contribution, index) => {
         const button = document.createElement("button");
@@ -533,9 +571,7 @@ const githubSkeletonCells = Array.from(
       });
 
       grid.addEventListener("mouseleave", () => {
-        activityLabel.textContent = "Move across the graph";
-        resetGithubProximity(renderedCells);
-        hideTooltip();
+        resetGithubInteraction();
       });
       graph.setAttribute("aria-busy", "false");
     } catch {

@@ -77,6 +77,27 @@ function WritingGrid({
               className="blog-card-read"
               href={`/writing/${post.slug}`}
               aria-label={`Read ${post.title}`}
+              onPointerEnter={() => {
+                window.dispatchEvent(
+                  new CustomEvent("portfolio:prefetch-post", {
+                    detail: { slug: post.slug },
+                  }),
+                );
+              }}
+              onPointerDown={() => {
+                window.dispatchEvent(
+                  new CustomEvent("portfolio:prefetch-post", {
+                    detail: { slug: post.slug },
+                  }),
+                );
+              }}
+              onFocus={() => {
+                window.dispatchEvent(
+                  new CustomEvent("portfolio:prefetch-post", {
+                    detail: { slug: post.slug },
+                  }),
+                );
+              }}
               onClick={(event) => {
                 if (
                   event.metaKey ||

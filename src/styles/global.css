@@ -2852,6 +2852,44 @@ li {
   display: none;
 }
 
+.blog-reader-loading {
+  display: grid;
+  width: min(100% - 48px, 680px);
+  gap: 10px;
+  margin: 10px auto clamp(48px, 8vw, 88px);
+}
+
+.blog-reader-loading span {
+  height: 10px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 999px;
+  animation: blog-reader-loading-pulse 1.1s ease-in-out infinite alternate;
+}
+
+.blog-reader-loading span:nth-child(2) {
+  width: 86%;
+  animation-delay: 80ms;
+}
+
+.blog-reader-loading span:nth-child(3) {
+  width: 62%;
+  animation-delay: 160ms;
+}
+
+.blog-reader-loading-page {
+  min-height: min(62dvh, 520px);
+  align-content: center;
+}
+
+@keyframes blog-reader-loading-pulse {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-reader-loading span { animation: none; }
+}
+
 .blog-reader-header,
 .blog-reader-copy {
   width: min(100% - 48px, 680px);
