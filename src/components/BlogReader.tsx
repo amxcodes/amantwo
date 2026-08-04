@@ -65,7 +65,10 @@ function useReaderState(
     const openPost = (event: Event) => {
       const next = (event as CustomEvent<PublicArticle>).detail;
       if (!next?.slug) return;
-      setPost(next);
+      // Public collection cards intentionally omit the article body. Let the
+      // slug query hydrate the complete reader document before opening the
+      // drawer; legacy/local cards may still carry a complete body.
+      setPost(Array.isArray(next.body) ? next : null);
       setRequestedSlug(next.slug);
       updatePostQuery(next.slug, "pushState");
     };

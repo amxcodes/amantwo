@@ -1,4 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import {
   type MutationCtx,
@@ -646,15 +647,72 @@ export const publicList = query({
   },
 });
 
+/**
+ * Lightweight, cursor-paginated records for public writing collections.
+ *
+ * Article bodies, narration metadata, cover metadata, and SEO documents stay
+ * behind `publicBySlug`. That keeps collection payloads bounded as the archive
+ * grows while preserving the writing studio's existing document contract.
+ */
+export const publicCards = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query("articles")
+      .withIndex("by_status_publishedAt", (q) =>
+        q.eq("status", "published"),
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    return {
+      ...result,
+      page: result.page.map((article) => ({
+        slug: article.slug,
+        title: article.title,
+        summary: article.summary,
+        meta: article.meta,
+        readingTime: article.readingTime,
+        tone: article.tone,
+        publishedAt: article.publishedAt,
+      })),
+    };
+  },
+});
+
 export const publicBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    const article = await ctx.db
+    const exactArticle = await ctx.db
       .query("articles")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
-    return article?.status === "published"
-      ? { ...article, readingTime: automaticReadingTime(article.body) }
+    if (exactArticle?.status === "published") {
+      return {
+        ...exactArticle,
+        readingTime: automaticReadingTime(exactArticle.body),
+      };
+    }
+
+    // Preserve old shared aliases after an editor expands a slug. This scan is
+    // deliberately confined to the exceptional alias path; normal card and
+    // canonical slug reads remain indexed.
+    const wanted = slugify(args.slug);
+    const published = await ctx.db
+      .query("articles")
+      .withIndex("by_status", (q) => q.eq("status", "published"))
+      .collect();
+    const alias = published.find((article) => {
+      const articleSlug = slugify(article.slug);
+      const titleSlug = slugify(article.title);
+      return (
+        articleSlug === wanted ||
+        titleSlug === wanted ||
+        articleSlug.endsWith(`-${wanted}`)
+      );
+    });
+    return alias
+      ? { ...alias, readingTime: automaticReadingTime(alias.body) }
       : null;
   },
 });

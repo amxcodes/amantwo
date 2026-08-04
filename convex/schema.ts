@@ -1,6 +1,6 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
   ...authTables,
@@ -90,6 +90,7 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_status", ["status"])
+    .index("by_status_publishedAt", ["status", "publishedAt"])
     .index("by_updatedAt", ["updatedAt"]),
 
   articleRevisions: defineTable({

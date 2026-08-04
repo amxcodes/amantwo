@@ -1,9 +1,6 @@
 ---
-import type { PublicArticle } from "./ArticleRenderer";
-import PublishedWritingCards from "./PublishedWritingCards";
+import PublishedWritingCards, { type ArticleCard } from "./PublishedWritingCards";
 import { publicConvexUrl } from "../lib/publicConfig";
-
-type ArticleCard = PublicArticle & { tone?: string };
 
 interface Props {
   posts: ArticleCard[];

@@ -21,9 +21,14 @@ function setupReveals() {
     { duration: 0.42, delay: stagger(0.06), ease: [0.22, 1, 0.36, 1] },
   );
 
-  const revealProjects = () => {
+  let managedWritingHydrated = false;
+
+  const revealProjects = (includeManagedWriting = managedWritingHydrated) => {
+    const selector = includeManagedWriting
+      ? "[data-reveal='project']:not([data-reveal-ready])"
+      : "[data-reveal='project']:not(.blog-card):not([data-reveal-ready])";
     const pending = document.querySelectorAll<HTMLElement>(
-      "[data-reveal='project']:not([data-reveal-ready])",
+      selector,
     );
     if (!pending.length) return;
     pending.forEach((element) => {
@@ -50,11 +55,17 @@ function setupReveals() {
 
   inView(
     ".project-scroller",
-    revealProjects,
+    () => revealProjects(),
     { margin: "0px 0px -6% 0px" },
   );
   revealProjects();
-  window.addEventListener("portfolio:content-mounted", revealProjects);
+  window.addEventListener("portfolio:content-mounted", () => {
+    // React owns the writing-card markup. Wait for its post-hydration signal
+    // before adding reveal attributes, otherwise the browser DOM no longer
+    // matches the server snapshot when React hydrates the island.
+    managedWritingHydrated = true;
+    revealProjects(true);
+  });
   // Convex-backed islands hydrate after this module on slower devices.  A
   // small, targeted observer keeps late cards from remaining at the global
   // [data-reveal] opacity: 0 without re-running animations for old nodes.

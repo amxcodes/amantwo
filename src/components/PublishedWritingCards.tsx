@@ -1,10 +1,19 @@
-import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import {
+  ConvexProvider,
+  ConvexReactClient,
+  usePaginatedQuery,
+} from "convex/react";
+import { useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import type { PublicArticle } from "./ArticleRenderer";
 import ArticleShareButton from "./ArticleShareButton";
 
-type ArticleCard = PublicArticle & { tone?: string };
+export type ArticleCard = Pick<
+  PublicArticle,
+  "slug" | "meta" | "title" | "summary" | "readingTime" | "tone" | "publishedAt"
+>;
+
+const HOME_WRITING_PAGE_SIZE = 6;
 
 type Props = {
   initialPosts: ArticleCard[];
@@ -33,7 +42,7 @@ function WritingGrid({
   useEffect(() => {
     if (!loading)
       window.dispatchEvent(new CustomEvent("portfolio:content-mounted"));
-  }, [loading, visiblePosts]);
+  }, [loading]);
 
   if (loading) {
     return (
@@ -53,7 +62,7 @@ function WritingGrid({
   }
 
   return (
-    <div className="blog-grid" aria-label="Writing">
+    <div className="blog-grid">
       {visiblePosts.map((post) => (
         <article
           className={`blog-card tone-${post.tone ?? "blue"}`}
@@ -106,16 +115,14 @@ function WritingGrid({
 }
 
 function ManagedWritingGrid({ initialPosts }: { initialPosts: ArticleCard[] }) {
-  const managed = useQuery(api.articles.publicList, {});
-  const [timedOut, setTimedOut] = useState(false);
+  const { results, status } = usePaginatedQuery(
+    api.articles.publicCards,
+    {},
+    { initialNumItems: HOME_WRITING_PAGE_SIZE },
+  );
+  const loading = status === "LoadingFirstPage";
 
-  useEffect(() => {
-    if (managed !== undefined) return;
-    const timeout = window.setTimeout(() => setTimedOut(true), 8_000);
-    return () => window.clearTimeout(timeout);
-  }, [managed]);
-
-  if (managed === undefined && !timedOut) {
+  if (loading) {
     // The Astro server already supplied the request-time Convex result. Keep
     // it visible while the client subscription connects instead of replacing
     // it with a loading/seed state during hydration.
@@ -130,8 +137,8 @@ function ManagedWritingGrid({ initialPosts }: { initialPosts: ArticleCard[] }) {
     <WritingGrid
       initialPosts={initialPosts}
       posts={
-        Array.isArray(managed)
-          ? (managed as unknown as ArticleCard[])
+        Array.isArray(results)
+          ? (results as unknown as ArticleCard[])
           : undefined
       }
     />

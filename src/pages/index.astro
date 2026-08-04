@@ -13,7 +13,7 @@ import { siteData } from "../content/site";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
-import type { PublicArticle } from "../components/ArticleRenderer";
+import type { ArticleCard } from "../components/PublishedWritingCards";
 import { publicConvexUrl } from "../lib/publicConfig";
 
 // Keep the published snapshot request-time in Astro dev and in Netlify's
@@ -28,7 +28,7 @@ type ManagedSection = {
 
 const convexUrl = publicConvexUrl;
 let managedSections: ManagedSection[] | null = null;
-let managedArticles: PublicArticle[] | null = null;
+let managedArticles: ArticleCard[] | null = null;
 let managedReadSucceeded = false;
 
 // The public page is backed by a published Convex revision. Avoid a browser,
@@ -41,11 +41,13 @@ if (convexUrl) {
     const client = new ConvexHttpClient(convexUrl);
     const [response, articles] = await Promise.all([
       client.query(api.cms.publicHome, {}),
-      client.query(api.articles.publicList, {}),
+      client.query(api.articles.publicCards, {
+        paginationOpts: { numItems: 6, cursor: null },
+      }),
     ]);
     managedSections = Array.isArray(response) ? response as ManagedSection[] : null;
-    managedArticles = Array.isArray(articles) && articles.length
-      ? articles as unknown as PublicArticle[]
+    managedArticles = Array.isArray(articles.page) && articles.page.length
+      ? articles.page as unknown as ArticleCard[]
       : null;
     managedReadSucceeded = true;
   } catch {
