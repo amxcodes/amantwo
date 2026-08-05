@@ -4409,7 +4409,7 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
     /* Keep the mobile cards on the same fixed row model as desktop. This
        prevents one long title/summary from changing the height of its
        neighbours while the card content remains line-clamped below. */
-    grid-auto-rows: clamp(320px, 31vw, 370px);
+    grid-auto-rows: clamp(370px, 31vw, 390px);
     gap: 12px;
   }
 
@@ -4421,13 +4421,21 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
   }
 
   .blog-card h3 {
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
     margin: 30px 0 14px;
     font-size: clamp(29px, 8vw, 38px);
     line-height: 1.08;
-    overflow-wrap: break-word;
+    /* Match the desktop card contract: three balanced lines, never a
+       partially clipped fourth line on narrow screens. */
+    min-block-size: calc(3 * 1.08em);
+    max-block-size: calc(3 * 1.08em);
+    overflow-wrap: anywhere;
     word-break: normal;
-    -webkit-line-clamp: 4;
+    text-wrap: balance;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
   }
 
   .blog-card > span {
