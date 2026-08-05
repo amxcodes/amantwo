@@ -1603,3 +1603,64 @@
     white-space: nowrap;
   }
 }
+
+/* Newsletter controls intentionally share the existing studio language. They
+   are scoped to the admin overlay so the public footer remains untouched. */
+.newsletter-admin-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(58rem, 100%);
+  max-height: min(48rem, calc(100svh - 2rem));
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 68%);
+  border-radius: 1.3rem;
+  background: #faf9f5;
+  box-shadow: 0 24px 70px rgb(24 35 51 / 22%), 0 1px 2px rgb(24 35 51 / 10%);
+  animation: manager-sheet-in 200ms cubic-bezier(.2, 0, 0, 1);
+}
+.newsletter-admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.35rem 1rem;
+  border-block-end: 1px solid #e5e5df;
+}
+.newsletter-admin-header p,
+.newsletter-admin-section-heading p { margin: 0; color: #637989; font: 600 .61rem/1 var(--font-mono); letter-spacing: .1em; }
+.newsletter-admin-header h2,
+.newsletter-admin-section-heading h3 { margin: .4rem 0 0; color: #1d2939; font-family: var(--font-sans); letter-spacing: -.03em; }
+.newsletter-admin-header h2 { font-size: 1.45rem; }
+.newsletter-admin-header span { display: block; margin-top: .35rem; color: #607080; font: 400 .76rem/1.45 var(--font-sans); }
+.newsletter-admin-scroll { display: grid; gap: 1rem; overflow-y: auto; padding: 1rem 1.35rem; scrollbar-width: thin; scrollbar-color: #ccd7d8 transparent; }
+.newsletter-admin-section { display: grid; gap: .8rem; padding: .95rem; border: 1px solid #e0e3de; border-radius: .95rem; background: #f1f3ef; }
+.newsletter-admin-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
+.newsletter-admin-section-heading h3 { font-size: 1.05rem; }
+.newsletter-admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.newsletter-admin-wide { grid-column: 1 / -1; }
+.newsletter-admin-toggle { display: inline-flex; align-items: center; gap: .45rem; color: #315f77; font: 500 .65rem/1 var(--font-mono); }
+.newsletter-admin-toggle input { accent-color: #2c506e; }
+.newsletter-admin-counts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .35rem; color: #607080; font: 500 .6rem/1 var(--font-mono); }
+.newsletter-admin-counts span { padding: .35rem .5rem; border-radius: 999px; background: #e3ebe8; }
+.newsletter-admin-filters { display: flex; flex-wrap: wrap; gap: .35rem; }
+.newsletter-admin-filters button { min-height: 2rem; border: 1px solid #d5dad5; border-radius: 999px; padding: .35rem .65rem; background: #fbfaf6; color: #526072; font: 500 .62rem/1 var(--font-mono); cursor: pointer; }
+.newsletter-admin-filters button[aria-selected="true"] { border-color: #a9c3ce; background: #dce9ee; color: #1c3a52; }
+.newsletter-admin-list { display: grid; gap: .35rem; max-height: 15rem; overflow-y: auto; }
+.newsletter-admin-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .6rem .65rem; border-radius: .65rem; background: #fbfaf6; }
+.newsletter-admin-row > div { min-width: 0; }
+.newsletter-admin-row strong { display: block; overflow: hidden; color: #1d2939; font: 500 .73rem/1.25 var(--font-sans); text-overflow: ellipsis; white-space: nowrap; }
+.newsletter-admin-row span { display: block; margin-top: .18rem; color: #687586; font: 400 .61rem/1.3 var(--font-sans); }
+.newsletter-admin-row small { flex: 0 0 auto; color: #2d6c5a; font: 500 .58rem/1 var(--font-mono); text-transform: uppercase; }
+.newsletter-admin-row small[data-status="unsubscribed"] { color: #a64e43; }
+.newsletter-admin-empty { margin: 0; color: #687586; font: 400 .72rem/1.45 var(--font-sans); }
+.newsletter-admin-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .8rem 1.35rem; border-block-start: 1px solid #e5e5df; background: #f5f3ed; }
+.newsletter-admin-footer > span { color: #607080; font: 500 .61rem/1.35 var(--font-mono); }
+.newsletter-admin-footer > div { display: flex; flex-wrap: wrap; gap: .45rem; }
+@media (max-width: 720px) {
+  .newsletter-admin-panel { width: 100%; max-height: 90svh; border-radius: 1.35rem 1.35rem 0 0; }
+  .newsletter-admin-header, .newsletter-admin-scroll, .newsletter-admin-footer { padding-inline: 1rem; }
+  .newsletter-admin-form-grid { grid-template-columns: 1fr; }
+  .newsletter-admin-wide { grid-column: auto; }
+  .newsletter-admin-footer { align-items: stretch; flex-direction: column; }
+  .newsletter-admin-footer > div { justify-content: flex-end; }
+}

@@ -4073,6 +4073,30 @@ li {
   transition-duration: 180ms;
 }
 
+.signature-footer-subscribe-wrap {
+  display: grid;
+  justify-items: center;
+  width: min(100%, 380px);
+}
+
+.signature-footer-subscribe-wrap .signature-footer-subscribe {
+  width: 100%;
+}
+
+.signature-footer-subscribe-status {
+  width: 100%;
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: .04em;
+  text-align: center;
+}
+
+.signature-footer-subscribe-status.is-error {
+  color: #a64e43;
+}
+
 .signature-footer-subscribe:focus-within {
   border-color: rgb(29 36 48 / 0.28);
   outline: 2px solid color-mix(in srgb, var(--yellow) 42%, transparent);
@@ -6457,7 +6481,8 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
 
   .ask-aman-mobile-sheet[data-ask-aman-keyboard-open="true"] {
     min-height: 0;
-    max-height: min(calc(var(--ask-aman-visual-vh, 100dvh) - 8px), 680px);
+    height: min(calc(var(--ask-aman-visual-vh, 100dvh) - 12px), 680px);
+    max-height: min(calc(var(--ask-aman-visual-vh, 100dvh) - 12px), 680px);
     inset-block-end: var(--ask-aman-keyboard-inset, 0px);
   }
 

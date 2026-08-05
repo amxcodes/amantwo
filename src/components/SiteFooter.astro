@@ -1,6 +1,8 @@
 ---
 import BrandIcon from "./BrandIcon.astro";
 import { FooterSignature } from "./FooterSignature";
+import NewsletterForm from "./NewsletterForm";
+import { publicConvexUrl } from "../lib/publicConfig";
 
 interface Props {
   email: string;
@@ -20,12 +22,7 @@ const socialLinks = [
   <div class="signature-footer-content">
     <div class="signature-footer-main">
       <FooterSignature client:load name="Aman" sectionId="signature-footer" />
-      <p class="signature-footer-message">A small, occasional note on products, systems, and moving images.</p>
-      <form class="signature-footer-subscribe" action={`mailto:${email}?subject=Newsletter%20subscription`} method="post" enctype="text/plain">
-        <label class="sr-only" for="footer-email">Email address</label>
-        <input id="footer-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="Email address" required />
-        <button type="submit">Join <span aria-hidden="true">↗</span></button>
-      </form>
+      <NewsletterForm client:load convexUrl={publicConvexUrl} fallbackEmail={email} />
       <nav class="signature-footer-socials" aria-label="Aman Anu on social media">
         {socialLinks.map((link) => (
           <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined} aria-label={link.label} title={link.label}>

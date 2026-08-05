@@ -19,6 +19,7 @@ import type * as auth from "../auth.js";
 import type * as cms from "../cms.js";
 import type * as http from "../http.js";
 import type * as media from "../media.js";
+import type * as newsletter from "../newsletter.js";
 
 import type {
   ApiFromModules,
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   cms: typeof cms;
   http: typeof http;
   media: typeof media;
+  newsletter: typeof newsletter;
 }>;
 
 /**

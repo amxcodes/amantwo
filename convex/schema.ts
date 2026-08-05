@@ -10,6 +10,34 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 
+  // Public newsletter sign-ups are intentionally kept separate from the
+  // editorial settings document. This gives the admin view a small, indexed
+  // audience table without exposing subscriber data to the public client.
+  newsletterSubscribers: defineTable({
+    email: v.string(),
+    normalizedEmail: v.string(),
+    status: v.union(v.literal("subscribed"), v.literal("unsubscribed")),
+    source: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    subscribedAt: v.optional(v.number()),
+    unsubscribedAt: v.optional(v.number()),
+  })
+    .index("by_email", ["normalizedEmail"])
+    .index("by_status_createdAt", ["status", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
+
+  // A small server-side fixed-window bucket for public newsletter writes.
+  // Convex mutations do not expose the caller IP, so this intentionally
+  // protects the public endpoint with a shared write budget instead of
+  // pretending that a client-supplied identity is trustworthy.
+  newsletterRateLimits: defineTable({
+    key: v.string(),
+    windowStartedAt: v.number(),
+    attempts: v.number(),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
+
   profiles: defineTable({
     userId: v.id("users"),
     role: v.union(v.literal("owner"), v.literal("editor")),

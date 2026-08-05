@@ -98,6 +98,7 @@ function AskAmanInner() {
   const rootRef = useRef<HTMLDivElement>(null);
   const mobileSheetRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const mobileLayoutHeightRef = useRef<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [mode, setMode] = useState<SearchMode>("writings");
@@ -184,14 +185,22 @@ function AskAmanInner() {
     if (!sheet) return;
 
     const viewport = window.visualViewport;
+    // Capture the layout viewport before the input is focused. Some mobile
+    // browsers temporarily report the keyboard-reduced height through
+    // innerHeight as well, which makes a live delta equal zero and leaves the
+    // composer under the keyboard until the first keystroke.
+    const documentHeight = document.documentElement?.clientHeight ?? 0;
+    const windowHeight = window.innerHeight || 0;
+    mobileLayoutHeightRef.current = Math.max(documentHeight, windowHeight);
     let frame = 0;
     const settleTimers: number[] = [];
 
     const syncViewport = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const layoutHeight = window.innerHeight;
-        const visualHeight = viewport?.height ?? layoutHeight;
+        const layoutHeight = mobileLayoutHeightRef.current
+          ?? Math.max(document.documentElement?.clientHeight ?? 0, window.innerHeight || 0);
+        const visualHeight = viewport?.height ?? window.innerHeight;
         const offsetTop = viewport?.offsetTop ?? 0;
         // Keep the sheet anchored to the visible viewport when the software
         // keyboard opens, then settle back to the layout viewport after it
@@ -200,7 +209,7 @@ function AskAmanInner() {
         const keyboardInset = Math.max(0, layoutHeight - visualHeight - offsetTop);
         sheet.style.setProperty("--ask-aman-visual-vh", `${visualHeight}px`);
         sheet.style.setProperty("--ask-aman-keyboard-inset", `${keyboardInset}px`);
-        sheet.dataset.askAmanKeyboardOpen = keyboardInset > 120 ? "true" : "false";
+        sheet.dataset.askAmanKeyboardOpen = keyboardInset > 80 || visualHeight < layoutHeight - 80 ? "true" : "false";
       });
     };
 
@@ -211,6 +220,9 @@ function AskAmanInner() {
     };
 
     scheduleSync();
+    const input = mobileInputRef.current;
+    input?.addEventListener("focusin", scheduleSync, { passive: true });
+    input?.addEventListener("input", scheduleSync, { passive: true });
     viewport?.addEventListener("resize", scheduleSync, { passive: true });
     viewport?.addEventListener("scroll", scheduleSync, { passive: true });
     window.addEventListener("resize", scheduleSync, { passive: true });
@@ -218,9 +230,12 @@ function AskAmanInner() {
     return () => {
       window.cancelAnimationFrame(frame);
       settleTimers.forEach((timer) => window.clearTimeout(timer));
+      input?.removeEventListener("focusin", scheduleSync);
+      input?.removeEventListener("input", scheduleSync);
       viewport?.removeEventListener("resize", scheduleSync);
       viewport?.removeEventListener("scroll", scheduleSync);
       window.removeEventListener("resize", scheduleSync);
+      mobileLayoutHeightRef.current = null;
       sheet.style.removeProperty("--ask-aman-visual-vh");
       sheet.style.removeProperty("--ask-aman-keyboard-inset");
       delete sheet.dataset.askAmanKeyboardOpen;

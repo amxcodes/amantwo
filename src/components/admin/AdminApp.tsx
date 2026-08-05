@@ -14,6 +14,7 @@ import { siteData } from "../../content/site";
 import { publicConvexUrl } from "../../lib/publicConfig";
 import { classifyProjectMedia } from "../../lib/project-media";
 import AiProviderSettings from "./AiProviderSettings";
+import NewsletterSettings from "./NewsletterSettings";
 import SessionLoader from "./SessionLoader";
 import "./admin.css";
 
@@ -1168,6 +1169,7 @@ function SiteManager({
     null,
   );
   const [aiSettingsOpen, setAiSettingsOpen] = useState(false);
+  const [newsletterOpen, setNewsletterOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -1181,7 +1183,7 @@ function SiteManager({
   }, [savedSections]);
   useEffect(() => {
     const modalOpen = Boolean(
-      activeKind || editorOpen || aiSettingsOpen || pendingDelete !== null || pendingArticleDelete !== null,
+      activeKind || editorOpen || aiSettingsOpen || newsletterOpen || pendingDelete !== null || pendingArticleDelete !== null,
     );
     if (!modalOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -1192,6 +1194,7 @@ function SiteManager({
       else if (pendingArticleDelete !== null) setPendingArticleDelete(null);
       else if (editorOpen) setEditorOpen(false);
       else if (aiSettingsOpen) setAiSettingsOpen(false);
+      else if (newsletterOpen) setNewsletterOpen(false);
       else {
         setActiveKind(null);
         setActiveIndex(null);
@@ -1202,7 +1205,7 @@ function SiteManager({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeTopLayer);
     };
-  }, [activeKind, editorOpen, aiSettingsOpen, pendingDelete, pendingArticleDelete]);
+  }, [activeKind, editorOpen, aiSettingsOpen, newsletterOpen, pendingDelete, pendingArticleDelete]);
   const section = useMemo(
     () => sections.find((entry) => entry.registryType === activeKind),
     [activeKind, sections],
@@ -1358,6 +1361,13 @@ function SiteManager({
             onClick={() => setAiSettingsOpen(true)}
           >
             AI settings
+          </button>
+          <button
+            className="studio-button studio-button-quiet"
+            type="button"
+            onClick={() => setNewsletterOpen(true)}
+          >
+            Newsletter
           </button>
           <button
             className="studio-button studio-button-quiet"
@@ -1655,6 +1665,7 @@ function SiteManager({
         </div>
       ) : null}
       {aiSettingsOpen ? <AiProviderSettings onClose={() => setAiSettingsOpen(false)} /> : null}
+      {newsletterOpen ? <NewsletterSettings onClose={() => setNewsletterOpen(false)} /> : null}
       {editorOpen &&
       activeItem !== null &&
       activeIndex !== null &&
