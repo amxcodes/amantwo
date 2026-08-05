@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { resolveMediaUrl } from "../lib/media";
+import { youtubeEmbedUrl } from "../lib/project-media";
 import { useFastDrawerRelease } from "../lib/useFastDrawerRelease";
 
 type DrawerProject = {
@@ -13,12 +14,12 @@ type DrawerProject = {
   tags?: string[];
   links?: Record<string, string>;
   media?: {
-    type?: "image" | "video";
+    type?: "image" | "video" | "youtube";
     src?: string;
     alt?: string;
   };
   mediaItems?: Array<{
-    type?: "image" | "video";
+    type?: "image" | "video" | "youtube";
     src?: string;
     alt?: string;
     caption?: string;
@@ -44,6 +45,7 @@ const prefetchProjectMedia = (project: DrawerProject) => {
     const src = resolveMediaUrl(item.src);
     if (!src || prefetchedProjectMedia.has(src)) continue;
     prefetchedProjectMedia.add(src);
+    if (item.type === "youtube") continue;
     if (item.type === "video") {
       const video = document.createElement("video");
       video.preload = "metadata";
@@ -60,6 +62,7 @@ export default function ProjectDrawer() {
   const [project, setProject] = useState<DrawerProject | null>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [open, setOpen] = useState(false);
+  const nativeVideoRef = useRef<HTMLVideoElement | null>(null);
   const clearProjectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -115,15 +118,38 @@ export default function ProjectDrawer() {
           ...item,
           src: resolveMediaUrl(item.src ?? ""),
         })) ?? [];
-    if (!items.length && project?.media?.src) {
-      items.push({
+    if (project?.media?.src) {
+      const main = {
         ...project.media,
         src: resolveMediaUrl(project.media.src),
-      });
+      };
+      // The lead media is authoritative. Keep it first even when a project
+      // also has a gallery, while avoiding a duplicate when the admin upload
+      // already stored the lead item in mediaItems.
+      if (!items.some((item) => item.src === main.src)) items.unshift(main);
     }
     return items;
   }, [project]);
   const media = mediaItems[mediaIndex];
+  const youtubeSrc =
+    media?.type === "youtube" && media.src
+      ? youtubeEmbedUrl(media.src, { autoplay: open })
+      : undefined;
+
+  useEffect(() => {
+    const video = nativeVideoRef.current;
+    if (!video) return;
+    if (!open) {
+      video.pause();
+      return;
+    }
+    // The muted attribute makes this autoplay policy-safe. Calling play here
+    // also covers media changes while the drawer is already open.
+    void video.play().catch(() => {
+      // A browser may still defer playback until the next user gesture. The
+      // native autoplay attribute remains in place for that gesture.
+    });
+  }, [open, media?.src]);
 
   return (
     <Drawer.Root
@@ -159,9 +185,22 @@ export default function ProjectDrawer() {
             {media ? (
               <div className="drawer-media-stack">
                 <div className="drawer-media">
-                  {media.type === "video" ? (
+                  {media.type === "youtube" && youtubeSrc ? (
+                    <iframe
+                      src={open ? youtubeSrc : "about:blank"}
+                      title={media.alt ?? "Project video"}
+                      loading="eager"
+                      data-vaul-no-drag
+                      allow="autoplay; encrypted-media; picture-in-picture"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  ) : media.type === "video" ? (
                     <video
-                      controls
+                      ref={nativeVideoRef}
+                      autoPlay={open}
+                      muted
+                      loop
                       playsInline
                       data-vaul-no-drag
                       preload="metadata"
@@ -173,6 +212,15 @@ export default function ProjectDrawer() {
                         label="English captions"
                       />
                     </video>
+                  ) : media.type === "youtube" ? (
+                    <a
+                      className="drawer-media-link"
+                      href={media.src}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open video
+                    </a>
                   ) : (
                     <img
                       src={media.src}

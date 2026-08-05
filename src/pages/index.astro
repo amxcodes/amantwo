@@ -15,6 +15,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
 import type { ArticleCard } from "../components/PublishedWritingCards";
 import { publicConvexUrl } from "../lib/publicConfig";
+import { normalizeProjectMedia } from "../lib/project-media";
 
 // Keep the published snapshot request-time in Astro dev and in Netlify's
 // server function. This prevents a future adapter change from prerendering a
@@ -141,24 +142,11 @@ const normalizeProjects = (value: unknown): typeof siteData.projects => {
       detail: asText(raw.detail, summary),
       caseStudy: asText(raw.caseStudy, summary),
       tags: tags.length ? tags : ["Selected work"],
-      media: media && typeof media.src === "string" && media.src.trim()
-        ? {
-            type: media.type === "video" ? "video" as const : "image" as const,
-            src: media.src,
-            alt: asText(media.alt, title),
-          }
-        : undefined,
+      media: normalizeProjectMedia(media, title),
       mediaItems: Array.isArray(raw.mediaItems)
         ? raw.mediaItems.flatMap((item) => {
-            if (!item || typeof item !== "object") return [];
-            const candidate = item as Record<string, unknown>;
-            if (typeof candidate.src !== "string" || !candidate.src.trim()) return [];
-            return [{
-              type: candidate.type === "video" ? "video" as const : "image" as const,
-              src: candidate.src,
-              alt: asText(candidate.alt, title),
-              ...(typeof candidate.caption === "string" && candidate.caption.trim() ? { caption: repairDisplayText(candidate.caption.trim()) } : {}),
-            }];
+            const normalized = normalizeProjectMedia(item, title);
+            return normalized ? [normalized] : [];
           })
         : undefined,
       links: {

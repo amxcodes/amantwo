@@ -724,6 +724,7 @@
 
 .studio-shell .manager-field input,
 .studio-shell .manager-field textarea,
+.studio-shell .manager-field select,
 .studio-shell .manager-segment input,
 .studio-shell .manager-segment textarea,
 .studio-shell .manager-segment select,
@@ -755,6 +756,7 @@
 
 .studio-shell .manager-field input:focus,
 .studio-shell .manager-field textarea:focus,
+.studio-shell .manager-field select:focus,
 .studio-shell .manager-segment input:focus,
 .studio-shell .manager-segment textarea:focus,
 .studio-shell .manager-segment select:focus,

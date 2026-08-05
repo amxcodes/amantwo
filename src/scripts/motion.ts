@@ -1,4 +1,5 @@
 import { animate, inView, stagger } from "motion";
+import { normalizeProjectMedia } from "../lib/project-media";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const precisePointer = window.matchMedia(
@@ -258,22 +259,33 @@ function setupProjects() {
       const getProjectDetail = () => {
         const card = button.closest<HTMLElement>("[data-project-card]");
         if (!card) return undefined;
+        const title = card.dataset.projectTitle ?? "Project";
+        const media = card.dataset.projectMedia
+          ? normalizeProjectMedia(
+              {
+                type: card.dataset.projectMediaType,
+                src: card.dataset.projectMedia,
+                alt: card.dataset.projectMediaLabel,
+              },
+              title,
+            )
+          : undefined;
+        const mediaItems = parseData<unknown[]>(
+          card.dataset.projectMediaItems,
+        )
+          ?.map((item) => normalizeProjectMedia(item, title))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
         return {
           eyebrow: card.dataset.projectEyebrow,
-          title: card.dataset.projectTitle,
+          title,
           summary: card.dataset.projectSummary,
           caseStudy: card.dataset.projectCaseStudy,
           meta: card.dataset.projectMeta,
           status: card.dataset.projectStatus,
           tags: parseData<string[]>(card.dataset.projectTags),
           links: parseData<Record<string, string>>(card.dataset.projectLinks),
-          media: card.dataset.projectMedia
-            ? {
-                type: card.dataset.projectMediaType,
-                src: card.dataset.projectMedia,
-                alt: card.dataset.projectMediaLabel,
-              }
-            : undefined,
+          media,
+          mediaItems: mediaItems?.length ? mediaItems : undefined,
         };
       };
       const prefetch = () => {

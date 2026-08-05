@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { siteData } from "../../content/site";
 import { publicConvexUrl } from "../../lib/publicConfig";
+import { classifyProjectMedia } from "../../lib/project-media";
 import AiProviderSettings from "./AiProviderSettings";
 import SessionLoader from "./SessionLoader";
 import "./admin.css";
@@ -841,8 +842,19 @@ function ItemForm({
         ...item,
         media: {
           ...media,
-          type: media.type === "video" ? "video" : "image",
+          type:
+            field === "src"
+              ? classifyProjectMedia(value)
+              : classifyProjectMedia(readable(media.src, ""), media.type),
           [field]: value,
+        },
+      });
+    const setMediaType = (value: string) =>
+      onChange({
+        ...item,
+        media: {
+          ...media,
+          type: value === "video" || value === "youtube" ? value : "image",
         },
       });
     const setLink = (field: string, value: string) =>
@@ -899,8 +911,8 @@ function ItemForm({
         <fieldset className="manager-media">
           <legend>Project media</legend>
           <p>
-            Paste an ImageKit image/video URL now. The upload picker appears
-            here after the secure ImageKit key setup.
+            Paste an ImageKit image/video URL or a YouTube link. Uploaded
+            images and videos are detected automatically.
           </p>
           <div className="manager-form-grid">
             <label className="manager-field">
@@ -909,6 +921,21 @@ function ItemForm({
                 value={readable(media.src, "")}
                 onChange={(event) => setMedia("src", event.target.value)}
               />
+            </label>
+            <label className="manager-field">
+              Media kind
+              <select
+                value={
+                  media.type === "video" || media.type === "youtube"
+                    ? String(media.type)
+                    : "image"
+                }
+                onChange={(event) => setMediaType(event.target.value)}
+              >
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+                <option value="youtube">YouTube video</option>
+              </select>
             </label>
             <label className="manager-field">
               Alt text
@@ -921,15 +948,22 @@ function ItemForm({
           <MediaUpload
             folder="/portfolio/projects"
             onUploaded={(asset) =>
-              onChange({ ...item, media: { ...media, ...asset } })
+              onChange({
+                ...item,
+                media: {
+                  ...media,
+                  ...asset,
+                  type: asset.type === "video" ? "video" : "image",
+                },
+              })
             }
           />
         </fieldset>
         <fieldset className="manager-media">
           <legend>Project gallery</legend>
           <p>
-            Add images or videos for the case-study drawer. The first uploaded
-            item is used as the lead media.
+            Add images, videos, or YouTube links for the case-study drawer.
+            The first uploaded item is used as the lead media.
           </p>
           {gallery.map((asset, index) => (
             <div
@@ -945,12 +979,47 @@ function ItemForm({
                       ...item,
                       mediaItems: gallery.map((current, currentIndex) =>
                         currentIndex === index
-                          ? { ...current, src: event.target.value }
+                          ? {
+                              ...current,
+                              src: event.target.value,
+                              type: classifyProjectMedia(event.target.value),
+                            }
                           : current,
                       ),
                     })
                   }
                 />
+              </label>
+              <label className="manager-field">
+                Media kind
+                <select
+                  value={
+                    asset.type === "video" || asset.type === "youtube"
+                      ? String(asset.type)
+                      : "image"
+                  }
+                  onChange={(event) =>
+                    onChange({
+                      ...item,
+                      mediaItems: gallery.map((current, currentIndex) =>
+                        currentIndex === index
+                          ? {
+                              ...current,
+                              type:
+                                event.target.value === "video" ||
+                                event.target.value === "youtube"
+                                  ? event.target.value
+                                  : "image",
+                            }
+                          : current,
+                      ),
+                    })
+                  }
+                >
+                  <option value="image">Image</option>
+                  <option value="video">Video</option>
+                  <option value="youtube">YouTube video</option>
+                </select>
               </label>
               <label className="manager-field">
                 Alt text
@@ -989,8 +1058,19 @@ function ItemForm({
             onUploaded={(asset) =>
               onChange({
                 ...item,
-                media: gallery.length ? media : asset,
-                mediaItems: [...gallery, asset],
+                media: gallery.length
+                  ? media
+                  : {
+                      ...asset,
+                      type: asset.type === "video" ? "video" : "image",
+                    },
+                mediaItems: [
+                  ...gallery,
+                  {
+                    ...asset,
+                    type: asset.type === "video" ? "video" : "image",
+                  },
+                ],
               })
             }
           />

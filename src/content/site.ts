@@ -41,7 +41,7 @@ const projectSchema = z.object({
   tags: z.array(z.string().min(1)).min(1),
   media: z
     .object({
-      type: z.enum(["image", "video"]),
+      type: z.enum(["image", "video", "youtube"]),
       src: z.string().min(1).optional(),
       alt: z.string().min(1),
     })
@@ -49,7 +49,7 @@ const projectSchema = z.object({
   mediaItems: z
     .array(
       z.object({
-        type: z.enum(["image", "video"]),
+        type: z.enum(["image", "video", "youtube"]),
         src: z.string().min(1),
         alt: z.string().min(1),
         caption: z.string().min(1).optional(),

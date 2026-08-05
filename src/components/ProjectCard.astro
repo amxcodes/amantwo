@@ -31,6 +31,7 @@ const mediaSource = project.media?.src ?? "";
   data-project-media={mediaSource}
   data-project-media-type={project.media?.type ?? ""}
   data-project-media-label={project.media?.alt ?? ""}
+  data-project-media-items={JSON.stringify(project.mediaItems ?? [])}
   data-project-meta={project.meta}
   data-project-status={project.status}
   data-project-layout={project.layout}
