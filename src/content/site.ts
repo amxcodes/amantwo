@@ -179,8 +179,9 @@ export const siteData = siteSchema.parse({
   ],
   links: [
     { label: "Email", href: "mailto:amananuworks@gmail.com" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/" },
-    { label: "GitHub", href: "https://github.com/" },
+    { label: "GitHub", href: "https://github.com/amxcodes" },
+    { label: "Instagram", href: "https://www.instagram.com/amanxnu/" },
+    { label: "YouTube", href: "https://www.youtube.com/@Amananu" },
   ],
   github: {
     account: "amxcodes",

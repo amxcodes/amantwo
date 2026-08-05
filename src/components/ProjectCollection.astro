@@ -88,12 +88,16 @@ const githubSkeletonCells = Array.from(
       </button>
 
       <nav class="work-pagination" aria-label="Project pages">
-        <button type="button" data-project-page-previous aria-label="Previous project page">
-          <span aria-hidden="true">←</span>
+        <button class="work-pagination-button work-pagination-button--previous" type="button" data-project-page-previous aria-label="Previous project page">
+          <svg class="pagination-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M9.75 3.25 5.25 8l4.5 4.75" />
+          </svg>
         </button>
         <div class="work-pagination-dots" data-project-pagination-dots aria-label="Project pages"></div>
-        <button type="button" data-project-page-next aria-label="Next project page">
-          <span aria-hidden="true">→</span>
+        <button class="work-pagination-button work-pagination-button--next" type="button" data-project-page-next aria-label="Next project page">
+          <svg class="pagination-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="m6.25 3.25 4.5 4.75-4.5 4.75" />
+          </svg>
         </button>
         <span class="sr-only" aria-live="polite" data-project-position>1 / {pageCount}</span>
       </nav>

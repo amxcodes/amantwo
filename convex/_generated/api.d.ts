@@ -13,6 +13,8 @@ import type * as aiActions from "../aiActions.js";
 import type * as aiModels from "../aiModels.js";
 import type * as aiProviderRuntime from "../aiProviderRuntime.js";
 import type * as articles from "../articles.js";
+import type * as assistant from "../assistant.js";
+import type * as assistantActions from "../assistantActions.js";
 import type * as auth from "../auth.js";
 import type * as cms from "../cms.js";
 import type * as http from "../http.js";
@@ -30,6 +32,8 @@ declare const fullApi: ApiFromModules<{
   aiModels: typeof aiModels;
   aiProviderRuntime: typeof aiProviderRuntime;
   articles: typeof articles;
+  assistant: typeof assistant;
+  assistantActions: typeof assistantActions;
   auth: typeof auth;
   cms: typeof cms;
   http: typeof http;

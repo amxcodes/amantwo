@@ -191,6 +191,15 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_createdAt", ["createdAt"]),
 
+  // Anonymous, public Ask Aman quota. This stores only a short-lived visitor
+  // token and counters, never the visitor's question or chat history.
+  assistantRateLimits: defineTable({
+    token: v.string(),
+    windowStart: v.number(),
+    requestCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_token", ["token"]),
+
   publicRevisions: defineTable({
     pageId: v.id("pages"),
     state: v.union(

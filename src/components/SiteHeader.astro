@@ -1,15 +1,20 @@
 ---
+import AskAman from "./AskAman.tsx";
+
 interface Props {
   name: string;
   email: string;
   availability: string;
+  convexUrl?: string;
 }
 
-const { name, email, availability } = Astro.props;
+const { name, email, availability, convexUrl } = Astro.props;
 ---
 
 <header class="site-header" data-reveal="header">
-  <a class="wordmark" href="/" aria-label={`${name}, home`}>{name}</a>
+  <div class="site-header-brand" aria-label="Aman, public portfolio assistant">
+    {convexUrl ? <AskAman convexUrl={convexUrl} client:load /> : <a class="wordmark" href="/" aria-label={`${name}, home`}>Aman</a>}
+  </div>
   <div class="header-meta">
     <span class="availability" aria-hidden="true">{availability}</span>
     <a class="header-email" href={`mailto:${email}`}>{email}</a>

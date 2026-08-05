@@ -84,8 +84,27 @@ const heroRoles = (hero?.roles ?? siteData.heroRoles) as typeof siteData.heroRol
 const projectTones = new Set(["blue", "cream", "orange", "red", "yellow", "mist", "green"]);
 const projectLayouts = new Set(["folder", "compact", "note", "feature", "tile"]);
 const projectCategories = new Set(["product", "ai", "web", "mobile", "film", "experiment"]);
+// Projects can be edited/imported from several systems over time. Older
+// imports occasionally contain UTF-8 punctuation decoded as Latin-1 (for
+// example `Â·` instead of `·`). Repair those display-only values at the public
+// boundary so the card and its drawer always share clean typography without
+// mutating the stored draft.
+const repairDisplayText = (value: string) => value
+  .replaceAll("\u00c2\u00b7", "\u00b7")
+  .replaceAll("\u00e2\u0080\u0094", "\u2014")
+  .replaceAll("\u00e2\u0080\u0093", "\u2013")
+  .replaceAll("\u00e2\u0086\u0097", "\u2197")
+  .replaceAll("\u00e2\u0086\u0092", "\u2192")
+  .replaceAll("\u00e2\u0086\u0090", "\u2190")
+  .replaceAll("\u00e2\u0080\u0099", "\u2019")
+  .replaceAll("\u00e2\u0080\u009c", "\u201c")
+  .replaceAll("\u00e2\u0080\u009d", "\u201d")
+  .replaceAll("\u00e2\u0080\u00a6", "\u2026")
+  .replaceAll("\u00c2", "");
 const asText = (value: unknown, fallback: string) =>
-  typeof value === "string" && value.trim() ? value.trim() : fallback;
+  typeof value === "string" && value.trim()
+    ? repairDisplayText(value.trim())
+    : fallback;
 const normalizeProjects = (value: unknown): typeof siteData.projects => {
   if (!Array.isArray(value)) return siteData.projects;
   return value.flatMap((entry) => {
@@ -101,7 +120,7 @@ const normalizeProjects = (value: unknown): typeof siteData.projects => {
       ? raw.categories.filter((item): item is string => typeof item === "string" && projectCategories.has(item))
       : [];
     const tags = Array.isArray(raw.tags)
-      ? raw.tags.map((item) => String(item).trim()).filter(Boolean)
+      ? raw.tags.map((item) => repairDisplayText(String(item).trim())).filter(Boolean)
       : [];
     const media = raw.media && typeof raw.media === "object"
       ? raw.media as Record<string, unknown>
@@ -138,7 +157,7 @@ const normalizeProjects = (value: unknown): typeof siteData.projects => {
               type: candidate.type === "video" ? "video" as const : "image" as const,
               src: candidate.src,
               alt: asText(candidate.alt, title),
-              ...(typeof candidate.caption === "string" && candidate.caption.trim() ? { caption: candidate.caption } : {}),
+              ...(typeof candidate.caption === "string" && candidate.caption.trim() ? { caption: repairDisplayText(candidate.caption.trim()) } : {}),
             }];
           })
         : undefined,
@@ -170,7 +189,7 @@ const footerEmail = typeof footerContent?.email === "string" ? footerContent.ema
 
 <BaseLayout title="Aman Anu — Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
   <div class="page-shell">
-    <SiteHeader {...identity} />
+    <SiteHeader {...identity} convexUrl={publicConvexUrl} />
     <main id="main-content">
       <ProfileHero {...identity} heroRoles={heroRoles} />
       <ProjectCollection projects={projects} roles={siteData.roles} github={siteData.github} />

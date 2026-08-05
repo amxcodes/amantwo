@@ -286,6 +286,12 @@ li {
   font-size: 12px;
 }
 
+.site-header-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
 .wordmark,
 .header-email {
   position: relative;
@@ -2900,6 +2906,176 @@ li {
   .blog-reader-loading span { animation: none; }
 }
 
+/* Ask Aman: one quiet public search affordance, with a full sheet only on
+   narrow screens. The panel intentionally uses the portfolio's paper controls
+   instead of a second visual language. */
+.ask-aman { position: relative; z-index: 12; }
+.ask-aman-mobile { display: none; }
+.ask-aman-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+  border-radius: 999px;
+  padding: 0 11px 0 8px;
+  background: color-mix(in srgb, var(--paper) 76%, transparent);
+  color: var(--ink-soft);
+  font: 500 9px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), transform 180ms var(--ease-out);
+}
+.ask-aman-trigger:hover,
+.ask-aman-trigger:focus-visible { background: var(--paper-control); border-color: color-mix(in srgb, var(--ink) 26%, transparent); }
+.ask-aman-trigger:active { transform: scale(.98); }
+.ask-aman-orb {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 28%, #f4c36d 0 18%, #e9783e 50%, #bc4f31 100%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, #e9783e 12%, transparent);
+}
+.ask-aman-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(370px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--paper) 96%, white);
+  box-shadow: 0 18px 48px rgba(29,36,48,.13), 0 1px 2px rgba(29,36,48,.05);
+}
+.site-header .ask-aman-trigger {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+}
+.site-header .ask-aman-trigger:hover,
+.site-header .ask-aman-trigger:focus-visible,
+.site-header .ask-aman-trigger:active {
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+.site-header .ask-aman-trigger-label { display: inline-flex; align-items: baseline; gap: .28em; }
+.site-header .ask-aman-trigger-prefix {
+  color: var(--ink-soft);
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: .42em;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.site-header .ask-aman-trigger .ask-aman-orb {
+  width: 7px;
+  height: 7px;
+  margin-left: 1px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #e9783e 11%, transparent);
+  transform: translateY(-.54em);
+}
+.site-header .ask-aman-header .ask-aman-panel { left: 0; right: auto; }
+.ask-aman-panel-heading { display: flex; align-items: center; gap: 9px; min-height: 28px; }
+.ask-aman-panel-heading strong { display: block; font: 500 15px/1.1 Inter, ui-sans-serif, sans-serif; letter-spacing: -.02em; }
+.ask-aman-panel-heading small { display: block; margin-top: 3px; color: var(--ink-soft); font: 9px/1 "DM Mono", ui-monospace, monospace; }
+.ask-aman-close { margin-left: auto; border: 0; background: transparent; color: var(--ink-soft); font-size: 17px; line-height: 1; cursor: pointer; }
+.ask-aman-close { font-size: 0; min-width: 32px; min-height: 28px; border-radius: 999px; }
+.ask-aman-close::after { content: "Close"; font: 500 9px/1 "DM Mono", ui-monospace, monospace; letter-spacing: .04em; }
+.ask-aman-scopes { display: flex; gap: 4px; margin: 13px 0 9px; padding: 3px; border-radius: 10px; background: color-mix(in srgb, var(--paper-deep) 78%, transparent); }
+.ask-aman-scopes button { flex: 1; min-height: 27px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-soft); font: 500 9px/1 "DM Mono", ui-monospace, monospace; cursor: pointer; }
+.ask-aman-scopes button.is-active { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(29,36,48,.07); }
+.ask-aman-form { display: flex; gap: 6px; }
+.ask-aman-form input { min-width: 0; flex: 1; min-height: 37px; border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent); border-radius: 10px; padding: 0 11px; outline: 0; background: color-mix(in srgb, white 38%, var(--paper)); color: var(--ink); font: 13px/1.2 Inter, ui-sans-serif, sans-serif; }
+.ask-aman-form input:focus { border-color: color-mix(in srgb, #e9783e 50%, var(--ink) 16%); box-shadow: 0 0 0 3px color-mix(in srgb, #e9783e 12%, transparent); }
+.ask-aman-submit { min-width: 51px; border: 0; border-radius: 10px; padding: 0 10px; background: var(--ink); color: var(--paper); font: 500 10px/1 "DM Mono", ui-monospace, monospace; cursor: pointer; }
+.ask-aman-submit:disabled { opacity: .45; cursor: default; }
+.ask-aman-results { display: grid; gap: 4px; margin-top: 10px; max-height: 238px; overflow: auto; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+.ask-aman-result { display: flex; align-items: flex-start; gap: 8px; width: 100%; border: 0; border-radius: 10px; padding: 8px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.ask-aman-result:hover, .ask-aman-result:focus-visible { background: color-mix(in srgb, var(--paper-deep) 62%, transparent); }
+.ask-aman-result-dot { width: 7px; height: 7px; margin-top: 5px; flex: 0 0 auto; border-radius: 50%; background: var(--blue); }
+.ask-aman-result-dot.tone-orange { background: var(--orange); } .ask-aman-result-dot.tone-green { background: var(--green); } .ask-aman-result-dot.tone-yellow { background: var(--yellow); }
+.ask-aman-result strong { display: block; font: 500 12px/1.25 Inter, ui-sans-serif, sans-serif; }
+.ask-aman-result small { display: block; margin-top: 3px; overflow: hidden; color: var(--ink-soft); font: 10px/1.3 Inter, ui-sans-serif, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.ask-aman-muted, .ask-aman-error, .ask-aman-thinking { margin: 8px 2px 0; color: var(--ink-soft); font: 10px/1.45 "DM Mono", ui-monospace, monospace; }
+.ask-aman-error { color: #a34d40; }
+.ask-aman-thinking { display: flex; align-items: center; gap: 7px; }
+.ask-aman-thinking .ask-aman-orb { width: 8px; height: 8px; }
+.ask-aman-answer { margin-top: 9px; border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); padding-top: 9px; }
+.ask-aman-answer p { margin: 0; color: var(--ink); font: 13px/1.55 Inter, ui-sans-serif, sans-serif; white-space: pre-line; }
+.ask-aman-sources { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 9px; }
+.ask-aman-sources small { width: 100%; color: var(--ink-soft); font: 9px/1 "DM Mono", ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; }
+.ask-aman-sources a { max-width: 100%; overflow: hidden; border-radius: 7px; padding: 5px 7px; background: color-mix(in srgb, var(--paper-deep) 72%, transparent); color: var(--ink); font: 10px/1.2 Inter, ui-sans-serif, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.ask-aman-note { margin: 10px 2px 0; color: var(--ink-soft); font: 9px/1.4 "DM Mono", ui-monospace, monospace; }
+.ask-aman-overlay { background: rgba(29,36,48,.18); }
+.ask-aman-drawer-content { max-height: 86svh; overflow: hidden; border-radius: 22px 22px 0 0; background: var(--paper); }
+.ask-aman-drawer-shell { max-height: 86svh; overflow: auto; padding: 10px 16px 24px; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 20%, transparent) transparent; }
+.ask-aman-panel-mobile { position: static; width: 100%; padding: 4px 0 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+
+/* The public assistant stays in the editorial flow. It is a field first,
+   with only a small results surface appearing when there is something to show. */
+.ask-aman-inline { position: relative; z-index: 12; }
+.ask-aman-inline-form { display: block; margin: 0; }
+.ask-aman-inline-input {
+  width: clamp(112px, 15vw, 170px);
+  min-height: 44px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 400 21px/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.055em;
+  transition: width 180ms var(--ease-out), border-color 180ms var(--ease-out);
+}
+.ask-aman-inline-input::placeholder { color: var(--ink); opacity: 1; }
+.ask-aman-inline-input:focus {
+  width: clamp(180px, 24vw, 250px);
+  border-bottom-color: color-mix(in srgb, #e9783e 58%, var(--ink) 12%);
+}
+.ask-aman-inline-popover {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  width: min(330px, calc(100vw - 40px));
+  padding: 10px 11px 9px;
+  border: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper) 97%, white);
+  box-shadow: 0 14px 34px rgba(29,36,48,.11), 0 1px 2px rgba(29,36,48,.04);
+  animation: ask-aman-popover-in 180ms var(--ease-out) both;
+}
+.ask-aman-inline-popover .ask-aman-scopes { margin: 0 0 8px; }
+.ask-aman-inline-popover .ask-aman-results { margin-top: 0; max-height: 240px; }
+.ask-aman-inline-popover .ask-aman-note { margin-top: 8px; }
+@keyframes ask-aman-popover-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .ask-aman-desktop { display: none; }
+  .ask-aman-mobile { display: block; }
+  .ask-aman-trigger { min-height: 30px; padding-inline: 8px 10px; }
+  .header-meta { gap: 10px; }
+  .ask-aman-drawer-shell .drawer-handle { display: block; width: 34px; height: 4px; margin: 1px auto 14px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+  .ask-aman-panel-mobile .ask-aman-results { max-height: 38svh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-aman-trigger, .ask-aman-form input { transition: none; }
+}
+
 .blog-reader-header,
 .blog-reader-copy {
   width: min(100% - 48px, 680px);
@@ -3910,6 +4086,11 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
     z-index: 11;
   }
 
+  .site-header .ask-aman-trigger { min-height: 40px; padding: 0; font-size: 18px; }
+  .site-header .ask-aman-inline-input { width: 112px; min-height: 40px; font-size: 18px; }
+  .site-header .ask-aman-inline-input:focus { width: min(210px, 52vw); }
+  .site-header .ask-aman-inline-popover { width: min(320px, calc(100vw - 40px)); }
+
   .availability {
     display: none;
   }
@@ -4885,6 +5066,108 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
   animation-timing-function: cubic-bezier(.22, 1, .36, 1);
 }
 
+/* Project card rhythm -----------------------------------------------------
+   Keep the bento geometry, but treat the title and summary as one content
+   cluster. Some slot/layout combinations previously inherited a
+   space-between body, which pushed the summary to the opposite edge of tall
+   cards and made long copy feel disconnected. A bounded measure keeps the
+   hierarchy readable without changing the card's dimensions. */
+.project-card-action {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+
+.project-card .card-body {
+  width: min(100%, 38ch);
+  max-width: none;
+  min-width: 0;
+  min-height: 0;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 14px);
+}
+
+.project-card .card-body h2 {
+  max-width: 18ch;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.project-card .card-body > p {
+  max-width: 36ch;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.project-card .card-footer {
+  min-width: 0;
+}
+
+.project-card .card-footer span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-card .card-footer span:first-child {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Narrow feature cards still use the same title/summary cluster. The
+   readable measure is smaller, but it is never split vertically. */
+.project-card.bento-slot-feature .card-body,
+.project-card[data-project-layout="feature"] .card-body {
+  width: min(100%, 24ch);
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.project-card.bento-slot-feature .card-body h2,
+.project-card[data-project-layout="feature"] .card-body h2 {
+  max-width: 12ch;
+}
+
+.project-card.bento-slot-feature .card-body > p,
+.project-card[data-project-layout="feature"] .card-body > p {
+  max-width: 22ch;
+}
+
+@media (max-width: 720px) {
+  .project-card .card-body,
+  .project-card.bento-slot-feature .card-body,
+  .project-card[data-project-layout="feature"] .card-body {
+    width: min(100%, 34ch);
+    max-width: 100%;
+  }
+
+  .project-card .card-body h2,
+  .project-card.bento-slot-feature .card-body h2,
+  .project-card[data-project-layout="feature"] .card-body h2 {
+    max-width: 100%;
+    font-size: clamp(23px, 7.5vw, 32px);
+    line-height: 1.08;
+  }
+
+  .project-card .card-body > p,
+  .project-card.bento-slot-feature .card-body > p,
+  .project-card[data-project-layout="feature"] .card-body > p {
+    max-width: 36ch;
+    font-size: 11px;
+    line-height: 1.48;
+  }
+
+  .project-card .card-heading p,
+  .project-card .card-footer span {
+    overflow-wrap: anywhere;
+  }
+}
+
 /* During an active pointer/touch gesture Vaul owns transform and transition
    inline. Do not let CSS animations or easing override that live position. */
 .project-drawer[data-vaul-drawer].vaul-dragging,
@@ -4900,5 +5183,1042 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
   .blog-reader-overlay[data-vaul-overlay] {
     transition: none;
     animation: none;
+  }
+}
+
+/* Pagination controls: quiet, optically centered chevrons instead of text
+   glyphs. Keep the dots as the primary page indicator and make the controls
+   feel like small, native system actions. */
+.work-pagination > .work-pagination-button {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  min-inline-size: 2.25rem;
+  min-block-size: 2.25rem;
+  padding: 0;
+  color: color-mix(in srgb, var(--ink) 70%, transparent);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition-property: background-color, color, scale;
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+
+.work-pagination > .work-pagination-button:hover:not(:disabled) {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--blue) 12%, var(--paper));
+}
+
+.work-pagination > .work-pagination-button:focus-visible {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--blue) 12%, var(--paper));
+  outline: 2px solid color-mix(in srgb, var(--blue) 62%, transparent);
+  outline-offset: 2px;
+}
+
+.work-pagination > .work-pagination-button:active:not(:disabled) {
+  scale: 0.94;
+}
+
+.pagination-chevron {
+  display: block;
+  inline-size: 14px;
+  block-size: 14px;
+  overflow: visible;
+}
+
+.pagination-chevron path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 720px) {
+  .work-pagination > .work-pagination-button {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    min-inline-size: 2.5rem;
+    min-block-size: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-pagination > .work-pagination-button {
+    transition: none;
+  }
+}
+
+/* Ask Aman: clickable desktop results and a dedicated mobile chat sheet. */
+.site-header {
+  position: relative;
+  z-index: 40;
+}
+
+.ask-aman-inline {
+  position: relative;
+  z-index: 41;
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.ask-aman-inline-popover {
+  z-index: 60;
+  pointer-events: auto;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.ask-aman-popover-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.ask-aman-popover-heading canvas {
+  display: block;
+  flex: 0 0 20px;
+}
+
+.ask-aman-popover-heading strong,
+.ask-aman-mobile-heading strong {
+  display: block;
+  color: var(--ink);
+  font: 500 13px/1.15 Inter, ui-sans-serif, sans-serif;
+  letter-spacing: -.018em;
+}
+
+.ask-aman-popover-heading small,
+.ask-aman-mobile-heading small {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font: 9px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .03em;
+}
+
+.ask-aman-results {
+  pointer-events: auto;
+}
+
+.ask-aman-result {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ask-aman-result-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ask-aman-result small {
+  max-width: 100%;
+}
+
+.ask-aman-result em {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font: 9px/1.2 "DM Mono", ui-monospace, monospace;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ask-aman-result-action {
+  align-self: center;
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  font: 9px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .04em;
+  opacity: .78;
+}
+
+.ask-aman-result:hover .ask-aman-result-action,
+.ask-aman-result:focus-visible .ask-aman-result-action {
+  color: var(--ink);
+  opacity: 1;
+}
+
+.ask-aman-mobile-shell {
+  display: none;
+}
+
+/* The sheet is portalled to document.body so it is never trapped by the
+   header's reveal transform. Keep the close glyph visual-only; the aria label
+   remains the accessible name. */
+.ask-aman-mobile-close {
+  font-size: 0 !important;
+}
+
+.ask-aman-mobile-close::before {
+  content: "×";
+  font: 400 18px/1 Inter, ui-sans-serif, sans-serif;
+}
+
+@media (max-width: 640px) {
+  .ask-aman-inline-popover {
+    display: none;
+  }
+
+  .ask-aman-mobile-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: block;
+    pointer-events: none;
+  }
+
+  .ask-aman-mobile-shell[aria-hidden="false"] {
+    pointer-events: auto;
+  }
+
+  .ask-aman-mobile-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    background: rgb(29 36 48 / 18%);
+    cursor: default;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease-out;
+  }
+
+  .ask-aman-mobile-shell[aria-hidden="false"] .ask-aman-mobile-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .ask-aman-mobile-sheet {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    max-height: min(76svh, 560px);
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 18px calc(16px + env(safe-area-inset-bottom));
+    border: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+    border-bottom: 0;
+    border-radius: 24px 24px 0 0;
+    background: var(--paper);
+    box-shadow: 0 -18px 48px rgb(29 36 48 / 12%);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(104%);
+    transition: transform 220ms cubic-bezier(.22, .61, .36, 1), opacity 160ms ease-out;
+  }
+
+  .ask-aman-mobile-shell[aria-hidden="false"] .ask-aman-mobile-sheet {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .ask-aman-mobile-grabber {
+    width: 34px;
+    height: 4px;
+    flex: 0 0 auto;
+    margin: 0 auto 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 20%, transparent);
+  }
+
+  .ask-aman-mobile-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .ask-aman-mobile-heading canvas {
+    display: block;
+    flex: 0 0 20px;
+  }
+
+  .ask-aman-mobile-close {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    margin-left: auto;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: var(--paper-control);
+    color: var(--ink-soft);
+    font: 400 18px/1 Inter, ui-sans-serif, sans-serif;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ask-aman-mobile-chat {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2px 1px;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ink) 18%, transparent) transparent;
+  }
+
+  .ask-aman-chat-message {
+    max-width: 90%;
+    padding: 10px 12px;
+    border-radius: 15px;
+    font: 13px/1.45 Inter, ui-sans-serif, sans-serif;
+  }
+
+  .ask-aman-chat-message-assistant {
+    align-self: flex-start;
+    background: var(--paper-control);
+    color: var(--ink);
+  }
+
+  .ask-aman-chat-message-user {
+    align-self: flex-end;
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .ask-aman-mobile-chat .ask-aman-results {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .ask-aman-mobile-chat .ask-aman-result {
+    background: var(--paper-control);
+  }
+
+  .ask-aman-mobile-sheet .ask-aman-scopes {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  .ask-aman-mobile-composer {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 7px;
+  }
+
+  .ask-aman-mobile-composer input {
+    min-width: 0;
+    min-height: 44px;
+    flex: 1 1 auto;
+    border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+    border-radius: 15px;
+    padding: 0 12px;
+    outline: 0;
+    background: color-mix(in srgb, white 38%, var(--paper));
+    color: var(--ink);
+    font: 13px/1.3 Inter, ui-sans-serif, sans-serif;
+  }
+
+  .ask-aman-mobile-composer input:focus {
+    border-color: color-mix(in srgb, #e9783e 48%, var(--ink) 16%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #e9783e 10%, transparent);
+  }
+
+  .ask-aman-mobile-composer button {
+    min-width: 56px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 15px;
+    padding-inline: 10px;
+    background: var(--ink);
+    color: var(--paper);
+    font: 500 10px/1 "DM Mono", ui-monospace, monospace;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ask-aman-mobile-composer button:disabled {
+    cursor: default;
+    opacity: .45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-aman-mobile-backdrop,
+  .ask-aman-mobile-sheet,
+  .ask-aman-inline-popover,
+  .ask-aman-inline-input {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Ask Aman v3 ------------------------------------------------------------
+   One calm editorial control on desktop, with a native-feeling Vaul sheet
+   on small screens. The orb is the only animated accent; all other motion is
+   transform/opacity work so the header never reflows while it searches. */
+.ask-aman-inline-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  margin: 0;
+}
+
+.ask-aman-inline-orb,
+.ask-aman-popover-orb,
+.ask-aman-mobile-heading-orb {
+  display: inline-flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #e9783e;
+}
+
+.ask-aman-orb {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.ask-aman-orb canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ask-aman-orb-accent canvas {
+  /* Thinking-orbs is intentionally monochrome. A tiny color matrix keeps
+     the same cheap 2D canvas while matching the portfolio's orange accent. */
+  filter: sepia(1) saturate(5) hue-rotate(325deg) brightness(.88);
+}
+
+.ask-aman-inline-input {
+  width: clamp(112px, 15vw, 170px);
+  min-height: 42px;
+  border-bottom-color: transparent;
+  font-size: 20px;
+}
+
+.ask-aman-inline-form:focus-within .ask-aman-inline-input,
+.ask-aman-inline-input:focus {
+  width: clamp(180px, 24vw, 250px);
+  border-bottom-color: color-mix(in srgb, #e9783e 58%, var(--ink) 12%);
+}
+
+.ask-aman-inline-form.is-searching .ask-aman-inline-orb {
+  animation: ask-aman-orb-sweep 720ms cubic-bezier(.22, .61, .36, 1) both;
+}
+
+.ask-aman-inline-form.is-searching .ask-aman-inline-input {
+  animation: ask-aman-input-wipe 720ms cubic-bezier(.22, .61, .36, 1) both;
+}
+
+@keyframes ask-aman-orb-sweep {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  36% { transform: translate3d(var(--ask-aman-orb-travel, 132px), 0, 0) scale(.82); }
+  60% { transform: translate3d(var(--ask-aman-orb-travel, 132px), 0, 0) scale(1); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes ask-aman-input-wipe {
+  0%, 26% { color: var(--ink); opacity: 1; }
+  48%, 72% { color: transparent; caret-color: transparent; opacity: .24; }
+  100% { color: transparent; caret-color: transparent; opacity: 0; }
+}
+
+.ask-aman-inline-popover {
+  width: min(370px, calc(100vw - 32px));
+  padding: 15px 15px 12px;
+  border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--paper) 97%, white);
+  box-shadow: none;
+}
+
+.ask-aman-popover-heading { margin-bottom: 11px; }
+.ask-aman-popover-heading strong { font-size: 14px; }
+.ask-aman-popover-heading small { margin-top: 4px; }
+
+.ask-aman-scopes {
+  margin: 0 0 10px;
+  padding: 2px;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--paper-deep) 52%, transparent);
+}
+
+.ask-aman-scopes button {
+  min-height: 29px;
+  border-radius: 8px;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.ask-aman-scopes button.is-active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.ask-aman-results { scrollbar-width: thin; }
+.ask-aman-result { border-radius: 12px; transition: background-color 150ms ease; }
+.ask-aman-result:hover,
+.ask-aman-result:focus-visible { background: color-mix(in srgb, #e9783e 8%, var(--paper)); }
+.ask-aman-result-action { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+
+.ask-aman-mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 119;
+  background: rgb(29 36 48 / 18%);
+  opacity: 1;
+}
+
+.ask-aman-mobile-sheet {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 120;
+  display: flex;
+  max-height: min(82svh, 640px);
+  flex-direction: column;
+  gap: 12px;
+  padding: 9px 18px calc(18px + env(safe-area-inset-bottom));
+  border: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+  border-bottom: 0;
+  border-radius: 25px 25px 0 0;
+  background: var(--paper);
+  box-shadow: 0 -16px 40px rgb(29 36 48 / 12%);
+  outline: none;
+}
+
+/* This selector used to be shared by the pre-Vaul mobile shell. That shell
+   left the element transparent, non-interactive, and translated below the
+   viewport. Vaul owns the open/close transform now, so reset only the stale
+   visibility state on the real drawer content. */
+.ask-aman-mobile-sheet[data-vaul-drawer] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.ask-aman-mobile-grabber {
+  display: flex;
+  min-height: 21px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+.ask-aman-mobile-grabber span {
+  display: block;
+  width: 34px;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.ask-aman-mobile-heading { gap: 9px; }
+.ask-aman-mobile-heading strong { font-size: 15px; }
+.ask-aman-mobile-heading small { font-size: 9px; }
+.ask-aman-mobile-close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--paper-control);
+  color: var(--ink-soft);
+  font: 400 18px/1 Inter, ui-sans-serif, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ask-aman-mobile-chat {
+  min-height: 0;
+  max-height: 46svh;
+  padding: 1px 1px 2px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.ask-aman-chat-message {
+  padding: 11px 13px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+.ask-aman-mobile-composer {
+  display: flex;
+  gap: 7px;
+  padding-top: 1px;
+}
+
+.ask-aman-mobile-composer input {
+  min-height: 45px;
+  border-radius: 15px;
+  background: color-mix(in srgb, white 40%, var(--paper));
+}
+
+.ask-aman-mobile-composer button {
+  min-width: 58px;
+  min-height: 45px;
+  border-radius: 15px;
+  background: var(--ink);
+}
+
+@media (min-width: 768px) {
+  .ask-aman-mobile-sheet,
+  .ask-aman-mobile-overlay { display: none; }
+}
+
+@media (max-width: 640px) {
+  .ask-aman-inline-popover { display: none; }
+  .ask-aman-inline-form { min-height: 40px; }
+  .ask-aman-inline-orb { flex-basis: 18px; width: 18px; height: 18px; }
+  .ask-aman-inline-input { width: 112px; min-height: 40px; font-size: 18px; }
+  .ask-aman-inline-form:focus-within .ask-aman-inline-input,
+  .ask-aman-inline-input:focus { width: min(210px, 52vw); }
+  .ask-aman-inline-form { --ask-aman-orb-travel: 104px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-aman-inline-form.is-searching .ask-aman-inline-orb,
+  .ask-aman-inline-form.is-searching .ask-aman-inline-input { animation: none; }
+}
+
+/* Ask Aman v4: one orb, one staged response --------------------------------
+   The header orb is a single circular material. The canvas supplies the
+   motion inside it; the ring is CSS-only so it stays cheap and crisp. */
+.ask-aman-orb {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #e9783e 55%, var(--ink) 12%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 28%, #fff8e9 0 22%, #f6e5d4 58%, #efc6ac 100%);
+  box-shadow: inset 0 1px 2px rgb(255 255 255 / 74%), inset 0 -1px 2px rgb(174 83 49 / 12%), 0 1px 0 rgb(29 36 48 / 6%);
+}
+
+.ask-aman-orb::before {
+  position: absolute;
+  inset: 3px;
+  z-index: 0;
+  border: 1.5px solid color-mix(in srgb, #e9783e 84%, #fff 16%);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: inherit;
+  content: "";
+  opacity: .92;
+  transform: rotate(-24deg);
+  animation: ask-aman-orb-orbit 3.4s linear infinite;
+}
+
+.ask-aman-orb canvas {
+  position: relative;
+  z-index: 1;
+  filter: brightness(.72) contrast(.88);
+}
+
+.ask-aman-inline-orb {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+}
+
+.ask-aman-inline-orb .ask-aman-orb {
+  width: 25px;
+  height: 25px;
+}
+
+.ask-aman-inline-form.is-searching .ask-aman-orb::before {
+  animation: ask-aman-orb-ring 720ms cubic-bezier(.22, .61, .36, 1) both;
+}
+
+@keyframes ask-aman-orb-orbit {
+  to { transform: rotate(336deg); }
+}
+
+@keyframes ask-aman-orb-ring {
+  0% { opacity: .5; transform: rotate(-24deg) scale(.9); }
+  42% { opacity: 1; transform: rotate(154deg) scale(1.02); }
+  100% { opacity: .72; transform: rotate(336deg) scale(1); }
+}
+
+.ask-aman-result {
+  animation: ask-aman-result-in 250ms cubic-bezier(.2, 0, 0, 1) both;
+}
+
+@keyframes ask-aman-result-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ask-aman-mobile-heading-orb,
+.ask-aman-popover-orb { display: none; }
+
+.ask-aman-mobile-close::before { content: "×"; }
+
+@media (max-width: 640px) {
+  .ask-aman-inline-orb,
+  .ask-aman-inline-orb .ask-aman-orb { width: 21px; height: 21px; flex-basis: 21px; }
+  .ask-aman-inline-form.is-searching .ask-aman-inline-orb { animation: ask-aman-orb-sweep 720ms cubic-bezier(.22, .61, .36, 1) both; }
+  .ask-aman-inline-form.is-searching .ask-aman-inline-input { animation: ask-aman-input-wipe 720ms cubic-bezier(.22, .61, .36, 1) both; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-aman-orb::before,
+  .ask-aman-result,
+  .ask-aman-inline-form.is-searching .ask-aman-orb::before { animation: none; }
+}
+
+/* Keep the close glyph encoding-safe across Windows editors and deployed builds. */
+.ask-aman-mobile-close::before { content: "\00D7"; }
+
+/* Ask Aman interaction polish: keep the trigger editorial and make the
+   circular accent feel like one quiet object rather than a flat orange dot. */
+.ask-aman-inline-input[readonly] {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ask-aman-inline-input[readonly]:focus {
+  border-bottom-color: transparent;
+  outline: 0;
+  box-shadow: none;
+}
+
+.ask-aman-orb {
+  overflow: visible;
+  border: 0;
+  background: radial-gradient(circle at 34% 28%, #fff9ed 0 18%, #f6dfcf 52%, #edbca4 100%);
+  box-shadow: inset 0 1px 2px rgb(255 255 255 / 78%), inset 0 -1px 2px rgb(157 73 43 / 11%);
+}
+
+.ask-aman-orb::before {
+  inset: -2px;
+  border: 1px solid color-mix(in srgb, var(--orange) 68%, white 32%);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  opacity: .84;
+  pointer-events: none;
+}
+
+.ask-aman-orb::after {
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  border: 1px solid rgb(255 255 255 / 44%);
+  border-radius: 50%;
+  content: "";
+  opacity: .64;
+  pointer-events: none;
+}
+
+.ask-aman-orb canvas {
+  z-index: 1;
+  filter: sepia(.58) saturate(2.35) hue-rotate(326deg) brightness(.84) contrast(.9);
+  pointer-events: none;
+}
+
+.ask-aman-mobile-chat {
+  touch-action: pan-y;
+}
+
+.ask-aman-mobile-composer,
+.ask-aman-mobile-composer * {
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  .ask-aman-inline-input[readonly] { pointer-events: auto; }
+  .ask-aman-mobile-sheet { overscroll-behavior: contain; }
+}
+
+/* The trigger uses the listening orb directly. Keep the 64px tuned canvas
+   density, but scale it into the compact editorial slot without a second
+   orange shell or ring competing with the dots. */
+.ask-aman-orb {
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ask-aman-orb::before,
+.ask-aman-orb::after {
+  display: none;
+}
+
+.ask-aman-orb canvas {
+  width: 100%;
+  height: 100%;
+  filter: none;
+}
+
+/* The 64px listening preset keeps its tuned dot density, while the header
+   presents it as a small inline accent beside the wordmark. */
+.ask-aman-inline-orb,
+.ask-aman-inline-orb .ask-aman-orb {
+  width: 19px !important;
+  height: 19px !important;
+  flex-basis: 19px !important;
+  flex-shrink: 0;
+}
+
+.ask-aman-inline-orb .ask-aman-orb canvas {
+  width: 19px !important;
+  height: 19px !important;
+  filter: sepia(1) saturate(3.4) hue-rotate(334deg) brightness(.9) contrast(1.04);
+}
+
+/* Mobile sheet refinement: one scroll owner, a stable composer, and enough
+   breathing room for the keyboard/safe area. Desktop layout is untouched. */
+@media (max-width: 640px) {
+  .ask-aman-mobile-sheet {
+    box-sizing: border-box;
+    inset-inline: 0;
+    width: 100%;
+    min-height: min(48svh, 420px);
+    max-height: min(88svh, 680px);
+    gap: 10px;
+    padding: 8px 14px calc(10px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  .ask-aman-mobile-grabber {
+    min-height: 18px;
+    flex: 0 0 auto;
+  }
+
+  .ask-aman-mobile-heading {
+    min-height: 34px;
+    flex: 0 0 auto;
+  }
+
+  .ask-aman-mobile-chat {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+    touch-action: pan-y;
+  }
+
+  .ask-aman-mobile-chat::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .ask-aman-mobile-chat .ask-aman-results {
+    max-height: none;
+    overflow: visible;
+    scrollbar-width: none;
+  }
+
+  .ask-aman-mobile-chat .ask-aman-result-copy small {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .ask-aman-mobile-composer {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    align-items: flex-end;
+    padding: 7px 0 0;
+    background: var(--paper);
+  }
+
+  .ask-aman-mobile-composer input {
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 16px;
+  }
+
+  .ask-aman-mobile-composer button {
+    flex: 0 0 58px;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 640px) {
+    .ask-aman-mobile-sheet {
+      min-height: min(48dvh, 420px);
+      max-height: min(88dvh, 680px);
+    }
+  }
+}
+
+/* The trigger uses the same mobile drawer up to tablet widths. This keeps
+   narrow browser previews and split-screen devices from falling through to
+   the desktop popover while leaving the desktop layout untouched. */
+@media (min-width: 641px) and (max-width: 767px) {
+  .ask-aman-inline-popover { display: none; }
+
+  .ask-aman-mobile-sheet {
+    box-sizing: border-box;
+    inset-inline: 0;
+    width: 100%;
+    min-height: min(48svh, 420px);
+    max-height: min(88svh, 680px);
+    gap: 10px;
+    padding: 8px 14px calc(10px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  .ask-aman-mobile-grabber,
+  .ask-aman-mobile-heading { flex: 0 0 auto; }
+
+  .ask-aman-mobile-grabber { min-height: 18px; }
+  .ask-aman-mobile-heading { min-height: 34px; }
+
+  .ask-aman-mobile-chat {
+    min-height: 0;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+    touch-action: pan-y;
+  }
+
+  .ask-aman-mobile-chat::-webkit-scrollbar { width: 0; height: 0; }
+
+  .ask-aman-mobile-composer {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    align-items: flex-end;
+    padding-top: 7px;
+    background: var(--paper);
+  }
+
+  .ask-aman-mobile-composer input {
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 16px;
+  }
+
+  .ask-aman-mobile-composer button { flex: 0 0 58px; }
+}
+
+/* Ask Aman mobile sheet: the sheet itself is the affordance. Vaul's optional
+   handle is intentionally omitted so there is no second floating mark above
+   the editorial heading. Keep this selector as a guard for cached islands
+   from older builds. */
+.ask-aman-mobile-sheet[data-vaul-drawer] .ask-aman-mobile-grabber,
+.ask-aman-mobile-sheet[data-vaul-drawer] [data-vaul-handle],
+.ask-aman-mobile-sheet[data-vaul-drawer] [data-vaul-handle-hitarea] {
+  display: none !important;
+}
+
+/* A quiet paper control instead of a generic input + dark button. The outer
+   capsule owns the focus treatment; the field stays borderless so typing
+   never produces nested rectangles or layout jumps on narrow screens. */
+.ask-aman-mobile-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 49px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--paper) 82%, var(--paper-deep));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 52%);
+}
+
+.ask-aman-mobile-composer:focus-within {
+  border-color: color-mix(in srgb, var(--orange) 38%, var(--ink) 8%);
+}
+
+.ask-aman-mobile-composer input {
+  min-width: 0;
+  min-height: 35px;
+  flex: 1 1 auto;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 11px;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: 400 14px/1.3 Inter, ui-sans-serif, sans-serif;
+  box-shadow: none;
+}
+
+.ask-aman-mobile-composer input::placeholder {
+  color: color-mix(in srgb, var(--ink-soft) 82%, transparent);
+}
+
+.ask-aman-mobile-composer input:focus {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.ask-aman-mobile-composer button {
+  display: inline-flex;
+  min-width: 56px;
+  min-height: 35px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--orange) 17%, var(--paper));
+  color: var(--ink);
+  font: 500 10px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ask-aman-mobile-composer button:hover:not(:disabled),
+.ask-aman-mobile-composer button:focus-visible {
+  border-color: color-mix(in srgb, var(--orange) 46%, transparent);
+  background: color-mix(in srgb, var(--yellow) 56%, var(--paper));
+}
+
+.ask-aman-mobile-composer button:active:not(:disabled) {
+  transform: scale(.96);
+}
+
+.ask-aman-mobile-composer button:disabled {
+  border-color: color-mix(in srgb, var(--ink) 8%, transparent);
+  background: color-mix(in srgb, var(--paper-deep) 54%, var(--paper));
+  color: color-mix(in srgb, var(--ink-soft) 65%, transparent);
+}
+
+@media (max-width: 640px) {
+  .ask-aman-mobile-composer {
+    min-height: 51px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+  }
+
+  .ask-aman-mobile-composer input {
+    font-size: 16px;
   }
 }

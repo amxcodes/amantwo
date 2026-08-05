@@ -35,7 +35,10 @@ const prefetchArticleAssets = (article: PublicArticle) => {
       src: block.src,
       kind: block.type as "image" | "video" | "audio",
     });
-    if (assets.length >= 4) break;
+    // Keep the handoff quick: cover/narration plus at most one body asset is
+    // enough for the first paint. Remaining media is loaded by the reader as
+    // it enters view instead of competing with the drawer transition.
+    if (assets.length >= 3) break;
   }
 
   for (const asset of assets) {
