@@ -96,6 +96,7 @@ function Orb({
 
 function AskAmanInner() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const mobileSheetRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -167,9 +168,63 @@ function AskAmanInner() {
     const timer = window.setTimeout(() => {
       const active = document.activeElement;
       if (active instanceof HTMLElement && active !== mobileInputRef.current) active.blur();
-      mobileInputRef.current?.focus({ preventScroll: true });
-    }, 260);
+      const input = mobileInputRef.current;
+      // Vaul portals the sheet outside the page island. Do not move focus if
+      // an embedded preview has temporarily marked the input's ancestor as
+      // hidden; the next animation-end callback will retry safely.
+      if (input && !input.closest('[aria-hidden="true"]')) input.focus({ preventScroll: true });
+    }, 620);
     return () => window.clearTimeout(timer);
+  }, [expanded, isMobileViewport]);
+
+  useEffect(() => {
+    if (!expanded || !(isMobileViewport || isNarrowViewport())) return;
+
+    const sheet = mobileSheetRef.current;
+    if (!sheet) return;
+
+    const viewport = window.visualViewport;
+    let frame = 0;
+    const settleTimers: number[] = [];
+
+    const syncViewport = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const layoutHeight = window.innerHeight;
+        const visualHeight = viewport?.height ?? layoutHeight;
+        const offsetTop = viewport?.offsetTop ?? 0;
+        // Keep the sheet anchored to the visible viewport when the software
+        // keyboard opens, then settle back to the layout viewport after it
+        // closes. This prevents the stale white/negative gap left by a
+        // keyboard resize on iOS and Chromium mobile previews.
+        const keyboardInset = Math.max(0, layoutHeight - visualHeight - offsetTop);
+        sheet.style.setProperty("--ask-aman-visual-vh", `${visualHeight}px`);
+        sheet.style.setProperty("--ask-aman-keyboard-inset", `${keyboardInset}px`);
+        sheet.dataset.askAmanKeyboardOpen = keyboardInset > 120 ? "true" : "false";
+      });
+    };
+
+    const scheduleSync = () => {
+      syncViewport();
+      settleTimers.push(window.setTimeout(syncViewport, 120));
+      settleTimers.push(window.setTimeout(syncViewport, 320));
+    };
+
+    scheduleSync();
+    viewport?.addEventListener("resize", scheduleSync, { passive: true });
+    viewport?.addEventListener("scroll", scheduleSync, { passive: true });
+    window.addEventListener("resize", scheduleSync, { passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
+      viewport?.removeEventListener("resize", scheduleSync);
+      viewport?.removeEventListener("scroll", scheduleSync);
+      window.removeEventListener("resize", scheduleSync);
+      sheet.style.removeProperty("--ask-aman-visual-vh");
+      sheet.style.removeProperty("--ask-aman-keyboard-inset");
+      delete sheet.dataset.askAmanKeyboardOpen;
+    };
   }, [expanded, isMobileViewport]);
 
   const openWriting = (post: WritingResult) => {
@@ -321,13 +376,19 @@ function AskAmanInner() {
       direction="bottom"
       dismissible
       handleOnly={false}
+      repositionInputs={false}
       scrollLockTimeout={120}
       closeThreshold={0.24}
+      onAnimationEnd={(open) => {
+        if (!open || !(isMobileViewport || isNarrowViewport())) return;
+        const input = mobileInputRef.current;
+        if (input && !input.closest('[aria-hidden="true"]')) input.focus({ preventScroll: true });
+      }}
       onOpenChange={(nextOpen) => { if (!nextOpen) closeAskAman(); }}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="ask-aman-mobile-overlay" />
-        <Drawer.Content className="ask-aman-mobile-sheet" aria-describedby="ask-aman-mobile-description">
+        <Drawer.Content ref={mobileSheetRef} className="ask-aman-mobile-sheet" aria-describedby="ask-aman-mobile-description">
           <Drawer.Title className="sr-only">Ask Aman</Drawer.Title>
           <Drawer.Description className="sr-only" id="ask-aman-mobile-description">Search published notes or ask Aman about his public work.</Drawer.Description>
           <header className="ask-aman-mobile-heading">
