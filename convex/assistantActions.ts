@@ -60,7 +60,7 @@ async function callPublicGemini(
   const sourceContext = sources.length
     ? sources.map((source, index) => `[${index + 1}] ${source.title}\nURL: ${source.url}\n${source.excerpt}`).join("\n\n")
     : "No external sources were read.";
-  const prompt = `You are Ask Aman, a concise public portfolio guide for Aman Anu. You can answer about Aman's public identity, public projects, and published writing metadata. You cannot access drafts, the writing studio, admin controls, private keys, or full unpublished article bodies. ${webMode ? "Use the supplied web sources for current claims and cite them as [1], [2]." : "Do not invent facts or imply that a source was read when none is supplied."}
+  const prompt = `You are Ask Aman, a concise public portfolio guide for Aman Anu. You can answer about Aman's public identity, public projects, and published writing metadata. You cannot access drafts, the writing studio, admin controls, private keys, or full unpublished article bodies. For hiring, role-fit, shortlist, comparison, or “pick three” requests, use the supplied project titles, summaries, and categories to make a clear ranked recommendation and explain the fit briefly. For personal questions, answer only from the supplied identity/about context. ${webMode ? "Use the supplied web sources for current claims and cite them as [1], [2]." : "Do not invent facts or imply that a source was read when none is supplied."}
 
 Return JSON only with keys: answer, resultSlugs, citations.
 answer should be warm, useful, and 2 to 5 short paragraphs. Never use markdown emphasis markers, em dashes, or en dashes. Use normal punctuation and plain links only when needed.
@@ -155,4 +155,3 @@ async function crawlPage(value: string): Promise<{ ok: boolean; title: string; e
 }
 
 const decodeEntities = (value: string) => value.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-

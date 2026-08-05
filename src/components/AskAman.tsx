@@ -17,10 +17,43 @@ type WritingResult = {
 };
 type OrbState = "searching" | "composing" | "shaping" | "working" | "listening";
 
-const questionPattern = /\?|\b(who|what|why|how|when|where|can|could|should|tell|explain|research|latest|current|compare|find|web|source)\b/i;
+const writingSearchPattern = /^(?:find|search|show|open|read|look\s+(?:me\s+)?for)\b/i;
+const writingNounPattern = /\b(?:note|notes|writing|writings|blog|blogs|article|articles|essay|essays|post|posts)\b/i;
+const writingContextPattern = /\b(?:my|your|the|published|public)\s+(?:note|notes|writing|writings|blog|blogs|article|articles|essay|essays|post|posts)\b|\b(?:note|notes|writing|writings|blog|blogs|article|articles|essay|essays|post|posts)\s+(?:about|on|from)\b/i;
+const aiCreationPattern = /\b(?:draft|write|rewrite|compose|create|generate|develop|appreciation|deep\s+dive|overview|analysis|guide|tutorial|outline|brainstorm|blog\s+post|write[- ]?up)\b/i;
+// Decision and profile phrasing is often declarative rather than a question
+// (for example, “pick three projects for this role”). Route it to Ask Aman
+// so Gemini can compare the public project context instead of searching note
+// titles for words such as “best” or “role”.
+const aiDecisionPattern = /\b(?:best|top|favo(?:u)?rite|pick|choose|select|shortlist|rank|ranking|which|compare|contrast|recommend|suggest|match|matches|closest|fit|fits|suitable|hire|hiring|candidate|role|roles|job|position|client|portfolio|project(?:s)?\s+(?:for|between|that|which)|between\s+(?:these|the)|for\s+this\s+role)\b/i;
+const profilePattern = /\b(?:about\s+aman|aman(?:'s)?\s+(?:age|background|experience|work|projects?|education|location)|how\s+old|where\s+is\s+aman|who\s+is\s+aman|personal(?:ly)?|bio(?:graphy)?)\b/i;
+const aiIntentPattern = /(?:\?|\b(?:who|what|why|how|when|where|can\s+you|could\s+you|should\s+i|would\s+you|tell\s+me|give\s+me|show\s+me\s+how|help\s+me|explain|break\s+(?:this|it)\s+down|research|look\s+into|find\s+out|analy[sz]e|summari[sz]e|compare|contrast|recommend|suggest|draft|write|rewrite|create|generate|improve|brainstorm|plan|latest|current|web\s+search|search\s+the\s+web|look\s+up|fact\s*check|do\s+you\s+think)\b)/i;
 
 function detectMode(value: string): SearchMode {
-  return questionPattern.test(value.trim()) ? "ask" : "writings";
+  const query = value.trim();
+  if (!query) return "writings";
+
+  // Search/open commands that mention portfolio writing stay in the fast
+  // metadata search path. This prevents a query such as “find my notes about
+  // motion” from being sent to the AI agent just because it starts with a
+  // question-like verb.
+  const explicitWebResearch = /\b(?:research|latest|current|web\s+search|search\s+the\s+web)\b/i.test(query);
+  if (
+    ((writingSearchPattern.test(query) && writingNounPattern.test(query)) || writingContextPattern.test(query))
+    && !explicitWebResearch
+    && !aiCreationPattern.test(query)
+    && !aiDecisionPattern.test(query)
+    && !profilePattern.test(query)
+  ) {
+    return "writings";
+  }
+
+  // Explicit questions and research verbs are routed to the public assistant
+  // on both desktop and mobile. Everything else remains a lightweight writing
+  // search, so a title fragment never incurs an AI request.
+  return aiIntentPattern.test(query) || aiCreationPattern.test(query) || aiDecisionPattern.test(query) || profilePattern.test(query)
+    ? "ask"
+    : "writings";
 }
 
 // Keep the mobile surface tied to the actual layout viewport rather than a
@@ -142,11 +175,7 @@ function AskAmanInner() {
   const openWriting = (post: WritingResult) => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     mobileInputRef.current?.blur();
-    // Warm the selected article before handing it to the reader. The reader
-    // owns the cache, so this works for both the inline popover and the mobile
-    // sheet without duplicating Convex clients or loading article bodies into
-    // the public search response.
-    window.dispatchEvent(new CustomEvent("portfolio:prefetch-post", { detail: post }));
+    warmWriting(post);
     // Hand the note to the reader immediately. It can paint the cached card
     // shell while the full body/media request resolves during the sheet exit.
     window.dispatchEvent(new CustomEvent("portfolio:open-post", { detail: post }));
@@ -154,6 +183,13 @@ function AskAmanInner() {
       setExpanded(false);
       setSearching(false);
     });
+  };
+
+  const warmWriting = (post: WritingResult) => {
+    // The reader owns the cache and media warming. Dispatching the same event
+    // used by the writing cards keeps desktop popovers and the mobile sheet on
+    // one fast path without putting article bodies in search results.
+    window.dispatchEvent(new CustomEvent("portfolio:prefetch-post", { detail: post }));
   };
 
   const beginFreshQuery = () => {
@@ -242,7 +278,9 @@ function AskAmanInner() {
             style={{ animationDelay: `${index * 55}ms` }}
             type="button"
             onClick={(event) => { event.stopPropagation(); openWriting(result); }}
-            onPointerDown={(event) => event.stopPropagation()}
+            onPointerEnter={() => warmWriting(result)}
+            onFocus={() => warmWriting(result)}
+            onPointerDown={(event) => { event.stopPropagation(); warmWriting(result); }}
             aria-label={`Open ${result.title}`}
             data-vaul-no-drag
           >

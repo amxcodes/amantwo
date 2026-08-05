@@ -99,7 +99,11 @@ export const publicContext = internalQuery({
     const writings = (await publishedWritingRows(ctx)).sort((a: any, b: any) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0));
 
     return {
-      identity: hero?.identity ?? null,
+      // Aman explicitly shared this public profile fact. Keeping it in the
+      // compact assistant context lets natural questions such as “how old is
+      // Aman?” be answered without exposing private CMS or article data. The
+      // reference year keeps the answer stable as the calendar changes.
+      identity: hero?.identity ? { ...hero.identity, age: 23, ageAsOf: 2026 } : { age: 23, ageAsOf: 2026 },
       roles: Array.isArray(hero?.roles) ? hero.roles.slice(0, 6) : [],
       about: about
         ? { title: about.title, description: about.description, labels: about.labels }
