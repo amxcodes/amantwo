@@ -2537,6 +2537,9 @@ li {
   border-radius: 999px;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 62%);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
   transition: none;
 }
 
@@ -2583,6 +2586,187 @@ li {
 .blog-card-arrow {
   display: none;
 }
+
+/* Mobile-only long-press Story sharing. The regular share button remains the
+   primary action; this sheet is progressively enhanced for touch devices. */
+.story-share-sheet {
+  position: fixed;
+  z-index: 3000;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  background: rgb(23 34 53 / 22%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
+}
+
+.story-share-sheet-panel {
+  width: min(100%, 32rem);
+  max-height: min(92dvh, 48rem);
+  margin-inline: auto;
+  overflow: auto;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+  color: var(--ink, #172235);
+  background: var(--paper, #f7f4ec);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -18px 60px rgb(23 34 53 / 16%);
+  overscroll-behavior: contain;
+  animation: story-share-sheet-in 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.story-share-sheet-handle {
+  width: 34px;
+  height: 4px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink, #172235) 20%, transparent);
+}
+
+.story-share-sheet-panel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.story-share-sheet-panel header p {
+  margin: 0 0 6px;
+  color: color-mix(in srgb, var(--ink, #172235) 56%, transparent);
+  font:
+    500 10px / 1.2 "DM Mono",
+    ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+}
+
+.story-share-sheet-panel h2 {
+  margin: 0;
+  font: 500 24px / 1.05 var(--font-display, serif);
+}
+
+.story-share-close {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ink, #172235);
+  background: color-mix(in srgb, var(--paper, #f7f4ec) 72%, #dce7e8);
+  border: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.story-share-preview {
+  width: min(100%, 240px);
+  margin: 22px auto 16px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #c8dced;
+  aspect-ratio: 9 / 16;
+}
+
+.story-share-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-share-preview-loading {
+  display: grid;
+  height: 100%;
+  padding: 20px;
+  place-items: center;
+  color: color-mix(in srgb, var(--ink, #172235) 62%, transparent);
+  text-align: center;
+  font:
+    500 11px / 1.45 "DM Mono",
+    ui-monospace,
+    monospace;
+}
+
+.story-share-note {
+  max-width: 34rem;
+  margin: 0 auto 16px;
+  color: color-mix(in srgb, var(--ink, #172235) 62%, transparent);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.story-share-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.story-share-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--ink, #172235) 12%, transparent);
+  border-radius: 999px;
+  font:
+    500 11px / 1 "DM Mono",
+    ui-monospace,
+    monospace;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, background-color, opacity;
+  transition-duration: 160ms;
+}
+
+.story-share-actions button:active {
+  transform: scale(0.96);
+}
+
+.story-share-primary {
+  grid-column: 1 / -1;
+  color: #f7f4ec;
+  background: var(--ink, #172235);
+}
+
+.story-share-secondary {
+  color: var(--ink, #172235);
+  background: color-mix(in srgb, var(--paper, #f7f4ec) 82%, #dce7e8);
+}
+
+.story-share-actions button:disabled {
+  cursor: progress;
+  opacity: 0.45;
+}
+
+@keyframes story-share-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-share-sheet-panel {
+    animation: none;
+  }
+  .story-share-actions button {
+    transition: none;
+  }
+}
+
+@media (min-width: 821px), (pointer: fine) {
+  .story-share-sheet {
+    display: none;
+  }
+}
+
+
 
 .blog-card-read small {
   min-width: 0;

@@ -387,10 +387,7 @@ export default function ArticleRenderer({
       );
       const viewportPadding = 12;
       const menuGap = 8;
-      const availableAbove = Math.max(
-        0,
-        rect.top - menuGap - viewportPadding,
-      );
+      const availableAbove = Math.max(0, rect.top - menuGap - viewportPadding);
       const availableBelow = Math.max(
         0,
         window.innerHeight - rect.bottom - menuGap - viewportPadding,
@@ -455,9 +452,8 @@ export default function ArticleRenderer({
     ).find((element) => element.id === id);
     if (!target) return;
 
-    const scrollRoot = articleRef.current?.closest<HTMLElement>(
-      ".blog-reader-panel",
-    );
+    const scrollRoot =
+      articleRef.current?.closest<HTMLElement>(".blog-reader-panel");
     if (scrollRoot) {
       const targetRect = target.getBoundingClientRect();
       const rootRect = scrollRoot.getBoundingClientRect();
@@ -560,7 +556,20 @@ export default function ArticleRenderer({
             />
           ) : null}
           <div className="article-renderer-actions">
-            <ArticleShareButton slug={article.slug} title={article.title} />
+            <ArticleShareButton
+              slug={article.slug}
+              title={article.title}
+              summary={article.summary}
+              meta={article.meta}
+              readingTime={article.readingTime}
+              publishedLabel={formatDate(article.publishedAt)}
+              tone={article.tone}
+              coverSrc={
+                article.cover?.src
+                  ? resolveMediaUrl(article.cover.src)
+                  : undefined
+              }
+            />
           </div>
         </div>
       </header>

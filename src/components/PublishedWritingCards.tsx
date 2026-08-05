@@ -155,6 +155,14 @@ function WritingGrid({
             <ArticleShareButton
               slug={post.slug}
               title={post.title}
+              summary={post.summary}
+              meta={post.meta}
+              readingTime={post.readingTime}
+              publishedLabel={
+                post.publishedAt ? publishedLabel(post.publishedAt) : undefined
+              }
+              tone={post.tone}
+              coverSrc={post.cover?.src}
               className="blog-card-share"
             />
           </div>
