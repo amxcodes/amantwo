@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { resolveMediaUrl } from "../lib/media";
+import { useFastDrawerRelease } from "../lib/useFastDrawerRelease";
 
 type DrawerProject = {
   eyebrow?: string;
@@ -62,6 +63,7 @@ export default function ProjectDrawer() {
   const clearProjectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const fastReleaseHandlers = useFastDrawerRelease();
 
   const cancelPendingProjectClear = () => {
     if (clearProjectTimerRef.current === null) return;
@@ -145,6 +147,7 @@ export default function ProjectDrawer() {
         <Drawer.Content
           className="project-drawer"
           aria-describedby="project-drawer-summary"
+          {...fastReleaseHandlers}
         >
           <section
             className="project-drawer-panel"

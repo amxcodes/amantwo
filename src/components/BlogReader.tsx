@@ -2,8 +2,9 @@ import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { api } from "../../convex/_generated/api";
-import ArticleRenderer, { type PublicArticle } from "./ArticleRenderer";
 import { resolveMediaUrl } from "../lib/media";
+import { useFastDrawerRelease } from "../lib/useFastDrawerRelease";
+import ArticleRenderer, { type PublicArticle } from "./ArticleRenderer";
 
 type Props = {
   convexUrl?: string;
@@ -215,6 +216,8 @@ function BlogReaderShell({
   loading?: boolean;
   close: () => void;
 }) {
+  const fastReleaseHandlers = useFastDrawerRelease();
+
   return (
     <Drawer.Root
       open={open}
@@ -230,6 +233,7 @@ function BlogReaderShell({
         <Drawer.Content
           className="blog-reader"
           aria-describedby="blog-reader-summary"
+          {...fastReleaseHandlers}
         >
           <Drawer.Title className="sr-only">
             {post?.title ?? "Writing"}

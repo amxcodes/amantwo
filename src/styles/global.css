@@ -5059,11 +5059,22 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
 
 .project-drawer-overlay[data-vaul-overlay],
 .blog-reader-overlay[data-vaul-overlay] {
+  will-change: opacity;
   transition-property: opacity;
   transition-duration: 260ms;
   transition-timing-function: cubic-bezier(.22, 1, .36, 1);
   animation-duration: 260ms;
   animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+/* A quick touch release carries more momentum than the default sheet
+   animation expects. Keep the established curve for normal releases, but
+   shorten only this one hand-off so the live drag does not appear to hitch at
+   the release point. */
+.project-drawer[data-vaul-drawer][data-vaul-fast-release][data-state="closed"],
+.blog-reader[data-vaul-drawer][data-vaul-fast-release][data-state="closed"] {
+  animation-duration: 360ms !important;
+  transition-duration: 360ms !important;
 }
 
 /* Project card rhythm -----------------------------------------------------
