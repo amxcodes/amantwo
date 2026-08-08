@@ -1923,6 +1923,11 @@ li {
   margin: 0 auto;
   padding-block: clamp(96px, 14vw, 168px);
   border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+  /* Let the browser skip painting this heavier section while it is well
+     outside the viewport. The intrinsic size keeps the document stable, so
+     scrolling does not jump when the chart becomes visible. */
+  content-visibility: auto;
+  contain-intrinsic-size: 760px;
 }
 
 .about-section {
@@ -3774,6 +3779,10 @@ li {
   padding: 0;
   border: 0;
   width: max-content;
+  /* Keep the graph's layout and paint work contained. This prevents a
+     contribution-cell update from invalidating the surrounding page while
+     the reader is scrolling past the section. */
+  contain: layout paint;
 }
 
 .github-graph-grid--loading span {

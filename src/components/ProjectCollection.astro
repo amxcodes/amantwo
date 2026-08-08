@@ -215,6 +215,10 @@ const githubSkeletonCells = Array.from(
     "#66a867",
     "#376f50",
   ];
+  const githubDateFormatter = new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  });
 
   const githubRequests = new Map<string, Promise<GithubContribution[]>>();
 
@@ -336,10 +340,7 @@ const githubSkeletonCells = Array.from(
   const githubContributionLabel = (contribution: GithubCell) => {
     const parsedDate = parseGithubDate(contribution.date);
     const date = parsedDate
-      ? new Intl.DateTimeFormat("en", {
-          month: "short",
-          day: "numeric",
-        }).format(parsedDate)
+      ? githubDateFormatter.format(parsedDate)
       : contribution.date;
     const unit =
       contribution.count === 1 ? "contribution" : "contributions";
@@ -470,10 +471,7 @@ const githubSkeletonCells = Array.from(
       };
 
       const resetGithubInteraction = () => {
-        if (!interactionActive) {
-          hideTooltip();
-          return;
-        }
+        if (!interactionActive) return;
         interactionActive = false;
         activityLabel.textContent = "Move across the graph";
         resetGithubProximity(renderedCells);
@@ -498,6 +496,11 @@ const githubSkeletonCells = Array.from(
       };
       let dismissFrame = 0;
       const handleWindowScroll = () => {
+        // A normal page scroll should stay completely outside the graph's
+        // interaction path. Previously this scheduled an rAF on every scroll
+        // event (even when no cell was focused), which competed with the
+        // browser's scroll compositor on lower-powered devices.
+        if (!interactionActive) return;
         if (dismissFrame) return;
         dismissFrame = window.requestAnimationFrame(() => {
           dismissFrame = 0;
@@ -643,6 +646,45 @@ const githubSkeletonCells = Array.from(
     ...document.querySelectorAll<HTMLElement>("[data-github-activity]"),
   ];
   if (githubSections.length) {
+    // Start the small public-data request while the reader is idle and keep
+    // initialization just ahead of the section. The contribution grid is
+    // still revealed at the same visual threshold, but its network request
+    // and off-DOM cell build no longer happen in the middle of a scroll.
+    const primeGithubActivity = () => {
+      githubSections.forEach((section) => {
+        const account = section.dataset.githubAccount;
+        if (account) void requestGithubActivity(account).catch(() => undefined);
+      });
+    };
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (
+        callback: () => void,
+        options?: { timeout: number },
+      ) => number;
+    };
+    if (idleWindow.requestIdleCallback) {
+      idleWindow.requestIdleCallback(primeGithubActivity, { timeout: 1200 });
+    } else {
+      window.setTimeout(primeGithubActivity, 300);
+    }
+
+    const githubWarmupObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const section = entry.target as HTMLElement;
+          if (!entry.isIntersecting || section.dataset.githubInitialized === "true") {
+            if (section.dataset.githubInitialized === "true") {
+              githubWarmupObserver.unobserve(section);
+            }
+            return;
+          }
+          void initializeGithubActivity(section);
+          githubWarmupObserver.unobserve(section);
+        });
+      },
+      { rootMargin: "720px 0px", threshold: 0 },
+    );
+
     // IntersectionObserver delivers the intersection rectangle that the
     // browser already computed for scroll. Reading getBoundingClientRect on
     // every scroll frame forced a synchronous layout right beside the smooth
@@ -664,12 +706,20 @@ const githubSkeletonCells = Array.from(
             githubRevealVisibility;
           if (entry.intersectionRect.height < requiredHeight) return;
           playGithubIntro(section);
-          void initializeGithubActivity(section);
+          // The warmup observer normally has already started the request. If
+          // an embedded browser delays that callback, keep the reveal path a
+          // safe fallback instead of leaving the graph uninitialized.
+          if (section.dataset.githubInitialized !== "true") {
+            void initializeGithubActivity(section);
+          }
           githubRevealObserver.unobserve(section);
         });
       },
       { threshold: [0, githubRevealVisibility] },
     );
-    githubSections.forEach((section) => githubRevealObserver.observe(section));
+    githubSections.forEach((section) => {
+      githubWarmupObserver.observe(section);
+      githubRevealObserver.observe(section);
+    });
   }
 </script>
