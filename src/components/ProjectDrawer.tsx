@@ -3,6 +3,7 @@ import { Drawer } from "vaul";
 import { resolveMediaUrl } from "../lib/media";
 import { youtubeEmbedUrl } from "../lib/project-media";
 import { useFastDrawerRelease } from "../lib/useFastDrawerRelease";
+import { listenPortfolioEvent } from "../lib/portfolio-events";
 
 type DrawerProject = {
   eyebrow?: string;
@@ -101,12 +102,19 @@ export default function ProjectDrawer() {
       if (next) prefetchProjectMedia(next);
     };
 
-    window.addEventListener("portfolio:open-project", openProject);
-    window.addEventListener("portfolio:prefetch-project", prefetch);
+    const removeOpenListener = listenPortfolioEvent(
+      "portfolio:open-project",
+      openProject,
+    );
+    const removePrefetchListener = listenPortfolioEvent(
+      "portfolio:prefetch-project",
+      prefetch,
+    );
+
     return () => {
       cancelPendingProjectClear();
-      window.removeEventListener("portfolio:open-project", openProject);
-      window.removeEventListener("portfolio:prefetch-project", prefetch);
+      removeOpenListener();
+      removePrefetchListener();
     };
   }, []);
 

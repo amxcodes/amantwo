@@ -32,10 +32,14 @@ let managedSections: ManagedSection[] | null = null;
 let managedArticles: ArticleCard[] | null = null;
 let managedReadSucceeded = false;
 
-// The public page is backed by a published Convex revision. Avoid a browser,
-// proxy, or dev-server cache serving the previous revision after an admin
-// publish; the page still remains static-friendly when Convex is unavailable.
-Astro.response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+// The public page is backed by a published Convex revision. Keep browser
+// caching opt-in (so an open tab revalidates), while allowing Netlify's edge
+// to reuse the complete SSR snapshot briefly. This removes a Convex round
+// trip for most new visitors without making an admin publish feel stale.
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
+);
 
 if (convexUrl) {
   const client = new ConvexHttpClient(convexUrl);
@@ -185,8 +189,8 @@ const footerEmail = typeof footerContent?.email === "string" ? footerContent.ema
       <ExperienceSection entries={experience} />
       <EducationSection entries={education} />
       <BlogSection posts={posts} />
-      <ChronicleDetailsDrawer client:load />
-      <BlogReader convexUrl={publicConvexUrl} client:load />
+      <ChronicleDetailsDrawer client:idle />
+      <BlogReader convexUrl={publicConvexUrl} client:idle />
     </main>
     <SiteFooter email={footerEmail} />
   </div>

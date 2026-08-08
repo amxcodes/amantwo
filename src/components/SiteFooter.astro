@@ -21,8 +21,8 @@ const socialLinks = [
   <a class="signature-footer-top" href="#home">Top <span aria-hidden="true">↑</span></a>
   <div class="signature-footer-content">
     <div class="signature-footer-main">
-      <FooterSignature client:load name="Aman" sectionId="signature-footer" />
-      <NewsletterForm client:load convexUrl={publicConvexUrl} fallbackEmail={email} />
+      <FooterSignature client:visible name="Aman" sectionId="signature-footer" />
+      <NewsletterForm client:visible convexUrl={publicConvexUrl} fallbackEmail={email} />
       <nav class="signature-footer-socials" aria-label="Aman Anu on social media">
         {socialLinks.map((link) => (
           <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined} aria-label={link.label} title={link.label}>

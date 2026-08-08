@@ -4,6 +4,7 @@ import { Drawer } from "vaul";
 import { api } from "../../convex/_generated/api";
 import { resolveMediaUrl } from "../lib/media";
 import { useFastDrawerRelease } from "../lib/useFastDrawerRelease";
+import { listenPortfolioEvent } from "../lib/portfolio-events";
 import ArticleRenderer, { type PublicArticle } from "./ArticleRenderer";
 
 type Props = {
@@ -181,8 +182,7 @@ function useReaderState(
       updatePostQuery(next.slug, "pushState");
     };
 
-    window.addEventListener("portfolio:open-post", openPost);
-    return () => window.removeEventListener("portfolio:open-post", openPost);
+    return listenPortfolioEvent("portfolio:open-post", openPost);
   }, [readCachedArticle, setRequestedSlug]);
 
   const close = () => {
@@ -292,8 +292,7 @@ function BlogReaderConvex({ client }: { client: ConvexReactClient }) {
       // immediately, without waiting for the full body query.
       if (detail?.slug) prefetchArticleAssets(detail as PublicArticle);
     };
-    window.addEventListener("portfolio:prefetch-post", prefetch);
-    return () => window.removeEventListener("portfolio:prefetch-post", prefetch);
+    return listenPortfolioEvent("portfolio:prefetch-post", prefetch);
   }, [client]);
 
   return (

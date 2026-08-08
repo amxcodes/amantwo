@@ -1,4 +1,5 @@
 import { animate, inView, stagger } from "motion";
+import { emitPortfolioEvent } from "../lib/portfolio-events";
 import { normalizeProjectMedia } from "../lib/project-media";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -291,9 +292,7 @@ function setupProjects() {
       const prefetch = () => {
         const detail = getProjectDetail();
         if (detail) {
-          window.dispatchEvent(
-            new CustomEvent("portfolio:prefetch-project", { detail }),
-          );
+          emitPortfolioEvent("portfolio:prefetch-project", detail);
         }
       };
       button.addEventListener("pointerenter", prefetch, { passive: true });
@@ -302,9 +301,7 @@ function setupProjects() {
       button.addEventListener("click", () => {
         const detail = getProjectDetail();
         if (!detail) return;
-        window.dispatchEvent(
-          new CustomEvent("portfolio:open-project", { detail }),
-        );
+        emitPortfolioEvent("portfolio:open-project", detail);
       });
     });
 

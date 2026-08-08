@@ -3,6 +3,7 @@ import { ThinkingOrb } from "thinking-orbs";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer } from "vaul";
 import { api } from "../../convex/_generated/api";
+import { emitPortfolioEvent } from "../lib/portfolio-events";
 
 type Props = { convexUrl: string };
 type SubmitLikeEvent = { preventDefault: () => void };
@@ -248,7 +249,7 @@ function AskAmanInner() {
     warmWriting(post);
     // Hand the note to the reader immediately. It can paint the cached card
     // shell while the full body/media request resolves during the sheet exit.
-    window.dispatchEvent(new CustomEvent("portfolio:open-post", { detail: post }));
+    emitPortfolioEvent("portfolio:open-post", post);
     window.requestAnimationFrame(() => {
       setExpanded(false);
       setSearching(false);
@@ -259,7 +260,7 @@ function AskAmanInner() {
     // The reader owns the cache and media warming. Dispatching the same event
     // used by the writing cards keeps desktop popovers and the mobile sheet on
     // one fast path without putting article bodies in search results.
-    window.dispatchEvent(new CustomEvent("portfolio:prefetch-post", { detail: post }));
+    emitPortfolioEvent("portfolio:prefetch-post", post);
   };
 
   const beginFreshQuery = () => {
