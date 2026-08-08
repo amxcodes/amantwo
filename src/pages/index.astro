@@ -43,6 +43,9 @@ Astro.response.headers.set(
         </Fragment>
       </ManagedPortfolio>
     </main>
-    <SiteFooter email={siteData.identity.email} interactive={false} />
+    <!-- Keep the footer's visible-only signature hydration on the public page.
+         The static island fallback intentionally stays non-interactive, but
+         the footer itself owns its reveal animation and newsletter behavior. -->
+    <SiteFooter email={siteData.identity.email} />
   </div>
 </BaseLayout>

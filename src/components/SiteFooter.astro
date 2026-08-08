@@ -45,14 +45,17 @@ const socialLinks = [
   </div>
 
   <div class="signature-footer-landscape" aria-hidden="true">
-    <img
-      src="/media/footer-landscape.png"
-      alt=""
-      width="1881"
-      height="370"
-      loading="lazy"
-      decoding="async"
-      fetchpriority="low"
-    />
+    <picture>
+      <source srcset="/media/footer-landscape.webp" type="image/webp" />
+      <img
+        src="/media/footer-landscape.png"
+        alt=""
+        width="1881"
+        height="370"
+        loading="lazy"
+        decoding="async"
+        fetchpriority="auto"
+      />
+    </picture>
   </div>
 </footer>
