@@ -10,9 +10,10 @@ interface Props {
     account: string;
     profileUrl: string;
   };
+  interactive?: boolean;
 }
 
-const { projects, github } = Astro.props;
+const { projects, github, interactive = true } = Astro.props;
 const categoryOptions = [
   {
     label: "All",
@@ -118,7 +119,7 @@ const githubSkeletonCells = Array.from(
       <small>Publish a project from the content studio and it will appear here.</small>
     </div>
   )}
-  <ProjectDrawer client:idle />
+  {interactive ? <ProjectDrawer client:idle /> : null}
 </section>
 
 <section
@@ -197,7 +198,7 @@ const githubSkeletonCells = Array.from(
   </div>
 </section>
 
-<script>
+{interactive ? <script>
   type GithubContribution = {
     date: string;
     count: number;
@@ -238,8 +239,14 @@ const githubSkeletonCells = Array.from(
       }
       return payload.contributions;
     });
-    githubRequests.set(account, request);
-    return request;
+    // Do not cache a rejected promise. A transient third-party/network error
+    // must be recoverable when the section becomes visible again.
+    const resilientRequest = request.catch((error) => {
+      githubRequests.delete(account);
+      throw error;
+    });
+    githubRequests.set(account, resilientRequest);
+    return resilientRequest;
   };
 
   const parseGithubDate = (value: string) => {
@@ -379,8 +386,13 @@ const githubSkeletonCells = Array.from(
   };
 
   const initializeGithubActivity = async (section: HTMLElement) => {
-    if (section.dataset.githubInitialized === "true") return;
-    section.dataset.githubInitialized = "true";
+    if (
+      section.dataset.githubLoading === "true" ||
+      section.dataset.githubGridReady === "true"
+    ) {
+      return;
+    }
+    section.dataset.githubLoading = "true";
 
     const account = section.dataset.githubAccount;
     const graph = section.querySelector<HTMLElement>(".github-graph");
@@ -410,6 +422,7 @@ const githubSkeletonCells = Array.from(
       !error ||
       !tooltip
     ) {
+      section.dataset.githubLoading = "false";
       return;
     }
 
@@ -594,15 +607,36 @@ const githubSkeletonCells = Array.from(
 
       appendRenderedCells();
       grid.classList.remove("github-graph-grid--loading");
+      section.dataset.githubGridReady = "true";
+      section.dataset.githubInitialized = "true";
+      section.dataset.githubLoading = "false";
+      section.dataset.githubRetryCount = "0";
 
       grid.addEventListener("mouseleave", () => {
         resetGithubInteraction();
       });
       graph.setAttribute("aria-busy", "false");
     } catch {
+      section.dataset.githubLoading = "false";
+      section.dataset.githubInitialized = "false";
       graph.setAttribute("aria-busy", "false");
       scroll.hidden = true;
       error.hidden = false;
+
+      // Retry a bounded number of times. This handles intermittent upstream
+      // failures without creating a request loop or competing with scroll.
+      const retries = Number(section.dataset.githubRetryCount ?? "0");
+      if (retries < 2) {
+        section.dataset.githubRetryCount = String(retries + 1);
+        window.setTimeout(() => {
+          if (!section.isConnected || section.dataset.githubGridReady === "true") {
+            return;
+          }
+          scroll.hidden = false;
+          error.hidden = true;
+          void initializeGithubActivity(section);
+        }, 1400 * (retries + 1));
+      }
     }
   };
 
@@ -672,8 +706,8 @@ const githubSkeletonCells = Array.from(
       (entries) => {
         entries.forEach((entry) => {
           const section = entry.target as HTMLElement;
-          if (!entry.isIntersecting || section.dataset.githubInitialized === "true") {
-            if (section.dataset.githubInitialized === "true") {
+          if (!entry.isIntersecting || section.dataset.githubGridReady === "true") {
+            if (section.dataset.githubGridReady === "true") {
               githubWarmupObserver.unobserve(section);
             }
             return;
@@ -696,7 +730,7 @@ const githubSkeletonCells = Array.from(
       (entries) => {
         entries.forEach((entry) => {
           const section = entry.target as HTMLElement;
-          if (section.dataset.githubInitialized === "true") {
+          if (section.dataset.githubIntroPlayed === "true") {
             githubRevealObserver.unobserve(section);
             return;
           }
@@ -709,7 +743,7 @@ const githubSkeletonCells = Array.from(
           // The warmup observer normally has already started the request. If
           // an embedded browser delays that callback, keep the reveal path a
           // safe fallback instead of leaving the graph uninitialized.
-          if (section.dataset.githubInitialized !== "true") {
+          if (section.dataset.githubGridReady !== "true") {
             void initializeGithubActivity(section);
           }
           githubRevealObserver.unobserve(section);
@@ -722,4 +756,4 @@ const githubSkeletonCells = Array.from(
       githubRevealObserver.observe(section);
     });
   }
-</script>
+</script> : null}

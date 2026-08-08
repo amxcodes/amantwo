@@ -1,197 +1,48 @@
 ---
 import AboutSection from "../components/AboutSection.astro";
-import BlogReader from "../components/BlogReader.tsx";
 import BlogSection from "../components/BlogSection.astro";
-import ChronicleDetailsDrawer from "../components/ChronicleDetailsDrawer.tsx";
 import EducationSection from "../components/EducationSection.astro";
 import ExperienceSection from "../components/ExperienceSection.astro";
+import ManagedPortfolio from "../components/ManagedPortfolio.astro";
 import ProfileHero from "../components/ProfileHero.astro";
 import ProjectCollection from "../components/ProjectCollection.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { siteData } from "../content/site";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "../../convex/_generated/api";
-import type { ArticleCard } from "../components/PublishedWritingCards";
 import { publicConvexUrl } from "../lib/publicConfig";
-import { normalizeProjectMedia } from "../lib/project-media";
 
-// Keep the published snapshot request-time in Astro dev and in Netlify's
-// server function. This prevents a future adapter change from prerendering a
-// stale build-time copy of the portfolio.
+// The shell is intentionally independent from the Convex snapshot. The
+// managed sections below are fetched by an Astro server island so the header
+// and hero can stream on a cold visit instead of waiting for Convex startup.
 export const prerender = false;
-
-type ManagedSection = {
-  registryType: string;
-  content: Record<string, unknown>;
-};
-
-const convexUrl = publicConvexUrl;
-let managedSections: ManagedSection[] | null = null;
-let managedArticles: ArticleCard[] | null = null;
-let managedReadSucceeded = false;
-
-// The public page is backed by a published Convex revision. Keep browser
-// caching opt-in (so an open tab revalidates), while allowing Netlify's edge
-// to reuse the complete SSR snapshot briefly. This removes a Convex round
-// trip for most new visitors without making an admin publish feel stale.
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
 );
-
-if (convexUrl) {
-  const client = new ConvexHttpClient(convexUrl);
-  // Keep the home snapshot and writing collection independent. A stale or
-  // temporarily unavailable articles function must not make the project rail
-  // silently fall back to the local seed (this was especially confusing in
-  // Astro dev, where one old Convex function could poison the whole Promise).
-  const [homeResult, articlesResult] = await Promise.allSettled([
-    client.query(api.cms.publicHome, {}),
-    client.query(api.articles.publicCards, {
-      paginationOpts: { numItems: 6, cursor: null },
-    }),
-  ]);
-
-  if (homeResult.status === "fulfilled") {
-    const response = homeResult.value;
-    managedSections = Array.isArray(response)
-      ? (response as ManagedSection[])
-      : null;
-  }
-  if (articlesResult.status === "fulfilled") {
-    const articles = articlesResult.value;
-    managedArticles = Array.isArray(articles.page) && articles.page.length
-      ? (articles.page as unknown as ArticleCard[])
-      : null;
-    managedReadSucceeded = true;
-  }
-}
-
-const managedContent = (type: string) =>
-  managedSections?.find((section) => section.registryType === type)?.content;
-const hero = managedContent("hero");
-const projectsContent = managedContent("projects");
-const aboutContent = managedContent("about");
-const experienceContent = managedContent("experience");
-const educationContent = managedContent("education");
-const writingContent = managedContent("writing");
-const footerContent = managedContent("footer");
-
-const identity = (hero?.identity ?? siteData.identity) as typeof siteData.identity;
-const heroRoles = (hero?.roles ?? siteData.heroRoles) as typeof siteData.heroRoles;
-
-// Managed project records are intentionally flexible in Convex so the editor
-// can evolve without a migration. Normalize them at the public boundary so a
-// partially edited record cannot take down the whole home page, and preserve
-// the stored array order exactly (that order drives the bento pagination).
-const projectTones = new Set(["blue", "cream", "orange", "red", "yellow", "mist", "green"]);
-const projectLayouts = new Set(["folder", "compact", "note", "feature", "tile"]);
-const projectCategories = new Set(["product", "ai", "web", "mobile", "film", "experiment"]);
-// Projects can be edited/imported from several systems over time. Older
-// imports occasionally contain UTF-8 punctuation decoded as Latin-1 (for
-// example `Â·` instead of `·`). Repair those display-only values at the public
-// boundary so the card and its drawer always share clean typography without
-// mutating the stored draft.
-const repairDisplayText = (value: string) => value
-  .replaceAll("\u00c2\u00b7", "\u00b7")
-  .replaceAll("\u00e2\u0080\u0094", "\u2014")
-  .replaceAll("\u00e2\u0080\u0093", "\u2013")
-  .replaceAll("\u00e2\u0086\u0097", "\u2197")
-  .replaceAll("\u00e2\u0086\u0092", "\u2192")
-  .replaceAll("\u00e2\u0086\u0090", "\u2190")
-  .replaceAll("\u00e2\u0080\u0099", "\u2019")
-  .replaceAll("\u00e2\u0080\u009c", "\u201c")
-  .replaceAll("\u00e2\u0080\u009d", "\u201d")
-  .replaceAll("\u00e2\u0080\u00a6", "\u2026")
-  .replaceAll("\u00c2", "");
-const asText = (value: unknown, fallback: string) =>
-  typeof value === "string" && value.trim()
-    ? repairDisplayText(value.trim())
-    : fallback;
-const normalizeProjects = (value: unknown): typeof siteData.projects => {
-  if (!Array.isArray(value)) return siteData.projects;
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object") return [];
-    const raw = entry as Record<string, unknown>;
-    const title = asText(raw.title, "");
-    const slug = asText(raw.slug, "");
-    const summary = asText(raw.summary, "");
-    // An unfinished draft must never render as a broken card. It remains
-    // editable in the admin collection, but is omitted until complete.
-    if (!title || !slug || !summary) return [];
-    const categories = Array.isArray(raw.categories)
-      ? raw.categories.filter((item): item is string => typeof item === "string" && projectCategories.has(item))
-      : [];
-    const tags = Array.isArray(raw.tags)
-      ? raw.tags.map((item) => repairDisplayText(String(item).trim())).filter(Boolean)
-      : [];
-    const media = raw.media && typeof raw.media === "object"
-      ? raw.media as Record<string, unknown>
-      : undefined;
-    const links = raw.links && typeof raw.links === "object"
-      ? raw.links as Record<string, unknown>
-      : {};
-    return [{
-      slug,
-      eyebrow: asText(raw.eyebrow, "Project"),
-      title,
-      summary,
-      meta: asText(raw.meta, categories.join(" · ") || "Selected work"),
-      tone: projectTones.has(String(raw.tone)) ? String(raw.tone) as typeof siteData.projects[number]["tone"] : "cream",
-      layout: projectLayouts.has(String(raw.layout)) ? String(raw.layout) as typeof siteData.projects[number]["layout"] : "compact",
-      status: asText(raw.status, "In progress"),
-      categories: categories.length ? categories as typeof siteData.projects[number]["categories"] : ["product"],
-      detail: asText(raw.detail, summary),
-      caseStudy: asText(raw.caseStudy, summary),
-      tags: tags.length ? tags : ["Selected work"],
-      media: normalizeProjectMedia(media, title),
-      mediaItems: Array.isArray(raw.mediaItems)
-        ? raw.mediaItems.flatMap((item) => {
-            const normalized = normalizeProjectMedia(item, title);
-            return normalized ? [normalized] : [];
-          })
-        : undefined,
-      links: {
-        ...(typeof links.live === "string" && links.live.trim() ? { live: links.live } : {}),
-        ...(typeof links.github === "string" && links.github.trim() ? { github: links.github } : {}),
-        ...(typeof links.figma === "string" && links.figma.trim() ? { figma: links.figma } : {}),
-      },
-    }];
-  });
-};
-const projectSource = Array.isArray(projectsContent?.projects)
-  ? projectsContent.projects
-  : siteData.projects;
-const projects = normalizeProjects(projectSource);
-const about = (aboutContent ?? siteData.about) as typeof siteData.about;
-const experience = (Array.isArray(experienceContent?.entries) ? experienceContent.entries : siteData.experience) as typeof siteData.experience;
-const education = (Array.isArray(educationContent?.entries) ? educationContent.entries : siteData.education) as typeof siteData.education;
-const legacyPosts = (Array.isArray(writingContent?.posts) ? writingContent.posts : siteData.posts) as typeof siteData.posts;
-// When Convex is configured, do not paint the legacy notes while the managed
-// collection is loading. The writing island renders a short loading state
-// instead, preventing the default-to-CMS content flash.
-// An empty published collection is valid. Only fall back to the local seed
-// when the Convex request failed, so a successful DB read never flashes old
-// content over the managed site.
-const posts = managedArticles ?? (managedReadSucceeded ? [] : legacyPosts);
-const footerEmail = typeof footerContent?.email === "string" ? footerContent.email : identity.email;
 ---
 
-<BaseLayout title="Aman Anu — Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
+<BaseLayout title="Aman Anu - Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
   <div class="page-shell">
-    <SiteHeader {...identity} convexUrl={publicConvexUrl} />
+    <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
     <main id="main-content">
-      <ProfileHero {...identity} heroRoles={heroRoles} />
-      <ProjectCollection projects={projects} roles={siteData.roles} github={siteData.github} />
-      <AboutSection {...about} />
-      <ExperienceSection entries={experience} />
-      <EducationSection entries={education} />
-      <BlogSection posts={posts} />
-      <ChronicleDetailsDrawer client:idle />
-      <BlogReader convexUrl={publicConvexUrl} client:idle />
+      <ManagedPortfolio server:defer>
+        <Fragment slot="fallback">
+          <!--
+            The fallback is deliberately static and non-interactive. It keeps
+            the existing card geometry visible while the managed snapshot
+            arrives, without starting a second GitHub request or hydrating a
+            second set of drawers that would immediately be replaced.
+          -->
+          <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
+          <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} interactive={false} />
+          <AboutSection {...siteData.about} />
+          <ExperienceSection entries={siteData.experience} />
+          <EducationSection entries={siteData.education} />
+          <BlogSection posts={siteData.posts} interactive={false} />
+        </Fragment>
+      </ManagedPortfolio>
     </main>
-    <SiteFooter email={footerEmail} />
+    <SiteFooter email={siteData.identity.email} interactive={false} />
   </div>
 </BaseLayout>

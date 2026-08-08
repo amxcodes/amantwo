@@ -4,9 +4,10 @@ import { publicConvexUrl } from "../lib/publicConfig";
 
 interface Props {
   posts: ArticleCard[];
+  interactive?: boolean;
 }
 
-const { posts } = Astro.props;
+const { posts, interactive = true } = Astro.props;
 ---
 
 <section class="blog-section" id="writing" aria-labelledby="writing-title" data-reveal="section" data-scroll-label="Writing">
@@ -19,9 +20,13 @@ const { posts } = Astro.props;
   <!-- The six public cards are fetched during SSR and rendered immediately.
        The island only owns the card interactions; the selected reader loads
        its full article on demand. -->
-  <PublishedWritingCards
-    initialPosts={posts}
-    convexUrl={publicConvexUrl}
-    client:load
-  />
+  {interactive ? (
+    <PublishedWritingCards
+      initialPosts={posts}
+      convexUrl={publicConvexUrl}
+      client:load
+    />
+  ) : (
+    <PublishedWritingCards initialPosts={posts} convexUrl={publicConvexUrl} />
+  )}
 </section>

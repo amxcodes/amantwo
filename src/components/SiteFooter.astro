@@ -6,9 +6,10 @@ import { publicConvexUrl } from "../lib/publicConfig";
 
 interface Props {
   email: string;
+  interactive?: boolean;
 }
 
-const { email } = Astro.props;
+const { email, interactive = true } = Astro.props;
 const socialLinks = [
   { label: "Email", brand: "gmail", href: `mailto:${email}` },
   { label: "GitHub", brand: "github", href: "https://github.com/amxcodes" },
@@ -21,8 +22,16 @@ const socialLinks = [
   <a class="signature-footer-top" href="#home">Top <span aria-hidden="true">↑</span></a>
   <div class="signature-footer-content">
     <div class="signature-footer-main">
-      <FooterSignature client:visible name="Aman" sectionId="signature-footer" />
-      <NewsletterForm client:visible convexUrl={publicConvexUrl} fallbackEmail={email} />
+      {interactive ? (
+        <FooterSignature client:visible name="Aman" sectionId="signature-footer" />
+      ) : (
+        <FooterSignature name="Aman" sectionId="signature-footer" />
+      )}
+      {interactive ? (
+        <NewsletterForm client:visible convexUrl={publicConvexUrl} fallbackEmail={email} />
+      ) : (
+        <NewsletterForm fallbackEmail={email} />
+      )}
       <nav class="signature-footer-socials" aria-label="Aman Anu on social media">
         {socialLinks.map((link) => (
           <a href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noreferrer" : undefined} aria-label={link.label} title={link.label}>
@@ -36,6 +45,14 @@ const socialLinks = [
   </div>
 
   <div class="signature-footer-landscape" aria-hidden="true">
-    <img src="/media/footer-landscape.png" alt="" />
+    <img
+      src="/media/footer-landscape.png"
+      alt=""
+      width="1881"
+      height="370"
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+    />
   </div>
 </footer>
