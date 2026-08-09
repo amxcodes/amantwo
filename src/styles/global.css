@@ -520,7 +520,7 @@ li {
   aspect-ratio: 1;
   place-items: center;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   cursor: zoom-in;
   background: var(--paper-deep);
   border: 0;
@@ -553,6 +553,8 @@ li {
 }
 
 .avatar-fallback {
+  position: absolute;
+  inset: 0;
   display: grid;
   width: 100%;
   height: 100%;
@@ -564,26 +566,115 @@ li {
   letter-spacing: -0.02em;
 }
 
-.portrait-trigger img {
+.avatar-person-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.avatar-person-layer img,
+.avatar-cat-layer img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  outline: 0;
+  outline-offset: 0;
+}
+
+.avatar-person-layer img {
   object-fit: cover;
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  outline-offset: -1px;
 }
 
-.portrait-trigger .avatar-image-dark {
-  display: none;
-}
-
-html[data-theme="dark"] .portrait-trigger .avatar-image-light {
-  display: none;
-}
-
-html[data-theme="dark"] .portrait-trigger .avatar-image-dark {
+.avatar-frame-stack {
+  position: absolute;
+  inset: 0;
   display: block;
+}
+
+.avatar-frame-stack-dark {
+  display: none;
+}
+
+html[data-theme="dark"] .avatar-frame-stack-light {
+  display: none;
+}
+
+html[data-theme="dark"] .avatar-frame-stack-dark {
+  display: block;
+}
+
+.avatar-frame {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.avatar-frame-1 {
+  visibility: visible;
+  opacity: 1;
+}
+
+.avatar-cat-layer img {
+  object-fit: contain;
+}
+
+.avatar-cat-layer {
+  position: absolute;
+  z-index: 2;
+  top: 53%;
+  left: 25%;
+  width: 19px;
+  height: 19px;
+  pointer-events: none;
+  transform-origin: 58% 82%;
+}
+
+.avatar-cat-layer .avatar-cat {
+  object-fit: contain;
+}
+
+/* The stop-motion loop swaps pre-rendered artwork instead of translating a
+   single bitmap. Each frame is a small WebP, so the browser only performs an
+   opacity/visibility change and the inline text never moves. */
+.portrait-anchor[data-motion="play"] .avatar-frame {
+  animation: avatar-frame-stop 6.4s steps(1, end) infinite both;
+  will-change: opacity;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-1 {
+  animation-delay: 0s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-2 {
+  animation-delay: -1.6s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-3 {
+  animation-delay: -3.2s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-4 {
+  animation-delay: -4.8s;
+}
+
+@keyframes avatar-frame-stop {
+  0%, 24.99% {
+    visibility: visible;
+    opacity: 1;
+  }
+  25%, 100% {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-anchor .avatar-frame {
+    animation: none;
+  }
 }
 
 .portrait-preview img {
@@ -7176,4 +7267,93 @@ html[data-theme="dark"] .github-profile-link:focus-visible {
   color: #fffaf1;
   background: #587548;
   border-color: #b2cf94;
+}
+
+/* Dark mobile drawer parity -------------------------------------------------
+   Vaul owns the sheet gesture/animation state. Keep the dark surface layer
+   from changing that hand-off: the dark mobile drawers use the exact same
+   transform, release, and overlay timings as the light drawers. */
+@media (max-width: 720px) {
+  html[data-theme="dark"] :is(
+    .project-drawer[data-vaul-drawer][data-state="open"],
+    .project-drawer[data-vaul-drawer][data-state="closed"],
+    .blog-reader[data-vaul-drawer][data-state="open"],
+    .blog-reader[data-vaul-drawer][data-state="closed"]
+  ) {
+    opacity: 1;
+    filter: none;
+    transition-property: transform;
+    transition-duration: 500ms;
+    transition-timing-function: cubic-bezier(.32, .72, 0, 1);
+    animation-duration: 500ms;
+    animation-timing-function: cubic-bezier(.32, .72, 0, 1);
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer[data-vaul-drawer][data-state="open"],
+    .blog-reader[data-vaul-drawer][data-state="open"]
+  ) {
+    animation-name: slideFromBottom;
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer[data-vaul-drawer][data-state="closed"],
+    .blog-reader[data-vaul-drawer][data-state="closed"]
+  ) {
+    animation-name: slideToBottom;
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer-overlay[data-vaul-overlay],
+    .blog-reader-overlay[data-vaul-overlay]
+  ) {
+    will-change: opacity;
+    transition-property: opacity;
+    transition-duration: 260ms;
+    transition-timing-function: cubic-bezier(.22, 1, .36, 1);
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer-overlay[data-vaul-overlay][data-state="open"],
+    .blog-reader-overlay[data-vaul-overlay][data-state="open"]
+  ) {
+    animation-name: fadeIn;
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer-overlay[data-vaul-overlay][data-state="closed"],
+    .blog-reader-overlay[data-vaul-overlay][data-state="closed"]
+  ) {
+    animation-name: fadeOut;
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer[data-vaul-drawer][data-vaul-fast-release][data-state="closed"],
+    .blog-reader[data-vaul-drawer][data-vaul-fast-release][data-state="closed"]
+  ) {
+    animation-duration: 360ms !important;
+    transition-duration: 360ms !important;
+  }
+
+  html[data-theme="dark"] :is(
+    .project-drawer[data-vaul-drawer].vaul-dragging,
+    .blog-reader[data-vaul-drawer].vaul-dragging
+  ) {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html[data-theme="dark"] :is(
+      .project-drawer[data-vaul-drawer],
+      .blog-reader[data-vaul-drawer],
+      .project-drawer-overlay[data-vaul-overlay],
+      .blog-reader-overlay[data-vaul-overlay]
+    ) {
+      transition: none;
+      animation: none;
+    }
+  }
 }

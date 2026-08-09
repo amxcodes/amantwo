@@ -366,11 +366,18 @@ function setupPortrait() {
     "[data-portrait-trigger]",
   );
   if (!root || !trigger) return;
-  trigger
-    .querySelector<HTMLImageElement>("[data-avatar-image]")
-    ?.addEventListener("error", (event) => {
-      (event.currentTarget as HTMLImageElement).hidden = true;
+  const connection = (
+    navigator as Navigator & { connection?: { saveData?: boolean } }
+  ).connection;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const constrainedDevice =
+    (navigator.hardwareConcurrency || 8) <= 2 || connection?.saveData === true;
+  root.dataset.motion = reducedMotion || constrainedDevice ? "static" : "play";
+  trigger.querySelectorAll<HTMLImageElement>("[data-avatar-image]").forEach((image) => {
+    image.addEventListener("error", () => {
+      image.hidden = true;
     });
+  });
   if (root.dataset.hasPreview !== "true") return;
   let closeTimer = 0;
   // Keep the preview open just long enough for a touch release or a precise

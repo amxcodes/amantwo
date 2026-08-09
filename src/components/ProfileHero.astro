@@ -16,7 +16,6 @@ interface Props {
 
 const {
   name,
-  avatarSrc,
   portraitSrc,
   introduction,
   heroClosing,
@@ -25,7 +24,23 @@ const {
   heroRoles,
 } = Astro.props;
 
-const resolvedAvatarSrc = avatarSrc?.trim() || "/media/aman-avatar-illustrated.webp";
+// The inline avatar uses four small, precomposed frames per theme. Keeping the
+// character and cat in each frame lets the motion stay coherent without extra
+// DOM layers, layout shifts, or runtime drawing work.
+const illustratedAvatarSrc = "/media/aman-avatar-illustrated-light.webp";
+const illustratedAvatarDarkSrc = "/media/aman-avatar-illustrated-dark.webp";
+const illustratedAvatarFrames = [
+  "/media/aman-avatar-stop-01-light.webp",
+  "/media/aman-avatar-stop-02-light.webp",
+  "/media/aman-avatar-stop-03-light.webp",
+  "/media/aman-avatar-stop-04-light.webp",
+];
+const illustratedAvatarDarkFrames = [
+  "/media/aman-avatar-stop-01-dark.webp",
+  "/media/aman-avatar-stop-02-dark.webp",
+  "/media/aman-avatar-stop-03-dark.webp",
+  "/media/aman-avatar-stop-04-dark.webp",
+];
 ---
 
 <section class="profile-hero" id="home" aria-labelledby="profile-title" data-scroll-label="Intro">
@@ -35,8 +50,10 @@ const resolvedAvatarSrc = avatarSrc?.trim() || "/media/aman-avatar-illustrated.w
         <span class="hero-identity">
           <span class="hero-lead">{introduction}</span>
           <InlinePortrait
-            compactSrc={resolveMediaUrl(resolvedAvatarSrc)}
-            compactDarkSrc={resolveMediaUrl("/media/aman-avatar-illustrated-dark.webp")}
+            compactSrc={resolveMediaUrl(illustratedAvatarSrc)}
+            compactDarkSrc={resolveMediaUrl(illustratedAvatarDarkSrc)}
+            compactFrames={illustratedAvatarFrames.map(resolveMediaUrl)}
+            compactDarkFrames={illustratedAvatarDarkFrames.map(resolveMediaUrl)}
             fullSrc={resolveMediaUrl(portraitSrc)}
             alt={`Portrait of ${name}`}
           />
