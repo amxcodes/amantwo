@@ -20,8 +20,35 @@ const canonicalUrl =
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-theme-mode="dark">
   <head>
+    <script is:inline>
+      (() => {
+        const key = "aman-theme";
+        const stored = (() => {
+          try { return localStorage.getItem(key); } catch { return null; }
+        })();
+        // The portfolio opens in its near-black navy variant. A stored choice
+        // still wins, so returning visitors can keep light or system mode.
+        const mode = stored === "light" || stored === "dark" ? stored : "dark";
+        const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+        const dark = mode === "dark" || (mode === "system" && prefersDark);
+        const root = document.documentElement;
+        root.dataset.theme = dark ? "dark" : "light";
+        root.dataset.themeMode = mode;
+        root.style.colorScheme = dark ? "dark" : "light";
+        const themeColor = dark ? "#02050b" : "#f5f3ed";
+        const updateThemeColor = () => {
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", themeColor);
+        };
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", updateThemeColor, { once: true });
+        } else {
+          updateThemeColor();
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -33,7 +60,7 @@ const canonicalUrl =
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
-    <meta name="theme-color" content="#f5f3ed" />
+    <meta name="theme-color" content="#02050b" />
     <link rel="preconnect" href="https://assets.watermelon.sh" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
@@ -43,6 +70,7 @@ const canonicalUrl =
     <slot />
     <nav class="edge-scroll-rail" data-edge-scroll-rail aria-label="Page sections"></nav>
     <script>
+      import "../scripts/theme";
       import "../scripts/motion-loader";
     </script>
   </body>

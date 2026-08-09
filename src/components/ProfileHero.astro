@@ -24,6 +24,8 @@ const {
   location,
   heroRoles,
 } = Astro.props;
+
+const resolvedAvatarSrc = avatarSrc?.trim() || "/media/aman-avatar-illustrated.webp";
 ---
 
 <section class="profile-hero" id="home" aria-labelledby="profile-title" data-scroll-label="Intro">
@@ -33,7 +35,8 @@ const {
         <span class="hero-identity">
           <span class="hero-lead">{introduction}</span>
           <InlinePortrait
-            compactSrc={resolveMediaUrl(avatarSrc)}
+            compactSrc={resolveMediaUrl(resolvedAvatarSrc)}
+            compactDarkSrc={resolveMediaUrl("/media/aman-avatar-illustrated-dark.webp")}
             fullSrc={resolveMediaUrl(portraitSrc)}
             alt={`Portrait of ${name}`}
           />

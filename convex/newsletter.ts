@@ -4,6 +4,12 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/s
 
 const settingsKey = "newsletter";
 
+// Older footer settings used the portfolio-description copy. Keep those
+// records readable, but restore the earlier signature-footer message when
+// they are read so an existing Convex row does not change the public footer.
+const legacyFooterDescription =
+  "Thoughtful products, systems, and moving images—built from a clear point of view.";
+
 export const defaultSettings = {
   enabled: true,
   title: "Get occasional notes",
@@ -18,10 +24,14 @@ type NewsletterSettings = typeof defaultSettings;
 const asSettings = (value: unknown): NewsletterSettings => {
   if (!value || typeof value !== "object") return defaultSettings;
   const record = value as Record<string, unknown>;
+  const rawDescription = typeof record.description === "string" ? record.description.trim() : "";
+  const description = rawDescription === legacyFooterDescription
+    ? defaultSettings.description
+    : rawDescription;
   return {
     enabled: record.enabled !== false,
     title: typeof record.title === "string" && record.title.trim() ? record.title : defaultSettings.title,
-    description: typeof record.description === "string" && record.description.trim() ? record.description : defaultSettings.description,
+    description: description || defaultSettings.description,
     placeholder: typeof record.placeholder === "string" && record.placeholder.trim() ? record.placeholder : defaultSettings.placeholder,
     buttonLabel: typeof record.buttonLabel === "string" && record.buttonLabel.trim() ? record.buttonLabel : defaultSettings.buttonLabel,
     successMessage: typeof record.successMessage === "string" && record.successMessage.trim() ? record.successMessage : defaultSettings.successMessage,

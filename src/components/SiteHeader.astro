@@ -16,6 +16,16 @@ const { name, email, availability, convexUrl } = Astro.props;
     {convexUrl ? <AskAman convexUrl={convexUrl} client:load /> : <a class="wordmark" href="/" aria-label={`${name}, home`}>Aman</a>}
   </div>
   <div class="header-meta">
+    <button
+      class="theme-toggle"
+      type="button"
+      data-theme-toggle
+      aria-label="Change color theme"
+      title="Change color theme"
+    >
+      <span class="theme-toggle-mark" aria-hidden="true"></span>
+      <span class="theme-toggle-label" data-theme-label>Theme</span>
+    </button>
     <span class="availability" aria-hidden="true">{availability}</span>
     <a class="header-email" href={`mailto:${email}`}>{email}</a>
   </div>

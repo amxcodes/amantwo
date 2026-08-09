@@ -188,7 +188,7 @@ const githubSkeletonCells = Array.from(
       >
         <span>Less</span>
         {["#e7ebdd", "#cfe7a7", "#9fcd76", "#66a867", "#376f50"].map(
-          (color) => <i style={`background-color: ${color}`} />,
+          (color) => <i style={`--github-cell-color: ${color}`} />,
         )}
         <span>More</span>
       </div>
@@ -546,7 +546,8 @@ const githubSkeletonCells = Array.from(
         button.setAttribute("aria-label", label);
         button.title = label;
         fill.className = "github-graph-cell-fill";
-        fill.style.backgroundColor = githubColors[contribution.level];
+        fill.dataset.githubLevel = String(contribution.level);
+        fill.style.setProperty("--github-cell-color", githubColors[contribution.level]);
         if (contribution.level > 0 && !reducedMotion) {
           fill.dataset.ambient = "true";
           fill.style.setProperty(

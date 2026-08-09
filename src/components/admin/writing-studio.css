@@ -3591,3 +3591,154 @@ textarea.writer-inline-input,
 @media (prefers-reduced-motion: reduce) {
   .writer-inspector-backdrop { backdrop-filter: none; }
 }
+
+/* Keep the writing studio's existing geometry and interaction model while
+   letting its independently-loaded island inherit the public theme. */
+html[data-theme="dark"] .writing-studio,
+html[data-theme="dark"] .writer-loading {
+  --writer-ink: #f1eee7;
+  --writer-muted: #a8b4c2;
+  --writer-canvas: #02050b;
+  --writer-paper: #050a12;
+  --writer-panel: #0a1320;
+  --writer-blue: #86a9cc;
+  --writer-yellow: #e8ce82;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] :where(
+  .writing-studio,
+  .writer-toolbar,
+  .writer-sidebar,
+  .writer-canvas-shell,
+  .writer-inspector,
+  .writer-inspector-mobile-head,
+  .writer-settings-panel,
+  .writer-index-panel,
+  .writer-ai-chat-panel,
+  .writer-ai-chat-compose,
+  .writer-ai-result,
+  .writer-ai-answer,
+  .writer-ai-sources,
+  .writer-ai-message,
+  .writer-empty-state,
+  .writer-error-state
+) {
+  color: var(--writer-ink);
+  background-color: var(--writer-paper);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] :where(
+  .writer-canvas,
+  .writer-canvas-page,
+  .writer-canvas-header,
+  .writer-block,
+  .writer-block-editor,
+  .writer-block-placeholder,
+  .writer-inspector-card,
+  .writer-settings-card,
+  .writer-index-popover,
+  .writer-ai-chat-feed,
+  .writer-ai-thinking,
+  .writer-ai-source,
+  .writer-ai-composer
+) {
+  color: var(--writer-ink);
+  background: var(--writer-panel);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] :where(
+  .writer-toolbar,
+  .writer-inspector-mobile-head,
+  .writer-ai-chat-compose,
+  .writer-inspector-tabs,
+  .writer-settings-tabs,
+  .writer-index-trigger,
+  .writer-tool-button,
+  .writer-back-button,
+  .writer-toolbar button,
+  .writer-toolbar a
+) {
+  color: var(--writer-ink);
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] :where(
+  .writer-toolbar button:hover,
+  .writer-toolbar a:hover,
+  .writer-tool-button:hover,
+  .writer-tool-button[aria-pressed="true"],
+  .writer-index-trigger:hover
+) {
+  background-color: color-mix(in srgb, var(--color-surface-muted) 72%, var(--color-text) 8%);
+}
+
+html[data-theme="dark"] :where(
+  .writer-field input,
+  .writer-field textarea,
+  .writer-field select,
+  .writer-ai-chat-compose textarea,
+  .writer-block textarea,
+  .writer-block input,
+  .writer-settings-panel input,
+  .writer-settings-panel textarea,
+  .writer-settings-panel select
+) {
+  color: var(--writer-ink);
+  background: var(--writer-paper);
+  border-color: var(--color-border);
+  caret-color: var(--writer-yellow);
+}
+
+html[data-theme="dark"] :where(
+  .writer-field input:focus,
+  .writer-field textarea:focus,
+  .writer-field select:focus,
+  .writer-ai-chat-compose textarea:focus,
+  .writer-block textarea:focus,
+  .writer-block input:focus,
+  .writer-settings-panel input:focus,
+  .writer-settings-panel textarea:focus,
+  .writer-settings-panel select:focus
+) {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 25%, transparent);
+}
+
+html[data-theme="dark"] :where(
+  .writer-toolbar span,
+  .writer-sidebar p,
+  .writer-sidebar small,
+  .writer-inspector p,
+  .writer-inspector small,
+  .writer-settings-panel p,
+  .writer-ai-chat-panel p,
+  .writer-ai-chat-panel small,
+  .writer-ai-source,
+  .writer-empty-state span,
+  .writer-loading,
+  .writer-error-state
+) {
+  color: var(--writer-muted);
+}
+
+html[data-theme="dark"] .writer-inspector-backdrop {
+  background: var(--color-overlay);
+}
+
+html[data-theme="dark"] .writer-button-primary,
+html[data-theme="dark"] .writer-ai-chat-compose button,
+html[data-theme="dark"] .writer-empty-primary {
+  color: var(--color-bg);
+  background: var(--writer-blue);
+}
+
+html[data-theme="dark"] .writer-button-danger,
+html[data-theme="dark"] .writer-delete-button {
+  color: var(--writer-yellow);
+  background: color-mix(in srgb, var(--writer-yellow) 26%, var(--writer-paper));
+}

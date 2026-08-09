@@ -124,7 +124,10 @@ export const siteSchema = z.object({
     location: z.string().min(1),
     availability: z.string().min(1),
     email: z.email(),
-    avatarSrc: z.url(),
+    // Avatar media may be hosted by a provider or served from the local
+    // public/media pipeline. Keeping this as a non-empty string lets the
+    // optimized local asset work in both dev and production builds.
+    avatarSrc: z.string().min(1),
     portraitSrc: z.string().min(1),
     introduction: z.string().min(1),
     heroClosing: z.string().min(1),
@@ -165,7 +168,7 @@ export const siteData = siteSchema.parse({
     location: "Kochi, India",
     availability: "Available for thoughtful collaborations",
     email: "amananuworks@gmail.com",
-    avatarSrc: "https://assets.watermelon.sh/wm_alex.png",
+    avatarSrc: "/media/aman-avatar-illustrated.webp",
     portraitSrc: "/media/aman-portrait.png",
     introduction: "I’m Aman",
     heroClosing: "building thoughtful systems.",

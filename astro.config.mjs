@@ -2,7 +2,14 @@ import react from "@astrojs/react";
 import netlify from "@astrojs/netlify";
 import { defineConfig } from "astro/config";
 
-const isBuild = process.argv.some((argument) => argument === "build");
+const isDev = process.argv.includes("dev");
+// `astro dev` does not need Netlify's local emulators. Marking the process as
+// Netlify dev makes the Vite plugin a no-op while keeping the Netlify adapter
+// available for Astro server islands. This avoids touching the global Netlify
+// CLI config (which may be read-only in local sandboxes/CI).
+if (isDev) {
+  process.env.NETLIFY_DEV = "true";
+}
 
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || undefined,
@@ -15,12 +22,14 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
-  // Netlify's Vite plugin is needed for the production function, but it also
-  // writes a global Netlify config during `astro dev`. That write can fail in
-  // local environments and terminate the dev server before client islands
-  // hydrate. Use Astro's native dev server locally; keep the adapter for the
-  // actual Netlify build.
-  adapter: isBuild ? netlify() : undefined,
+  // The home page uses an Astro server island to stream the managed snapshot.
+  // The adapter must be present in dev as well as build mode or Astro rejects
+  // the `server:defer` boundary before rendering the page.
+  // Keep the Netlify runtime available for server islands in local dev, but
+  // disable Netlify's optional local emulators. They attempt to persist the
+  // CLI token in the user's global AppData directory, which is unavailable in
+  // restricted/local environments and prevents Astro from starting at all.
+  adapter: netlify({ devFeatures: false }),
   build: {
     inlineStylesheets: "auto",
   },

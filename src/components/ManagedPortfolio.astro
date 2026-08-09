@@ -65,7 +65,17 @@ const experienceContent = managedContent("experience");
 const educationContent = managedContent("education");
 const writingContent = managedContent("writing");
 
-const identity = (hero?.identity ?? siteData.identity) as typeof siteData.identity;
+// Keep the local, optimized hero avatar canonical. Older CMS drafts can still
+// contain the previous demo/remote avatar URL and would otherwise silently
+// override the asset used by the public site.
+const managedIdentity = hero?.identity && typeof hero.identity === "object"
+  ? (hero.identity as Partial<typeof siteData.identity>)
+  : {};
+const identity = {
+  ...siteData.identity,
+  ...managedIdentity,
+  avatarSrc: siteData.identity.avatarSrc,
+} satisfies typeof siteData.identity;
 const heroRoles = (hero?.roles ?? siteData.heroRoles) as typeof siteData.heroRoles;
 
 const projectTones = new Set(["blue", "cream", "orange", "red", "yellow", "mist", "green"]);

@@ -90,7 +90,7 @@ function Orb({
 }) {
   return (
     <span className="ask-aman-orb ask-aman-orb-accent" aria-hidden="true">
-      <ThinkingOrb state={state} size={size} theme="light" speed={0.82} aria-label="Aman is thinking" />
+      <ThinkingOrb state={state} size={size} theme="auto" speed={0.82} aria-label="Aman is thinking" />
     </span>
   );
 }

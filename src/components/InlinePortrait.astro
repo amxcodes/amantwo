@@ -1,11 +1,12 @@
 ---
 interface Props {
   compactSrc: string;
+  compactDarkSrc?: string;
   fullSrc: string;
   alt: string;
 }
 
-const { compactSrc, fullSrc, alt } = Astro.props;
+const { compactSrc, compactDarkSrc, fullSrc, alt } = Astro.props;
 const hasPreview = true;
 ---
 
@@ -24,14 +25,30 @@ const hasPreview = true;
   >
     <span class="avatar-fallback" aria-hidden="true">AA</span>
     <img
+      class="avatar-image avatar-image-light"
       src={compactSrc}
       width="48"
       height="48"
       alt=""
       decoding="async"
+      loading="eager"
+      fetchpriority="high"
       referrerpolicy="no-referrer"
       data-avatar-image
     />
+    {compactDarkSrc && (
+      <img
+        class="avatar-image avatar-image-dark"
+        src={compactDarkSrc}
+        width="48"
+        height="48"
+        alt=""
+        decoding="async"
+        loading="eager"
+        referrerpolicy="no-referrer"
+        data-avatar-image
+      />
+    )}
   </button>
   {
     hasPreview && (

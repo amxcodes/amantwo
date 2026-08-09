@@ -34,6 +34,24 @@ const brandForLabel = {
   </div>
 
   <figure class="about-section-portrait">
-    <img src={resolveMediaUrl(portraitSrc)} alt={portraitAlt} width="1254" height="1254" loading="lazy" decoding="async" />
+    <img
+      class="about-section-portrait-image about-portrait-light"
+      src={resolveMediaUrl(portraitSrc)}
+      alt={portraitAlt}
+      width="1254"
+      height="1254"
+      loading="lazy"
+      decoding="async"
+    />
+    <img
+      class="about-section-portrait-image about-portrait-dark"
+      src={resolveMediaUrl("/media/aman-about-annotated-dark.png")}
+      alt=""
+      aria-hidden="true"
+      width="1254"
+      height="1254"
+      loading="lazy"
+      decoding="async"
+    />
   </figure>
 </section>
