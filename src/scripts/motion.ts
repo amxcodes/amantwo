@@ -372,30 +372,55 @@ function setupPortrait() {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const constrainedDevice =
     (navigator.hardwareConcurrency || 8) <= 2 || connection?.saveData === true;
-  root.dataset.motion = reducedMotion || constrainedDevice ? "static" : "play";
+  const shouldPlay = !reducedMotion && !constrainedDevice;
   const avatarImages = Array.from(
     trigger.querySelectorAll<HTMLImageElement>("[data-avatar-image]"),
   );
-  let avatarReady = avatarImages.some(
-    (image) => image.complete && image.naturalWidth > 0,
-  );
-  let failedImages = 0;
+  // Keep the first frame visible while the rest of the tiny sprite settles,
+  // then start the loop only when every frame is either decoded or known to
+  // have failed. This prevents a cold visitor from seeing blank frames while
+  // the browser is still fetching the sequence.
+  root.dataset.motion = shouldPlay ? "loading" : "static";
+  let loadedImages = 0;
+  let settledImages = 0;
   const markAvatarReady = () => {
-    avatarReady = true;
     root.dataset.avatarReady = "true";
     delete root.dataset.avatarFailed;
   };
-  avatarImages.forEach((image) => {
-    image.addEventListener("load", markAvatarReady, { once: true });
-    image.addEventListener("error", () => {
+  const settleImage = (image: HTMLImageElement, loaded: boolean) => {
+    if (image.dataset.avatarSettled === "true") return;
+    image.dataset.avatarSettled = "true";
+    settledImages += 1;
+    if (loaded) {
+      loadedImages += 1;
+      markAvatarReady();
+    } else {
       image.hidden = true;
-      failedImages += 1;
-      if (!avatarReady && failedImages >= avatarImages.length) {
-        root.dataset.avatarFailed = "true";
-      }
+    }
+    if (settledImages < avatarImages.length) return;
+    if (loadedImages > 0) {
+      root.dataset.motion = shouldPlay ? "play" : "static";
+      return;
+    }
+    root.dataset.motion = "static";
+    root.dataset.avatarFailed = "true";
+  };
+  avatarImages.forEach((image) => {
+    if (image.complete) {
+      settleImage(image, image.naturalWidth > 0);
+      return;
+    }
+    image.addEventListener("load", () => settleImage(image, true), {
+      once: true,
+    });
+    image.addEventListener("error", () => settleImage(image, false), {
+      once: true,
     });
   });
-  if (avatarReady) markAvatarReady();
+  if (!avatarImages.length) {
+    root.dataset.motion = "static";
+    root.dataset.avatarFailed = "true";
+  }
   if (root.dataset.hasPreview !== "true") return;
   let closeTimer = 0;
   // Keep the preview open just long enough for a touch release or a precise
