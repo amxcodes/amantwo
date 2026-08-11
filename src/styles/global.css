@@ -656,7 +656,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
    single bitmap. Each frame is a small WebP, so the browser only performs an
    opacity/visibility change and the inline text never moves. */
 .portrait-anchor[data-motion="play"] .avatar-frame {
-  animation: avatar-frame-stop 4.8s steps(1, end) infinite both;
+  animation: avatar-frame-stop 10.4s steps(1, end) infinite both;
   will-change: opacity;
 }
 
@@ -665,23 +665,59 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
 }
 
 .portrait-anchor[data-motion="play"] .avatar-frame-2 {
-  animation-delay: -1.2s;
+  animation-delay: -0.8s;
 }
 
 .portrait-anchor[data-motion="play"] .avatar-frame-3 {
-  animation-delay: -2.4s;
+  animation-delay: -1.6s;
 }
 
 .portrait-anchor[data-motion="play"] .avatar-frame-4 {
-  animation-delay: -3.6s;
+  animation-delay: -2.4s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-5 {
+  animation-delay: -3.2s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-6 {
+  animation-delay: -4s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-7 {
+  animation-delay: -4.8s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-8 {
+  animation-delay: -5.6s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-9 {
+  animation-delay: -6.4s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-10 {
+  animation-delay: -7.2s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-11 {
+  animation-delay: -8s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-12 {
+  animation-delay: -8.8s;
+}
+
+.portrait-anchor[data-motion="play"] .avatar-frame-13 {
+  animation-delay: -9.6s;
 }
 
 @keyframes avatar-frame-stop {
-  0%, 25% {
+  0%, 7.69% {
     visibility: visible;
     opacity: 1;
   }
-  25.01%, 100% {
+  7.70%, 100% {
     visibility: hidden;
     opacity: 0;
   }
