@@ -373,11 +373,29 @@ function setupPortrait() {
   const constrainedDevice =
     (navigator.hardwareConcurrency || 8) <= 2 || connection?.saveData === true;
   root.dataset.motion = reducedMotion || constrainedDevice ? "static" : "play";
-  trigger.querySelectorAll<HTMLImageElement>("[data-avatar-image]").forEach((image) => {
+  const avatarImages = Array.from(
+    trigger.querySelectorAll<HTMLImageElement>("[data-avatar-image]"),
+  );
+  let avatarReady = avatarImages.some(
+    (image) => image.complete && image.naturalWidth > 0,
+  );
+  let failedImages = 0;
+  const markAvatarReady = () => {
+    avatarReady = true;
+    root.dataset.avatarReady = "true";
+    delete root.dataset.avatarFailed;
+  };
+  avatarImages.forEach((image) => {
+    image.addEventListener("load", markAvatarReady, { once: true });
     image.addEventListener("error", () => {
       image.hidden = true;
+      failedImages += 1;
+      if (!avatarReady && failedImages >= avatarImages.length) {
+        root.dataset.avatarFailed = "true";
+      }
     });
   });
+  if (avatarReady) markAvatarReady();
   if (root.dataset.hasPreview !== "true") return;
   let closeTimer = 0;
   // Keep the preview open just long enough for a touch release or a precise

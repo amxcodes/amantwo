@@ -53,7 +53,7 @@ const hasPreview = true;
             height="48"
             alt=""
             decoding="async"
-            loading="eager"
+            loading={index === 0 ? "eager" : "lazy"}
             fetchpriority={index === 0 ? "high" : undefined}
             referrerpolicy="no-referrer"
             data-avatar-image
@@ -70,7 +70,7 @@ const hasPreview = true;
               height="48"
               alt=""
               decoding="async"
-              loading="eager"
+              loading={index === 0 ? "eager" : "lazy"}
               fetchpriority={index === 0 ? "high" : undefined}
               referrerpolicy="no-referrer"
               data-avatar-image

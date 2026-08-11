@@ -24,7 +24,7 @@ const {
   heroRoles,
 } = Astro.props;
 
-// The inline avatar uses nine small, precomposed frames per theme. Keeping the
+// The inline avatar uses thirteen small, precomposed frames per theme. Keeping the
 // character and cat in each frame lets the motion stay coherent without extra
 // DOM layers, layout shifts, or runtime drawing work. The final frame returns
 // to the exact rest pose, with the last two frames holding the settle so the
@@ -41,6 +41,10 @@ const illustratedAvatarFrames = [
   "/media/aman-avatar-stop-07-light.webp",
   "/media/aman-avatar-stop-08-light.webp",
   "/media/aman-avatar-stop-09-light.webp",
+  "/media/aman-avatar-stop-10-light.webp",
+  "/media/aman-avatar-stop-11-light.webp",
+  "/media/aman-avatar-stop-12-light.webp",
+  "/media/aman-avatar-stop-13-light.webp",
 ];
 const illustratedAvatarDarkFrames = [
   "/media/aman-avatar-stop-01-dark.webp",
@@ -52,6 +56,10 @@ const illustratedAvatarDarkFrames = [
   "/media/aman-avatar-stop-07-dark.webp",
   "/media/aman-avatar-stop-08-dark.webp",
   "/media/aman-avatar-stop-09-dark.webp",
+  "/media/aman-avatar-stop-10-dark.webp",
+  "/media/aman-avatar-stop-11-dark.webp",
+  "/media/aman-avatar-stop-12-dark.webp",
+  "/media/aman-avatar-stop-13-dark.webp",
 ];
 ---
 
