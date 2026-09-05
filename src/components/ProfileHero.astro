@@ -24,11 +24,10 @@ const {
   heroRoles,
 } = Astro.props;
 
-// The inline avatar uses thirteen small, precomposed frames per theme. Keeping the
-// character and cat in each frame lets the motion stay coherent without extra
-// DOM layers, layout shifts, or runtime drawing work. The final frame returns
-// to the exact rest pose, with the last two frames holding the settle so the
-// loop reads as a gentle stop-motion beat.
+// The inline avatar uses the short, verified four-frame sequence per theme.
+// Keeping the character and cat in each frame lets the motion stay coherent
+// without extra DOM layers, layout shifts, or runtime drawing work. The short
+// loop keeps the first-load request set small on both desktop and mobile.
 const illustratedAvatarSrc = "/media/aman-avatar-illustrated-light.webp";
 const illustratedAvatarDarkSrc = "/media/aman-avatar-illustrated-dark.webp";
 const illustratedAvatarFrames = [
@@ -36,30 +35,12 @@ const illustratedAvatarFrames = [
   "/media/aman-avatar-stop-02-light.webp",
   "/media/aman-avatar-stop-03-light.webp",
   "/media/aman-avatar-stop-04-light.webp",
-  "/media/aman-avatar-stop-05-light.webp",
-  "/media/aman-avatar-stop-06-light.webp",
-  "/media/aman-avatar-stop-07-light.webp",
-  "/media/aman-avatar-stop-08-light.webp",
-  "/media/aman-avatar-stop-09-light.webp",
-  "/media/aman-avatar-stop-10-light.webp",
-  "/media/aman-avatar-stop-11-light.webp",
-  "/media/aman-avatar-stop-12-light.webp",
-  "/media/aman-avatar-stop-13-light.webp",
 ];
 const illustratedAvatarDarkFrames = [
   "/media/aman-avatar-stop-01-dark.webp",
   "/media/aman-avatar-stop-02-dark.webp",
   "/media/aman-avatar-stop-03-dark.webp",
   "/media/aman-avatar-stop-04-dark.webp",
-  "/media/aman-avatar-stop-05-dark.webp",
-  "/media/aman-avatar-stop-06-dark.webp",
-  "/media/aman-avatar-stop-07-dark.webp",
-  "/media/aman-avatar-stop-08-dark.webp",
-  "/media/aman-avatar-stop-09-dark.webp",
-  "/media/aman-avatar-stop-10-dark.webp",
-  "/media/aman-avatar-stop-11-dark.webp",
-  "/media/aman-avatar-stop-12-dark.webp",
-  "/media/aman-avatar-stop-13-dark.webp",
 ];
 ---
 

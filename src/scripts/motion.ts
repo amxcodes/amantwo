@@ -373,13 +373,25 @@ function setupPortrait() {
   const constrainedDevice =
     (navigator.hardwareConcurrency || 8) <= 2 || connection?.saveData === true;
   const shouldPlay = !reducedMotion && !constrainedDevice;
-  const avatarImages = Array.from(
-    trigger.querySelectorAll<HTMLImageElement>("[data-avatar-image]"),
+  // Only gate the animation on the currently visible theme stack. The other
+  // stack is kept mounted for instant theme changes, but waiting for both
+  // themes (and every hidden frame) made the avatar appear stuck on cold mobile
+  // loads.
+  const activeTheme = document.documentElement.dataset.theme === "dark"
+    ? "dark"
+    : "light";
+  const activeStack = trigger.querySelector<HTMLElement>(
+    `.avatar-frame-stack-${activeTheme}`,
   );
-  // Keep the first frame visible while the rest of the tiny sprite settles,
-  // then start the loop only when every frame is either decoded or known to
-  // have failed. This prevents a cold visitor from seeing blank frames while
-  // the browser is still fetching the sequence.
+  const avatarImages = Array.from(
+    (activeStack ?? trigger).querySelectorAll<HTMLImageElement>(
+      "[data-avatar-image]",
+    ),
+  );
+  // Keep the first frame visible while the small active-theme sprite settles,
+  // then start the loop only when every active frame is either decoded or
+  // known to have failed. This prevents a cold visitor from seeing blank
+  // frames while the sequence is still being fetched.
   root.dataset.motion = shouldPlay ? "loading" : "static";
   let loadedImages = 0;
   let settledImages = 0;
