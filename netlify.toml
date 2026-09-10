@@ -24,3 +24,18 @@
   for = "/.well-known/*"
   [headers.values]
     Cache-Control = "public, max-age=300, s-maxage=300"
+
+[[headers]]
+  for = "/.well-known/ai-catalog.json"
+  [headers.values]
+    Content-Type = "application/ai-catalog+json; charset=utf-8"
+
+[[headers]]
+  for = "/.well-known/agent-skills/amananu-portfolio-context/SKILL.md"
+  [headers.values]
+    Content-Type = "text/markdown; charset=utf-8"
+
+[[headers]]
+  for = "/feeds/portfolio.schema.jsonl"
+  [headers.values]
+    Content-Type = "application/x-ndjson; charset=utf-8"

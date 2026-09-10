@@ -2,9 +2,21 @@ import type {
   PublicArticle,
   PublicArticleBlock,
 } from "../components/ArticleRenderer";
+import { siteOrigin } from "./agent-resources";
 
 const text = (value: string | undefined) =>
   (value ?? "").replace(/\uE000[^\uE001]+\uE001/g, "").trim();
+
+const yamlValue = (value: string) =>
+  JSON.stringify(value.replace(/\s+/g, " ").trim());
+
+const dateOnly = (value: PublicArticle["publishedAt"]) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf())
+    ? undefined
+    : date.toISOString().slice(0, 10);
+};
 
 const blockToMarkdown = (block: PublicArticleBlock) => {
   const content = text(block.content);
@@ -45,6 +57,15 @@ export const articleToMarkdown = (article: PublicArticle) => {
   const author = article.author
     ? `\n\nWritten by ${article.author.name}${article.author.role ? ` · ${article.author.role}` : ""}.`
     : "";
+  const lastUpdated = dateOnly(article.publishedAt);
+  const frontmatter = [
+    "---",
+    `title: ${yamlValue(article.title)}`,
+    `description: ${yamlValue(article.summary)}`,
+    `canonical: ${yamlValue(`${siteOrigin}/writing/${encodeURIComponent(article.slug)}`)}`,
+    ...(lastUpdated ? [`last_updated: ${yamlValue(lastUpdated)}`] : []),
+    "---",
+  ].join("\n");
 
-  return `# ${article.title}\n\n${article.summary}\n\n${metadata}${body ? `\n\n${body}` : ""}${sources}${author}\n`;
+  return `${frontmatter}\n\n# ${article.title}\n\n${article.summary}\n\n${metadata}${body ? `\n\n${body}` : ""}${sources}${author}\n`;
 };

@@ -2464,7 +2464,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
 }
 
 .chronicle-preview p,
-.chronicle-preview h4,
+.chronicle-preview h3,
 .chronicle-preview span {
   margin: 0;
 }
@@ -2477,7 +2477,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
   text-transform: uppercase;
 }
 
-.chronicle-preview h4 {
+.chronicle-preview h3 {
   margin-top: 9px;
   font-size: 16px;
   font-weight: 500;

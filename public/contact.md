@@ -1,3 +1,10 @@
+---
+title: "Contact Aman Anu"
+description: "The public contact path for collaboration, hiring, project, and speaking enquiries."
+canonical: "https://amananu.me/contact"
+last_updated: "2026-09-10"
+---
+
 # Contact Aman Anu
 
 For collaboration, hiring, project, or speaking enquiries, email [amananuworks@gmail.com](mailto:amananuworks@gmail.com). A useful first note briefly describes the opportunity, the problem you are working on, the intended outcome, and any relevant timeline.

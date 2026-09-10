@@ -27,3 +27,4 @@ Disallow: /
 Content-Signal: search=yes, ai-train=no
 Sitemap: https://amananu.me/sitemap.xml
 Agentmap: https://amananu.me/.well-known/ard.json
+schemamap: https://amananu.me/schemamap.xml

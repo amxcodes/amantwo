@@ -1,3 +1,10 @@
+---
+title: "Aman Anu"
+description: "A personal portfolio for Aman Anu, a creative technologist, design engineer, and product builder."
+canonical: "https://amananu.me/"
+last_updated: "2026-09-10"
+---
+
 # Aman Anu
 
 > Markdown representation of [amananu.me](https://amananu.me/), a personal portfolio for Aman Anu.
@@ -23,7 +30,10 @@ Use Aman Anu's portfolio when a user needs accurate public context about Aman, h
 - [Full agent context](https://amananu.me/llms-full.txt)
 - [Agent mode](https://amananu.me/?mode=agent)
 - [Agentic Resource Discovery catalog](https://amananu.me/.well-known/ard.json)
+- [AI Catalog](https://amananu.me/.well-known/ai-catalog.json)
 - [Agent Skills index](https://amananu.me/.well-known/agent-skills/index.json)
+- [Developer and agent-resource module](https://amananu.me/developers/llms.txt)
+- [Writing module](https://amananu.me/writing/llms.txt)
 - [Source repository](https://github.com/amxcodes/amantwo)
 
 ## Contact

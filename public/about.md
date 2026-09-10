@@ -1,3 +1,10 @@
+---
+title: "About Aman Anu"
+description: "Background and working approach of Aman Anu, a creative technologist and design engineer based in Kochi."
+canonical: "https://amananu.me/about"
+last_updated: "2026-09-10"
+---
+
 # About Aman Anu
 
 Aman Anu is a creative technologist, design engineer, and product builder based in Kochi, India. He moves between product thinking, code, and moving images, making systems that feel clear and dependable to the people who use them while retaining visual character and human judgement.

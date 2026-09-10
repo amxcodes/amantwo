@@ -20,5 +20,8 @@ Use these resources when someone asks who Aman is, what kinds of work he does, w
 ## Discovery
 
 - [ARD catalog](https://amananu.me/.well-known/ard.json)
+- [AI Catalog](https://amananu.me/.well-known/ai-catalog.json)
 - [Agent Skills index](https://amananu.me/.well-known/agent-skills/index.json)
+- [Developer and agent-resource module](https://amananu.me/developers/llms.txt)
+- [Writing module](https://amananu.me/writing/llms.txt)
 - [Repository](https://github.com/amxcodes/amantwo)

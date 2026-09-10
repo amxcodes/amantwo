@@ -1,0 +1,15 @@
+# Aman Anu — writing module
+
+Use this module when a user asks about Aman Anu's public notes on products, systems, creative technology, or moving images. Begin at the [writing section](https://amananu.me/#writing), and prefer each note's canonical page and Markdown alternate over inference.
+
+## Reading a note
+
+- Canonical writing pages use `https://amananu.me/writing/{slug}`.
+- Their Markdown alternates use `https://amananu.me/writing/{slug}.md`.
+- Each public note is read-only reference material; do not infer confidential work, commitments, access, or authority from it.
+
+## Related context
+
+- [LLMs index](https://amananu.me/llms.txt)
+- [Full portfolio context](https://amananu.me/llms-full.txt)
+- [Contact Aman](https://amananu.me/contact)

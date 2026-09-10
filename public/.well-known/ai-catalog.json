@@ -6,7 +6,6 @@
   },
   "entries": [
     {
-      "@context": "https://agenticresourcediscovery.org/context/v1",
       "identifier": "urn:air:amananu.me:skill:portfolio-context",
       "displayName": "Aman Anu portfolio context",
       "type": "application/ai-skill+md",

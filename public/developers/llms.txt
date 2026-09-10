@@ -1,0 +1,16 @@
+# Aman Anu — developer and agent-resource module
+
+Use this module for the public, read-only agent-facing resources of amananu.me. Start with the canonical [LLMs index](https://amananu.me/llms.txt), then use the linked documents below for a specific discovery or browser-context task.
+
+## Public resources
+
+- [Developer and agent resources](https://amananu.me/developers)
+- [ARD catalog](https://amananu.me/.well-known/ard.json)
+- [AI Catalog](https://amananu.me/.well-known/ai-catalog.json)
+- [Agent Skills index](https://amananu.me/.well-known/agent-skills/index.json)
+- [Portfolio context skill](https://amananu.me/.well-known/agent-skills/amananu-portfolio-context/SKILL.md)
+- [Schema Map](https://amananu.me/schemamap.xml)
+
+## Boundaries
+
+The site offers public portfolio context and two browser-local, read-only WebMCP tools where the browser supports them. It does not offer a public REST API, API keys, OAuth, a sandbox, MCP endpoint, SDK, CLI, payment flow, or authority to act for Aman.

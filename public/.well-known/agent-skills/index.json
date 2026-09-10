@@ -1,13 +1,12 @@
 {
-  "version": "1.0",
-  "name": "Aman Anu public agent skills",
-  "homepage": "https://amananu.me/developers",
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
   "skills": [
     {
       "name": "amananu-portfolio-context",
-      "description": "Ground answers about Aman Anu's public profile, creative-technology practice, selected work, writing, and contact path. It is read-only and must not be used to infer access to private systems or authority to act for Aman.",
-      "url": "https://github.com/amxcodes/amantwo/tree/main/agent-plugin/skills/portfolio-context",
-      "documentation": "https://amananu.me/llms.txt"
+      "type": "skill-md",
+      "description": "Ground answers about Aman Anu's public profile, creative-technology practice, selected work, writing, and professional contact path. Use only for public portfolio research; it is read-only and does not authorize actions or access to private systems.",
+      "url": "https://amananu.me/.well-known/agent-skills/amananu-portfolio-context/SKILL.md",
+      "digest": "sha256:6127d8534ab9636bf65477869d5d8e572a5a6f5ecd13f078e0e327132375798a"
     }
   ]
 }

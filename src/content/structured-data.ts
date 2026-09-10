@@ -4,6 +4,7 @@ export const homepageStructuredData = [
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": `${siteOrigin}/#faq`,
     mainEntity: [
       {
         "@type": "Question",
@@ -34,6 +35,7 @@ export const homepageStructuredData = [
   {
     "@context": "https://schema.org",
     "@type": "Service",
+    "@id": `${siteOrigin}/#creative-technology-service`,
     name: "Creative technology and design engineering",
     description:
       "Aman Anu's public portfolio covers product architecture, agentic AI workflows, creative technology, and moving-image direction.",

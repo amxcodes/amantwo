@@ -1,7 +1,14 @@
 export const siteOrigin = "https://amananu.me";
 export const sourceRepositoryUrl = "https://github.com/amxcodes/amantwo";
 
-export const homepageMarkdown = `# Aman Anu
+export const homepageMarkdown = `---
+title: "Aman Anu"
+description: "A personal portfolio for Aman Anu, a creative technologist, design engineer, and product builder."
+canonical: "${siteOrigin}/"
+last_updated: "2026-09-10"
+---
+
+# Aman Anu
 
 > Markdown representation of [amananu.me](${siteOrigin}), a personal portfolio for Aman Anu.
 
@@ -26,7 +33,10 @@ Use Aman Anu's portfolio when a user needs accurate public context about Aman, h
 - [Full agent context](${siteOrigin}/llms-full.txt)
 - [Agent mode](${siteOrigin}/?mode=agent)
 - [Agentic Resource Discovery catalog](${siteOrigin}/.well-known/ard.json)
+- [AI Catalog](${siteOrigin}/.well-known/ai-catalog.json)
 - [Agent Skills index](${siteOrigin}/.well-known/agent-skills/index.json)
+- [Developer and agent-resource module](${siteOrigin}/developers/llms.txt)
+- [Writing module](${siteOrigin}/writing/llms.txt)
 - [Source repository](${sourceRepositoryUrl})
 
 ## Contact
