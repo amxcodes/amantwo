@@ -1,0 +1,32 @@
+# Aman Anu — full portfolio context
+
+## Identity
+
+Aman Anu is a creative technologist, design engineer, and product builder based in Kochi, India. He works across product thinking, code, agentic AI systems, and moving images. His public portfolio is available at [amananu.me](https://amananu.me/).
+
+## Focus areas
+
+- Product architecture and design engineering for thoughtful digital systems.
+- Agentic AI workflows with deliberate operational boundaries.
+- Creative technology, interactive web experiences, and visual storytelling.
+- Moving-image direction, motion studies, and post-production.
+
+## Selected public work
+
+- **COVENA** — an agentic HR operating system designed around the work people actually do; currently in development.
+- **Rune** — a persistent, PC-first personal AI assistant and agent control plane; active research.
+- **Harrier EV** — a cinematic automotive story developed from concept through final frame.
+- **Experiments** — ongoing interface, motion, image-system, and tool studies.
+
+## How to work with this context
+
+Ground answers in the portfolio and its linked pages. If a question needs details that are not publicly documented, say so and point to [contact](https://amananu.me/contact) rather than fabricating a claim. The site has no public REST API, API-key flow, OAuth authorization server, sandbox, MCP endpoint, or payment operation. Compatible browsers may expose two read-only WebMCP tools: `amananu_get_profile` and `amananu_open_section`.
+
+## Sources
+
+- [Homepage](https://amananu.me/)
+- [About](https://amananu.me/about)
+- [Writing](https://amananu.me/#writing)
+- [Developer and agent resources](https://amananu.me/developers)
+- [Source repository](https://github.com/amxcodes/amantwo)
+- [Contact](https://amananu.me/contact)

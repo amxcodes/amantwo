@@ -1,0 +1,21 @@
+---
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import TrustPage from "../components/TrustPage.astro";
+import { siteData } from "../content/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { publicConvexUrl } from "../lib/publicConfig";
+---
+
+<BaseLayout title="About Aman Anu" description="Background, working approach, and public focus areas for Aman Anu." canonicalPath="/about" markdownPath="/about.md">
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
+    <TrustPage eyebrow="About" title="A thoughtful practice across systems and images." lead="Aman Anu is a creative technologist, design engineer, and product builder based in Kochi, India.">
+      <p>Aman moves between product thinking, code, and moving images. His practice is centred on making systems that feel clear and dependable to the people who use them, while still leaving room for visual character and human judgement. That can mean mapping a product workflow, designing an interface, prototyping a tool, or shaping a film from early direction through its final frame.</p>
+      <p>His public portfolio focuses on product architecture, agentic AI workflows, creative technology, and visual storytelling. He is especially interested in the small moments around a primary task: the hand-off between people, the state someone sees when they are unsure, and the language that makes an action feel safe to take. Those details are where a system earns trust.</p>
+      <p>Selected work includes COVENA, an agentic HR operating system in development; Rune, an exploration of a persistent personal AI assistant; cinematic work such as Harrier EV; and a living collection of smaller interface, motion, and image studies. The portfolio is a public record of that work, not a promise of access to private projects or client systems.</p>
+      <p>For a collaboration, hiring, project, or speaking enquiry, <a href="/contact">get in touch</a>. For an agent-readable guide to this public portfolio, start with <a href="/llms.txt">llms.txt</a> or the <a href="/developers">developer and agent resources</a>.</p>
+    </TrustPage>
+    <SiteFooter email={siteData.identity.email} />
+  </div>
+</BaseLayout>

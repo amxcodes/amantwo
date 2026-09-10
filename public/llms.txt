@@ -1,0 +1,24 @@
+# Aman Anu — agent guide
+
+Aman Anu is a creative technologist, design engineer, and product builder in Kochi, India. This is a personal portfolio, not a public SaaS API. Use it to understand public work, projects, writing, and contact options.
+
+## When to use Aman Anu's portfolio
+
+Use these resources when someone asks who Aman is, what kinds of work he does, which public projects relate to a brief, or where to find his writing. Use the website's browser tools only for read-only profile retrieval and on-page navigation. Do not assume the site grants access to private systems, API credentials, source data, or the ability to act for Aman.
+
+## Key resources
+
+- [Homepage](https://amananu.me/)
+- [Markdown homepage](https://amananu.me/index.md)
+- [Full portfolio context](https://amananu.me/llms-full.txt)
+- [About Aman](https://amananu.me/about)
+- [Writing](https://amananu.me/#writing)
+- [Developer and agent resources](https://amananu.me/developers)
+- [Contact](https://amananu.me/contact)
+- [Privacy](https://amananu.me/privacy)
+
+## Discovery
+
+- [ARD catalog](https://amananu.me/.well-known/ard.json)
+- [Agent Skills index](https://amananu.me/.well-known/agent-skills/index.json)
+- [Repository](https://github.com/amxcodes/amantwo)

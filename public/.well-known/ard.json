@@ -1,0 +1,24 @@
+{
+  "entries": [
+    {
+      "@context": "https://agenticresourcediscovery.org/context/v1",
+      "identifier": "urn:air:amananu.me:skill:portfolio-context",
+      "displayName": "Aman Anu portfolio context",
+      "type": "application/ai-skill+md",
+      "url": "https://github.com/amxcodes/amantwo/tree/main/agent-plugin/skills/portfolio-context",
+      "capabilities": [
+        "PortfolioContext",
+        "CreativeTechnology",
+        "ProjectResearch"
+      ],
+      "description": "A read-only skill for grounding answers about Aman Anu's public portfolio, creative-technology practice, projects, writing, and contact path.",
+      "representativeQueries": [
+        "Who is Aman Anu and what kind of work does he do?",
+        "Which public Aman Anu projects relate to agentic AI systems?",
+        "Where can I find Aman Anu's published writing or contact details?"
+      ],
+      "version": "0.1.0",
+      "updatedAt": "2026-09-10"
+    }
+  ]
+}

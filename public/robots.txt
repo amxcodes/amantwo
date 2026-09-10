@@ -1,0 +1,29 @@
+# Public pages are available to search and answer-engine crawlers.
+User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# These training-focused crawlers are not permitted to crawl this portfolio.
+User-agent: CCBot
+Disallow: /
+
+User-agent: ByteSpider
+Disallow: /
+
+Content-Signal: search=yes, ai-train=no
+Sitemap: https://amananu.me/sitemap.xml
+Agentmap: https://amananu.me/.well-known/ard.json

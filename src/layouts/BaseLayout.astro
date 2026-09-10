@@ -10,13 +10,48 @@ interface Props {
   title: string;
   description: string;
   canonicalPath?: string;
+  markdownPath?: string;
+  structuredData?: Array<Record<string, unknown>>;
 }
 
-const { title, description, canonicalPath } = Astro.props;
-const canonicalUrl =
-  canonicalPath && Astro.site
-    ? new URL(canonicalPath, Astro.site).href
-    : undefined;
+const { title, description, canonicalPath, markdownPath, structuredData = [] } = Astro.props;
+const siteUrl = Astro.site ?? new URL("https://amananu.me");
+const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, siteUrl).href;
+const markdownUrl = markdownPath ? new URL(markdownPath, siteUrl).href : undefined;
+const ogImageUrl = new URL("/media/aman-portrait.png", siteUrl).href;
+const baseStructuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${siteUrl.href.replace(/\/$/, "")}/#aman-anu`,
+    name: "Aman Anu",
+    url: siteUrl.href,
+    image: ogImageUrl,
+    description: "Creative technologist, design engineer, and product builder based in Kochi, India.",
+    jobTitle: "Creative technologist and product builder",
+    email: "amananuworks@gmail.com",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Kochi",
+      addressCountry: "IN",
+    },
+    sameAs: [
+      "https://github.com/amxcodes",
+      "https://www.instagram.com/amanxnu/",
+      "https://www.youtube.com/@Amananu",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteUrl.href.replace(/\/$/, "")}/#website`,
+    name: "Aman Anu",
+    url: siteUrl.href,
+    description: "Portfolio of Aman Anu: creative technology, product systems, AI, and moving images.",
+    inLanguage: "en",
+  },
+];
+const jsonLd = [...baseStructuredData, ...structuredData];
 ---
 
 <!doctype html>
@@ -55,14 +90,23 @@ const canonicalUrl =
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="description" content={description} />
-    {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+    <link rel="canonical" href={canonicalUrl} />
+    {markdownUrl ? <link rel="alternate" type="text/markdown" href={markdownUrl} /> : null}
+    <link rel="ard" href="/.well-known/ard.json" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content="Portrait of Aman Anu" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
     <meta name="theme-color" content="#02050b" />
     <link rel="preconnect" href="https://assets.watermelon.sh" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <title>{title}</title>
   </head>
   <body>
@@ -72,6 +116,7 @@ const canonicalUrl =
     <script>
       import "../scripts/theme";
       import "../scripts/motion-loader";
+      import "../scripts/webmcp";
     </script>
   </body>
 </html>

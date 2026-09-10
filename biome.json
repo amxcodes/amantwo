@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
   "files": {
-    "includes": ["**", "!**/*.astro", "!dist", "!.astro", "!convex/_generated/**"]
+    "includes": [
+      "**",
+      "!**/*.astro",
+      "!dist",
+      "!.astro",
+      "!convex/_generated",
+      "!.netlify",
+      "!.convex"
+    ]
   },
   "formatter": {
     "enabled": true,

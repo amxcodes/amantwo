@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "amananu-portfolio",
+  "version": "0.1.0",
+  "description": "Read-only public portfolio context for Aman Anu: creative technology, product systems, agentic AI work, writing, and contact guidance.",
+  "author": {
+    "name": "Aman Anu",
+    "email": "amananuworks@gmail.com",
+    "url": "https://amananu.me"
+  },
+  "homepage": "https://amananu.me/developers",
+  "repository": "https://github.com/amxcodes/amantwo",
+  "license": "UNLICENSED",
+  "keywords": [
+    "portfolio",
+    "creative-technology",
+    "design-engineering",
+    "agentic-ai"
+  ]
+}

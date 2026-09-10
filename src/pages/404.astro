@@ -1,19 +1,19 @@
 ---
-import PublicArticleFallback from "../components/PublicArticleFallback.tsx";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import TrustPage from "../components/TrustPage.astro";
 import { siteData } from "../content/site";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { publicConvexUrl } from "../lib/publicConfig";
-
+Astro.response.status = 404;
 ---
 
-<BaseLayout title="Writing — Aman Anu" description="Notes on products, systems, and moving images.">
+<BaseLayout title="Page not found — Aman Anu" description="This page is not part of Aman Anu’s public portfolio." canonicalPath="/404">
   <div class="page-shell">
-    <SiteHeader {...siteData.identity} />
-    <main id="main-content" class="article-page article-fallback-page">
-      <PublicArticleFallback convexUrl={publicConvexUrl} client:load />
-    </main>
+    <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
+    <TrustPage eyebrow="404" title="This page isn’t here." lead="The URL does not match a public page in Aman Anu’s portfolio.">
+      <p>Try the <a href="/">portfolio homepage</a> for current work, experience, and writing, or use the <a href="/sitemap.xml">sitemap</a> to find an indexable page. Agents and developer tools should start with <a href="/llms.txt">llms.txt</a>, the <a href="/index.md">markdown homepage</a>, or the <a href="/developers">developer and agent resources page</a>.</p>
+    </TrustPage>
     <SiteFooter email={siteData.identity.email} />
   </div>
 </BaseLayout>

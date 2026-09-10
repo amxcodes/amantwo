@@ -1,0 +1,21 @@
+---
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import TrustPage from "../components/TrustPage.astro";
+import { siteData } from "../content/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { publicConvexUrl } from "../lib/publicConfig";
+---
+
+<BaseLayout title="Privacy — Aman Anu" description="Privacy information for amananu.me." canonicalPath="/privacy" markdownPath="/privacy.md">
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
+    <TrustPage eyebrow="Privacy" title="A simple approach to public data." lead="amananu.me is a public portfolio designed to share work, writing, and a direct contact path.">
+      <p>The site can be read without creating an account. Its public pages are intended to present portfolio material, project context, writing, and professional contact information. Standard hosting and browser infrastructure may process technical request information such as IP address, device or browser details, requested URLs, and security logs in order to deliver the site and protect it from abuse.</p>
+      <p>If you choose to use a contact link or newsletter form, you provide the information included in that message or submission. That information is used to respond to the request, manage the requested communication, and maintain the portfolio’s subscriber or correspondence records where applicable. Please do not send sensitive personal information, credentials, payment details, or confidential material through an unsolicited message.</p>
+      <p>The portfolio includes a public "Ask Aman" interface for questions about public work and writing. Requests to that interface may be processed by the site’s configured application services so that an answer can be returned. It is not a private support channel and should not be used to submit personal, confidential, or account-related information. The site does not offer public API credentials or a consumer payment flow.</p>
+      <p>For questions about this notice or to request help with information you have sent directly to Aman, email <a href="mailto:amananuworks@gmail.com">amananuworks@gmail.com</a>. This notice may be updated when the site’s features or data practices change; the current version is published at this URL.</p>
+    </TrustPage>
+    <SiteFooter email={siteData.identity.email} />
+  </div>
+</BaseLayout>

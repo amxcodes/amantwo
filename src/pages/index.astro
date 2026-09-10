@@ -9,6 +9,8 @@ import ProjectCollection from "../components/ProjectCollection.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { siteData } from "../content/site";
+import { homepageStructuredData } from "../content/structured-data";
+import AgentModeView from "../components/AgentModeView.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { publicConvexUrl } from "../lib/publicConfig";
 
@@ -20,29 +22,40 @@ Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
 );
+const isAgentMode = Astro.url.searchParams.get("mode") === "agent";
 ---
 
-<BaseLayout title="Aman Anu - Creative technologist" description="Aman Anu builds AI systems, products, and moving-image experiences.">
+<BaseLayout
+  title="Aman Anu - Creative technologist"
+  description="Aman Anu builds AI systems, products, and moving-image experiences."
+  canonicalPath="/"
+  markdownPath="/index.md"
+  structuredData={homepageStructuredData}
+>
   <div class="page-shell">
     <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
-    <main id="main-content">
-      <ManagedPortfolio server:defer>
-        <Fragment slot="fallback">
-          <!--
-            The fallback is deliberately static and non-interactive. It keeps
-            the existing card geometry visible while the managed snapshot
-            arrives, without starting a second GitHub request or hydrating a
-            second set of drawers that would immediately be replaced.
-          -->
-          <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
-          <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} interactive={false} />
-          <AboutSection {...siteData.about} />
-          <ExperienceSection entries={siteData.experience} />
-          <EducationSection entries={siteData.education} />
-          <BlogSection posts={siteData.posts} interactive={false} />
-        </Fragment>
-      </ManagedPortfolio>
-    </main>
+    {isAgentMode ? (
+      <AgentModeView />
+    ) : (
+      <main id="main-content">
+        <ManagedPortfolio server:defer>
+          <Fragment slot="fallback">
+            <!--
+              The fallback is deliberately static and non-interactive. It keeps
+              the existing card geometry visible while the managed snapshot
+              arrives, without starting a second GitHub request or hydrating a
+              second set of drawers that would immediately be replaced.
+            -->
+            <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
+            <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} interactive={false} />
+            <AboutSection {...siteData.about} />
+            <ExperienceSection entries={siteData.experience} />
+            <EducationSection entries={siteData.education} />
+            <BlogSection posts={siteData.posts} interactive={false} />
+          </Fragment>
+        </ManagedPortfolio>
+      </main>
+    )}
     <!-- Keep the footer's visible-only signature hydration on the public page.
          The static island fallback intentionally stays non-interactive, but
          the footer itself owns its reveal animation and newsletter behavior. -->

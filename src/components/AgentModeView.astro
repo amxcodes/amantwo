@@ -1,0 +1,41 @@
+---
+import { sourceRepositoryUrl } from "../lib/agent-resources";
+---
+
+<main id="main-content" class="agent-mode-page">
+  <article class="agent-mode-card">
+    <p class="agent-mode-eyebrow">Machine-readable portfolio view</p>
+    <h1>Aman Anu</h1>
+    <p>Aman Anu is a creative technologist, design engineer, and product builder based in Kochi, India. His public work spans product systems, agentic AI workflows, web experiences, and moving images.</p>
+
+    <section>
+      <h2>Best-fit requests</h2>
+      <ul>
+        <li>Find public background, experience, projects, or writing by Aman Anu.</li>
+        <li>Assess the publicly documented fit between a brief and Aman’s work.</li>
+        <li>Navigate the portfolio, retrieve read-only profile context, or find the contact path.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Capabilities and boundaries</h2>
+      <dl>
+        <div><dt>Browser tools</dt><dd><code>amananu_get_profile</code> and <code>amananu_open_section</code>, when WebMCP is available.</dd></div>
+        <div><dt>Authentication</dt><dd>None. The public portfolio does not issue API keys or OAuth tokens.</dd></div>
+        <div><dt>Public API</dt><dd>None. Do not infer an API, sandbox, MCP endpoint, or authority to access private systems.</dd></div>
+        <div><dt>Contact</dt><dd><a href="mailto:amananuworks@gmail.com">amananuworks@gmail.com</a> for collaboration, hiring, project, or speaking enquiries.</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Authoritative resources</h2>
+      <ul>
+        <li><a href="/llms.txt">LLMs index</a></li>
+        <li><a href="/llms-full.txt">Full portfolio context</a></li>
+        <li><a href="/index.md">Markdown homepage</a></li>
+        <li><a href="/.well-known/ard.json">ARD catalog</a></li>
+        <li><a href={sourceRepositoryUrl}>Source repository</a></li>
+      </ul>
+    </section>
+  </article>
+</main>

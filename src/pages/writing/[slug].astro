@@ -51,7 +51,7 @@ const title = article ? `${article.title} — Aman Anu` : "Writing — Aman Anu"
 const canonicalPath = `/writing/${article?.slug ?? normalizeSlug(slug)}`;
 ---
 
-<BaseLayout title={title} description={article?.summary ?? "Notes on products, systems, and moving images."} canonicalPath={canonicalPath}>
+<BaseLayout title={title} description={article?.summary ?? "Notes on products, systems, and moving images."} canonicalPath={canonicalPath} markdownPath={`${canonicalPath}.md`}>
   <div class="page-shell">
     <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
     <main id="main-content" class="article-page article-page-server">

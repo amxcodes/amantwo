@@ -1,0 +1,21 @@
+---
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import TrustPage from "../components/TrustPage.astro";
+import { siteData } from "../content/site";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { publicConvexUrl } from "../lib/publicConfig";
+---
+
+<BaseLayout title="Contact Aman Anu" description="Contact Aman Anu for collaboration, hiring, project, or speaking enquiries." canonicalPath="/contact" markdownPath="/contact.md">
+  <div class="page-shell">
+    <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
+    <TrustPage eyebrow="Contact" title="Start with a clear note." lead="For collaboration, hiring, project, or speaking enquiries, email Aman Anu directly.">
+      <p>The best first message is a short description of the opportunity, the kind of problem you are working on, the desired outcome, and any relevant timeline. Aman works across product systems, design engineering, agentic AI workflows, creative technology, and moving images, so a little context helps establish whether the work is a useful fit.</p>
+      <p>Email is the primary contact channel: <a href="mailto:amananuworks@gmail.com">amananuworks@gmail.com</a>. The address is published for professional enquiries and correspondence. Please do not use it for unsolicited bulk outreach, credential requests, or messages that ask Aman to approve an action without a clear scope and an appropriate follow-up conversation.</p>
+      <p>This site is a public portfolio. It does not create a client relationship, expose a public API, issue API keys, accept payments, or grant access to private systems, source material, or personal data. Any work that requires access, a contract, an account, or a decision affecting another person will be handled through a separate, explicit agreement.</p>
+      <p>You can also find Aman’s public profiles on <a href="https://github.com/amxcodes">GitHub</a>, <a href="https://www.instagram.com/amanxnu/">Instagram</a>, and <a href="https://www.youtube.com/@Amananu">YouTube</a>. For background before getting in touch, read the <a href="/about">about page</a> or browse the portfolio home.</p>
+    </TrustPage>
+    <SiteFooter email={siteData.identity.email} />
+  </div>
+</BaseLayout>

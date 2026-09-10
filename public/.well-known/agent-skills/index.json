@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "name": "Aman Anu public agent skills",
+  "homepage": "https://amananu.me/developers",
+  "skills": [
+    {
+      "name": "amananu-portfolio-context",
+      "description": "Ground answers about Aman Anu's public profile, creative-technology practice, selected work, writing, and contact path. It is read-only and must not be used to infer access to private systems or authority to act for Aman.",
+      "url": "https://github.com/amxcodes/amantwo/tree/main/agent-plugin/skills/portfolio-context",
+      "documentation": "https://amananu.me/llms.txt"
+    }
+  ]
+}
