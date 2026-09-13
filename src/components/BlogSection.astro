@@ -5,9 +5,11 @@ import { publicConvexUrl } from "../lib/publicConfig";
 interface Props {
   posts: ArticleCard[];
   interactive?: boolean;
+  nextCursor?: string;
+  hasMore?: boolean;
 }
 
-const { posts, interactive = true } = Astro.props;
+const { posts, interactive = true, nextCursor, hasMore = false } = Astro.props;
 ---
 
 <section class="blog-section" id="writing" aria-labelledby="writing-title" data-reveal="section" data-scroll-label="Writing">
@@ -17,16 +19,22 @@ const { posts, interactive = true } = Astro.props;
     <span>Products, images, systems, and the details between them.</span>
   </div>
 
-  <!-- The six public cards are fetched during SSR and rendered immediately.
-       The island only owns the card interactions; the selected reader loads
-       its full article on demand. -->
+  <!-- The first six public cards are rendered during SSR. Further pages are
+       requested only after a visitor chooses Show more. -->
   {interactive ? (
     <PublishedWritingCards
       initialPosts={posts}
       convexUrl={publicConvexUrl}
+      nextCursor={nextCursor}
+      hasMore={hasMore}
       client:load
     />
   ) : (
-    <PublishedWritingCards initialPosts={posts} convexUrl={publicConvexUrl} />
+    <PublishedWritingCards
+      initialPosts={posts}
+      convexUrl={publicConvexUrl}
+      nextCursor={nextCursor}
+      hasMore={hasMore}
+    />
   )}
 </section>

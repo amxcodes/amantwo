@@ -667,23 +667,13 @@ li {
   pointer-events: none;
   border-radius: inherit;
   background-color: var(--paper-deep, #f0ebe2);
-  background-image: url("/media/aman-avatar-stop-01-light.webp");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-html[data-theme="dark"] .avatar-person-layer {
-  background-color: var(--ink, #050b14);
-  background-image: url("/media/aman-avatar-stop-01-dark.webp");
 }
 
 .portrait-anchor[data-avatar-failed="true"] .avatar-fallback {
   opacity: 1;
 }
 
-.avatar-person-layer img,
-.avatar-cat-layer img {
+.avatar-person-layer img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -694,95 +684,6 @@ html[data-theme="dark"] .avatar-person-layer {
 
 .avatar-person-layer img {
   object-fit: cover;
-}
-
-.avatar-frame-stack {
-  position: absolute;
-  inset: 0;
-  display: block;
-  contain: paint;
-}
-
-.avatar-frame-stack-dark {
-  display: none;
-}
-
-html[data-theme="dark"] .avatar-frame-stack-light {
-  display: none;
-}
-
-html[data-theme="dark"] .avatar-frame-stack-dark {
-  display: block;
-}
-
-.avatar-frame {
-  visibility: hidden;
-  opacity: 0;
-}
-
-.avatar-frame-1 {
-  visibility: visible;
-  opacity: 1;
-}
-
-.avatar-cat-layer img {
-  object-fit: contain;
-}
-
-.avatar-cat-layer {
-  position: absolute;
-  z-index: 2;
-  top: 53%;
-  left: 25%;
-  width: 19px;
-  height: 19px;
-  pointer-events: none;
-  transform-origin: 58% 82%;
-}
-
-.avatar-cat-layer .avatar-cat {
-  object-fit: contain;
-}
-
-/* The stop-motion loop swaps pre-rendered artwork instead of translating a
-   single bitmap. Each frame is a small WebP, so the browser only performs an
-   opacity/visibility change and the inline text never moves. */
-.portrait-anchor[data-motion="play"] .avatar-frame {
-  animation: avatar-frame-stop 4.8s steps(1, end) infinite both;
-  will-change: opacity;
-}
-
-.portrait-anchor[data-motion="play"] .avatar-frame-1 {
-  animation-delay: 0s;
-}
-
-.portrait-anchor[data-motion="play"] .avatar-frame-2 {
-  animation-delay: -1.2s;
-}
-
-.portrait-anchor[data-motion="play"] .avatar-frame-3 {
-  animation-delay: -2.4s;
-}
-
-.portrait-anchor[data-motion="play"] .avatar-frame-4 {
-  animation-delay: -3.6s;
-}
-
-@keyframes avatar-frame-stop {
-  0%, 25% {
-    visibility: visible;
-    opacity: 1;
-  }
-  25.01%, 100% {
-    visibility: hidden;
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .portrait-anchor .avatar-frame {
-    animation: none;
-  }
 }
 
 .portrait-preview img {
@@ -2622,7 +2523,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
 .blog-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: clamp(320px, 31vw, 370px);
+  grid-auto-rows: minmax(380px, auto);
   gap: clamp(12px, 2vw, 20px);
   margin-top: clamp(34px, 5vw, 60px);
 }
@@ -2668,7 +2569,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
 .blog-card h3 {
   max-width: 11ch;
   display: -webkit-box;
-  margin: auto 0 22px;
+  margin: clamp(28px, 3vw, 42px) 0 16px;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(25px, 2.2vw, 34px);
   font-weight: 400;
@@ -2677,6 +2578,7 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
   text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  min-block-size: calc(3 * 1.01em);
   overflow: hidden;
   overflow-wrap: anywhere;
 }
@@ -2690,7 +2592,55 @@ html[data-theme="dark"] .avatar-frame-stack-dark {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
+  padding-block-end: 0.1em;
   overflow: hidden;
+}
+
+.blog-load-more {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: clamp(24px, 3vw, 36px);
+}
+
+.blog-load-more button {
+  min-height: 44px;
+  padding: 0 18px;
+  color: var(--ink);
+  font: 500 10px/1 "DM Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 55%);
+  cursor: pointer;
+  transition-property: background-color, border-color, scale;
+  transition-duration: 160ms;
+  transition-timing-function: var(--ease-out);
+}
+
+.blog-load-more button:hover,
+.blog-load-more button:focus-visible {
+  background: color-mix(in srgb, var(--paper) 72%, var(--blue));
+  border-color: color-mix(in srgb, var(--ink) 26%, transparent);
+  outline: none;
+}
+
+.blog-load-more button:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.blog-load-more button:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+.blog-load-more-error {
+  margin: 0;
+  color: var(--ink-soft);
+  font: 500 11px/1.4 "DM Mono", ui-monospace, monospace;
+  text-align: center;
 }
 
 .blog-card-read {
@@ -4645,10 +4595,9 @@ html[data-motion="ready"] [data-reveal="project"]:not(.blog-card):not([data-reve
 
   .blog-grid {
     grid-template-columns: 1fr;
-    /* Keep the mobile cards on the same fixed row model as desktop. This
-       prevents one long title/summary from changing the height of its
-       neighbours while the card content remains line-clamped below. */
-    grid-auto-rows: clamp(370px, 31vw, 390px);
+    /* Let a card grow if its five-line summary needs room, while retaining a
+       consistent minimum rhythm for short notes. */
+    grid-auto-rows: minmax(390px, auto);
     gap: 12px;
   }
 

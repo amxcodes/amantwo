@@ -366,71 +366,27 @@ function setupPortrait() {
     "[data-portrait-trigger]",
   );
   if (!root || !trigger) return;
-  const connection = (
-    navigator as Navigator & { connection?: { saveData?: boolean } }
-  ).connection;
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const constrainedDevice =
-    (navigator.hardwareConcurrency || 8) <= 2 || connection?.saveData === true;
-  const shouldPlay = !reducedMotion && !constrainedDevice;
-  // Only gate the animation on the currently visible theme stack. The other
-  // stack is kept mounted for instant theme changes, but waiting for both
-  // themes (and every hidden frame) made the avatar appear stuck on cold mobile
-  // loads.
-  const activeTheme = document.documentElement.dataset.theme === "dark"
-    ? "dark"
-    : "light";
-  const activeStack = trigger.querySelector<HTMLElement>(
-    `.avatar-frame-stack-${activeTheme}`,
+  const avatarImage = trigger.querySelector<HTMLImageElement>(
+    "[data-avatar-image]",
   );
-  const avatarImages = Array.from(
-    (activeStack ?? trigger).querySelectorAll<HTMLImageElement>(
-      "[data-avatar-image]",
-    ),
-  );
-  // Keep the first frame visible while the small active-theme sprite settles,
-  // then start the loop only when every active frame is either decoded or
-  // known to have failed. This prevents a cold visitor from seeing blank
-  // frames while the sequence is still being fetched.
-  root.dataset.motion = shouldPlay ? "loading" : "static";
-  let loadedImages = 0;
-  let settledImages = 0;
+  root.dataset.motion = "static";
   const markAvatarReady = () => {
     root.dataset.avatarReady = "true";
     delete root.dataset.avatarFailed;
   };
-  const settleImage = (image: HTMLImageElement, loaded: boolean) => {
-    if (image.dataset.avatarSettled === "true") return;
-    image.dataset.avatarSettled = "true";
-    settledImages += 1;
-    if (loaded) {
-      loadedImages += 1;
-      markAvatarReady();
-    } else {
-      image.hidden = true;
-    }
-    if (settledImages < avatarImages.length) return;
-    if (loadedImages > 0) {
-      root.dataset.motion = shouldPlay ? "play" : "static";
-      return;
-    }
-    root.dataset.motion = "static";
-    root.dataset.avatarFailed = "true";
-  };
-  avatarImages.forEach((image) => {
-    if (image.complete) {
-      settleImage(image, image.naturalWidth > 0);
-      return;
-    }
-    image.addEventListener("load", () => settleImage(image, true), {
+  if (avatarImage?.complete) {
+    if (avatarImage.naturalWidth > 0) markAvatarReady();
+    else root.dataset.avatarFailed = "true";
+  } else if (avatarImage) {
+    avatarImage.addEventListener("load", markAvatarReady, {
       once: true,
     });
-    image.addEventListener("error", () => settleImage(image, false), {
+    avatarImage.addEventListener("error", () => {
+      root.dataset.avatarFailed = "true";
+    }, {
       once: true,
     });
-  });
-  if (!avatarImages.length) {
-    root.dataset.motion = "static";
+  } else {
     root.dataset.avatarFailed = "true";
   }
   if (root.dataset.hasPreview !== "true") return;

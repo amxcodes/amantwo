@@ -1,31 +1,15 @@
 ---
 interface Props {
   compactSrc: string;
-  compactDarkSrc?: string;
-  compactFrames?: string[];
-  compactDarkFrames?: string[];
-  catSrc?: string;
-  catDarkSrc?: string;
   fullSrc: string;
   alt: string;
 }
 
 const {
   compactSrc,
-  compactDarkSrc,
-  compactFrames,
-  compactDarkFrames,
-  catSrc,
-  catDarkSrc,
   fullSrc,
   alt,
 } = Astro.props;
-const lightFrames = compactFrames?.length ? compactFrames : [compactSrc];
-const darkFrames = compactDarkFrames?.length
-  ? compactDarkFrames
-  : compactDarkSrc
-    ? [compactDarkSrc]
-    : [];
 const hasPreview = true;
 ---
 
@@ -44,74 +28,24 @@ const hasPreview = true;
   >
     <span class="avatar-person-layer" aria-hidden="true">
       <span class="avatar-fallback">AA</span>
-      <span class="avatar-frame-stack avatar-frame-stack-light">
-        {lightFrames.map((src, index) => (
-          <img
-            class={`avatar-image avatar-image-light avatar-frame avatar-frame-${index + 1}`}
-            src={src}
-            width="48"
-            height="48"
-            alt=""
-            decoding="async"
-            loading="eager"
-            fetchpriority={index === 0 ? "high" : undefined}
-            referrerpolicy="no-referrer"
-            data-avatar-image
-          />
-        ))}
-      </span>
-      {darkFrames.length > 0 && (
-        <span class="avatar-frame-stack avatar-frame-stack-dark">
-          {darkFrames.map((src, index) => (
-            <img
-              class={`avatar-image avatar-image-dark avatar-frame avatar-frame-${index + 1}`}
-              src={src}
-              width="48"
-              height="48"
-              alt=""
-              decoding="async"
-              loading="eager"
-              fetchpriority={index === 0 ? "high" : undefined}
-              referrerpolicy="no-referrer"
-              data-avatar-image
-            />
-          ))}
-        </span>
-      )}
+      <img
+        class="avatar-image"
+        src={compactSrc}
+        width="48"
+        height="48"
+        alt=""
+        decoding="async"
+        loading="eager"
+        fetchpriority="high"
+        referrerpolicy="no-referrer"
+        data-avatar-image
+      />
     </span>
-    {catSrc && (
-      <span class="avatar-cat-layer" aria-hidden="true">
-        <img
-          class="avatar-cat avatar-cat-light"
-          src={catSrc}
-          width="256"
-          height="256"
-          alt=""
-          decoding="async"
-          loading="eager"
-          referrerpolicy="no-referrer"
-          data-avatar-image
-        />
-        {catDarkSrc && (
-          <img
-            class="avatar-cat avatar-cat-dark"
-            src={catDarkSrc}
-            width="256"
-            height="256"
-            alt=""
-            decoding="async"
-            loading="eager"
-            referrerpolicy="no-referrer"
-            data-avatar-image
-          />
-        )}
-      </span>
-    )}
   </button>
   {
     hasPreview && (
       <span class="portrait-preview" id="portrait-preview" aria-hidden="true" data-portrait-preview>
-        <img src={fullSrc} width="328" height="410" alt="" decoding="async" />
+        <img src={fullSrc} width="328" height="410" alt="" decoding="async" loading="lazy" />
       </span>
     )
   }

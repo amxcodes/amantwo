@@ -24,24 +24,9 @@ const {
   heroRoles,
 } = Astro.props;
 
-// The inline avatar uses the short, verified four-frame sequence per theme.
-// Keeping the character and cat in each frame lets the motion stay coherent
-// without extra DOM layers, layout shifts, or runtime drawing work. The short
-// loop keeps the first-load request set small on both desktop and mobile.
-const illustratedAvatarSrc = "/media/aman-avatar-illustrated-light.webp";
-const illustratedAvatarDarkSrc = "/media/aman-avatar-illustrated-dark.webp";
-const illustratedAvatarFrames = [
-  "/media/aman-avatar-stop-01-light.webp",
-  "/media/aman-avatar-stop-02-light.webp",
-  "/media/aman-avatar-stop-03-light.webp",
-  "/media/aman-avatar-stop-04-light.webp",
-];
-const illustratedAvatarDarkFrames = [
-  "/media/aman-avatar-stop-01-dark.webp",
-  "/media/aman-avatar-stop-02-dark.webp",
-  "/media/aman-avatar-stop-03-dark.webp",
-  "/media/aman-avatar-stop-04-dark.webp",
-];
+// Keep the inline hero avatar deliberately static. The separate full portrait
+// remains available in the existing hover/focus preview.
+const illustratedAvatarSrc = "/media/aman-avatar-illustrated.webp";
 ---
 
 <section class="profile-hero" id="home" aria-labelledby="profile-title" data-scroll-label="Intro">
@@ -52,9 +37,6 @@ const illustratedAvatarDarkFrames = [
           <span class="hero-lead">{introduction}</span>
           <InlinePortrait
             compactSrc={resolveMediaUrl(illustratedAvatarSrc)}
-            compactDarkSrc={resolveMediaUrl(illustratedAvatarDarkSrc)}
-            compactFrames={illustratedAvatarFrames.map(resolveMediaUrl)}
-            compactDarkFrames={illustratedAvatarDarkFrames.map(resolveMediaUrl)}
             fullSrc={resolveMediaUrl(portraitSrc)}
             alt={`Portrait of ${name}`}
           />

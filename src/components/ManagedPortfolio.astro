@@ -21,7 +21,11 @@ type ManagedSection = {
 
 const convexUrl = publicConvexUrl;
 let managedSections: ManagedSection[] | null = null;
-let managedArticles: ArticleCard[] | null = null;
+let managedArticles: {
+  cards: ArticleCard[];
+  continueCursor?: string;
+  isDone: boolean;
+} | null = null;
 let managedReadSucceeded = false;
 
 // This component is rendered as an Astro server island from the home page.
@@ -49,9 +53,16 @@ if (convexUrl) {
   }
   if (articlesResult.status === "fulfilled") {
     const articles = articlesResult.value;
-    managedArticles = Array.isArray(articles.page) && articles.page.length
-      ? (articles.page as unknown as ArticleCard[])
-      : null;
+    managedArticles = {
+      cards: Array.isArray(articles.page)
+        ? (articles.page as unknown as ArticleCard[])
+        : [],
+      continueCursor:
+        typeof articles.continueCursor === "string"
+          ? articles.continueCursor
+          : undefined,
+      isDone: articles.isDone === true,
+    };
     managedReadSucceeded = true;
   }
 }
@@ -156,7 +167,7 @@ const about = (aboutContent ?? siteData.about) as typeof siteData.about;
 const experience = (Array.isArray(experienceContent?.entries) ? experienceContent.entries : siteData.experience) as typeof siteData.experience;
 const education = (Array.isArray(educationContent?.entries) ? educationContent.entries : siteData.education) as typeof siteData.education;
 const legacyPosts = (Array.isArray(writingContent?.posts) ? writingContent.posts : siteData.posts) as typeof siteData.posts;
-const posts = managedArticles ?? (managedReadSucceeded ? [] : legacyPosts);
+const posts = managedArticles?.cards ?? (managedReadSucceeded ? [] : legacyPosts);
 ---
 
 <ProfileHero {...identity} heroRoles={heroRoles} />
@@ -164,6 +175,10 @@ const posts = managedArticles ?? (managedReadSucceeded ? [] : legacyPosts);
 <AboutSection {...about} />
 <ExperienceSection entries={experience} />
 <EducationSection entries={education} />
-<BlogSection posts={posts} />
+<BlogSection
+  posts={posts}
+  nextCursor={managedArticles?.continueCursor}
+  hasMore={managedArticles ? !managedArticles.isDone : false}
+/>
 <ChronicleDetailsDrawer client:idle />
 <BlogReader convexUrl={publicConvexUrl} client:idle />
