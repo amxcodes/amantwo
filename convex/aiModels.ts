@@ -5,6 +5,8 @@
  * Google retires or introduces a model.
  */
 export const GEMINI_GENERATE_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
   "gemini-3.6-flash",
   "gemini-3.5-flash",
   "gemini-3.5-flash-lite",
@@ -22,11 +24,25 @@ export const GEMINI_RESEARCH_MODELS = [
   "deep-research-preview-04-2026",
   "deep-research-max-preview-04-2026",
   // Pro is the generateContent-compatible research fallback.
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
   "gemini-3.1-pro-preview",
   "gemini-3.6-flash",
   "gemini-3.5-flash",
   "gemini-2.5-pro",
 ] as const;
+
+export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash";
+export const GEMINI_DEFAULT_RESEARCH_MODEL = "gemini-3.1-pro-preview";
+
+export const GEMINI_THINKING_LEVELS = ["low", "medium", "high"] as const;
+export type GeminiThinkingLevel = (typeof GEMINI_THINKING_LEVELS)[number];
+
+export function isGeminiThinkingLevel(
+  value: unknown,
+): value is GeminiThinkingLevel {
+  return (GEMINI_THINKING_LEVELS as readonly string[]).includes(String(value));
+}
 
 export function isSupportedGenerateModel(model: string) {
   return (GEMINI_GENERATE_MODELS as readonly string[]).includes(model);

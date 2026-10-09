@@ -96,12 +96,14 @@ export default defineSchema({
     readingTime: v.string(),
     // Presentation tone used by the writing cards on the public portfolio.
     // Optional so existing articles continue to read as the default blue tone.
-    tone: v.optional(v.union(
-      v.literal("blue"),
-      v.literal("orange"),
-      v.literal("green"),
-      v.literal("yellow"),
-    )),
+    tone: v.optional(
+      v.union(
+        v.literal("blue"),
+        v.literal("orange"),
+        v.literal("green"),
+        v.literal("yellow"),
+      ),
+    ),
     status: v.union(
       v.literal("draft"),
       v.literal("published"),
@@ -157,6 +159,9 @@ export default defineSchema({
     label: v.string(),
     model: v.string(),
     researchModel: v.optional(v.string()),
+    thinkingLevel: v.optional(
+      v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    ),
     priority: v.number(),
     active: v.boolean(),
     dailyLimit: v.number(),
@@ -179,7 +184,12 @@ export default defineSchema({
     userId: v.id("users"),
     articleId: v.optional(v.id("articles")),
     mode: v.union(v.literal("chat"), v.literal("write"), v.literal("research")),
-    status: v.union(v.literal("queued"), v.literal("running"), v.literal("completed"), v.literal("failed")),
+    status: v.union(
+      v.literal("queued"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
     input: v.any(),
     progress: v.optional(v.string()),
     result: v.optional(v.any()),
@@ -210,6 +220,7 @@ export default defineSchema({
   aiUsage: defineTable({
     userId: v.id("users"),
     provider: v.literal("gemini"),
+    providerId: v.optional(v.id("aiProviders")),
     model: v.string(),
     jobId: v.id("aiJobs"),
     ok: v.boolean(),

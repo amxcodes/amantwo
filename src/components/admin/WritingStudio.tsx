@@ -7,10 +7,19 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent, type RefObject, type SyntheticEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+  type RefObject,
+  type SyntheticEvent,
+} from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { siteData } from "../../content/site";
 import { publicConvexUrl } from "../../lib/publicConfig";
 import AdminMediaUpload from "./AdminMediaUpload";
 import SessionLoader from "./SessionLoader";
@@ -43,7 +52,11 @@ const blockOptions: Array<{
   { type: "heading", label: "Heading", detail: "A section title" },
   { type: "image", label: "Image", detail: "Inline capsule or media block" },
   { type: "video", label: "Video", detail: "Inline capsule or media block" },
-  { type: "audio", label: "Voice note", detail: "Inline capsule or media block" },
+  {
+    type: "audio",
+    label: "Voice note",
+    detail: "Inline capsule or media block",
+  },
   { type: "link", label: "Source", detail: "Inline source capsule" },
   { type: "embed", label: "Embed", detail: "Inline embed capsule" },
   { type: "quote", label: "Quote", detail: "Quotation" },
@@ -80,14 +93,20 @@ const standaloneUrl = (value: string) => {
   }
 };
 
-const draftStorageKey = (articleId: string) => `amananuworks:article-draft:${articleId}`;
+const draftStorageKey = (articleId: string) =>
+  `amananuworks:article-draft:${articleId}`;
 
 const readCachedDraft = (articleId: string): ArticleDocument | null => {
   try {
     const raw = window.localStorage.getItem(draftStorageKey(articleId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ArticleDocument;
-    if (!parsed || !Array.isArray(parsed.body) || typeof parsed.title !== "string") return null;
+    if (
+      !parsed ||
+      !Array.isArray(parsed.body) ||
+      typeof parsed.title !== "string"
+    )
+      return null;
     return parsed;
   } catch {
     return null;
@@ -96,7 +115,10 @@ const readCachedDraft = (articleId: string): ArticleDocument | null => {
 
 const cacheDraft = (articleId: string, document: ArticleDocument) => {
   try {
-    window.localStorage.setItem(draftStorageKey(articleId), JSON.stringify(document));
+    window.localStorage.setItem(
+      draftStorageKey(articleId),
+      JSON.stringify(document),
+    );
   } catch {
     // A full local cache is a resilience aid, not a reason to block editing.
   }
@@ -115,7 +137,9 @@ const clearCachedDraft = (articleId: string) => {
  * can carry presentation-only keys; Convex's strict validators should never
  * have to reject an otherwise editable draft because of those keys.
  */
-const persistableArticleDocument = (document: ArticleDocument): ArticleDocument => {
+const persistableArticleDocument = (
+  document: ArticleDocument,
+): ArticleDocument => {
   const media = (value?: ArticleMedia) => {
     if (!value || typeof value.src !== "string") return undefined;
     return {
@@ -129,9 +153,24 @@ const persistableArticleDocument = (document: ArticleDocument): ArticleDocument 
   const body = document.body.map((block) => {
     const next: ArticleBlock = { id: block.id, type: block.type };
     const fields = [
-      "content", "level", "attribution", "src", "alt", "caption", "label",
-      "href", "description", "provider", "display", "sourceId", "timestampStart",
-      "timestampEnd", "transcript", "language", "items", "variant",
+      "content",
+      "level",
+      "attribution",
+      "src",
+      "alt",
+      "caption",
+      "label",
+      "href",
+      "description",
+      "provider",
+      "display",
+      "sourceId",
+      "timestampStart",
+      "timestampEnd",
+      "transcript",
+      "language",
+      "items",
+      "variant",
     ] as const;
     for (const field of fields) {
       const value = block[field];
@@ -145,14 +184,26 @@ const persistableArticleDocument = (document: ArticleDocument): ArticleDocument 
         ...(attachment.href ? { href: attachment.href } : {}),
         ...(attachment.src ? { src: attachment.src } : {}),
         ...(attachment.alt !== undefined ? { alt: attachment.alt } : {}),
-        ...(attachment.transcript !== undefined ? { transcript: attachment.transcript } : {}),
-        ...(attachment.provider !== undefined ? { provider: attachment.provider } : {}),
-        ...(attachment.display !== undefined ? { display: attachment.display } : {}),
-        ...(attachment.sourceId !== undefined ? { sourceId: attachment.sourceId } : {}),
+        ...(attachment.transcript !== undefined
+          ? { transcript: attachment.transcript }
+          : {}),
+        ...(attachment.provider !== undefined
+          ? { provider: attachment.provider }
+          : {}),
+        ...(attachment.display !== undefined
+          ? { display: attachment.display }
+          : {}),
+        ...(attachment.sourceId !== undefined
+          ? { sourceId: attachment.sourceId }
+          : {}),
       }));
     }
     if (block.highlights?.length) {
-      next.highlights = block.highlights.map(({ start, end, tone }) => ({ start, end, tone }));
+      next.highlights = block.highlights.map(({ start, end, tone }) => ({
+        start,
+        end,
+        tone,
+      }));
     }
     return next;
   });
@@ -167,7 +218,9 @@ const persistableArticleDocument = (document: ArticleDocument): ArticleDocument 
     readingTime: document.readingTime,
     status: document.status,
     ...(media(document.cover) ? { cover: media(document.cover) } : {}),
-    ...(media(document.narration) ? { narration: media(document.narration) } : {}),
+    ...(media(document.narration)
+      ? { narration: media(document.narration) }
+      : {}),
     body,
     seo: {
       title: document.seo.title,
@@ -185,18 +238,46 @@ const inlineAttachmentFromUrl = (value: string): InlineAttachment | null => {
   const pathname = url.pathname.toLowerCase();
   const label = url.hostname.replace(/^www\./, "");
   if (/youtube\.com|youtu\.be|instagram\.com/.test(url.hostname)) {
-    return { id: `inline-${crypto.randomUUID()}`, kind: "embed", href: source, label };
+    return {
+      id: `inline-${crypto.randomUUID()}`,
+      kind: "embed",
+      href: source,
+      label,
+    };
   }
   if (/\.(png|jpe?g|gif|webp|avif|svg)$/i.test(pathname)) {
-    return { id: `inline-${crypto.randomUUID()}`, kind: "image", src: source, label: "Image", alt: "" };
+    return {
+      id: `inline-${crypto.randomUUID()}`,
+      kind: "image",
+      src: source,
+      label: "Image",
+      alt: "",
+    };
   }
   if (/\.(mp4|webm|mov|m4v)$/i.test(pathname)) {
-    return { id: `inline-${crypto.randomUUID()}`, kind: "video", src: source, label: "Video", alt: "" };
+    return {
+      id: `inline-${crypto.randomUUID()}`,
+      kind: "video",
+      src: source,
+      label: "Video",
+      alt: "",
+    };
   }
   if (/\.(mp3|wav|m4a|ogg|aac)$/i.test(pathname)) {
-    return { id: `inline-${crypto.randomUUID()}`, kind: "audio", src: source, label: "Voice note", transcript: "" };
+    return {
+      id: `inline-${crypto.randomUUID()}`,
+      kind: "audio",
+      src: source,
+      label: "Voice note",
+      transcript: "",
+    };
   }
-  return { id: `inline-${crypto.randomUUID()}`, kind: "link", href: source, label };
+  return {
+    id: `inline-${crypto.randomUUID()}`,
+    kind: "link",
+    href: source,
+    label,
+  };
 };
 
 function EditableText({
@@ -219,23 +300,31 @@ function EditableText({
   onSelection?: (selection: string, start: number, end: number) => void;
 }) {
   const fieldRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
-  const wrapsTitle = className === "writer-title" || className === "writer-heading";
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if ((!multiline || wrapsTitle) && event.key === "Enter") event.preventDefault();
+  const wrapsTitle =
+    className === "writer-title" || className === "writer-heading";
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    if ((!multiline || wrapsTitle) && event.key === "Enter")
+      event.preventDefault();
     const currentValue = event.currentTarget.value;
     if (event.key === "/" && !currentValue.trim()) {
       event.preventDefault();
       onCommand?.();
     }
   };
-  const handlePaste = (event: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handlePaste = (
+    event: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const pasted = event.clipboardData.getData("text/plain").trim();
     if (standaloneUrl(pasted)) {
       event.preventDefault();
       onStandaloneUrl?.(pasted);
     }
   };
-  const handleSelect = (event: SyntheticEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleSelect = (
+    event: SyntheticEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const target = event.currentTarget;
     const start = target.selectionStart ?? 0;
     const end = target.selectionEnd ?? 0;
@@ -266,7 +355,13 @@ function EditableText({
         onPaste={handlePaste}
         onSelect={handleSelect}
         onMouseUp={handleSelect}
-        rows={wrapsTitle ? 1 : className.includes("paragraph") || className.includes("deck") ? 3 : 2}
+        rows={
+          wrapsTitle
+            ? 1
+            : className.includes("paragraph") || className.includes("deck")
+              ? 3
+              : 2
+        }
       />
     );
   }
@@ -290,11 +385,22 @@ const INLINE_URL_PATTERN = /https?:\/\/[^\s<>()"']+/gi;
 const INLINE_TOKEN_PATTERN = /\uE000([^\uE001]+)\uE001/g;
 
 function escapeInlineHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ?? character);
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        character
+      ] ?? character,
+  );
 }
 
-function renderInlineEditorHtml(value: string, attachments: InlineAttachment[]) {
-  const lookup = new Map(attachments.map((attachment) => [attachment.id, attachment]));
+function renderInlineEditorHtml(
+  value: string,
+  attachments: InlineAttachment[],
+) {
+  const lookup = new Map(
+    attachments.map((attachment) => [attachment.id, attachment]),
+  );
   INLINE_TOKEN_PATTERN.lastIndex = 0;
   let html = "";
   let cursor = 0;
@@ -329,7 +435,10 @@ function serializedNodeLength(node: Node): number {
   const element = node as HTMLElement;
   const tokenId = element.dataset.inlineTokenId;
   if (tokenId) return inlineToken(tokenId).length;
-  return Array.from(node.childNodes).reduce((total, child) => total + serializedNodeLength(child), 0);
+  return Array.from(node.childNodes).reduce(
+    (total, child) => total + serializedNodeLength(child),
+    0,
+  );
 }
 
 /**
@@ -354,7 +463,10 @@ function serializedPointOffset(root: HTMLElement, node: Node, offset: number) {
 
     const parent: Node | null = current.parentNode;
     if (!parent) break;
-    const index = Array.prototype.indexOf.call(parent.childNodes, current) as number;
+    const index = Array.prototype.indexOf.call(
+      parent.childNodes,
+      current,
+    ) as number;
     for (let siblingIndex = 0; siblingIndex < index; siblingIndex += 1) {
       total += serializedNodeLength(parent.childNodes[siblingIndex]);
     }
@@ -390,14 +502,30 @@ function InlineTextEditor({
   const rootRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
   const lastValue = useRef(value);
-  const lastAttachments = useRef(attachments.map((attachment) => `${attachment.id}:${attachment.label}:${attachment.src ?? ""}`).join("|"));
+  const lastAttachments = useRef(
+    attachments
+      .map(
+        (attachment) =>
+          `${attachment.id}:${attachment.label}:${attachment.src ?? ""}`,
+      )
+      .join("|"),
+  );
   const pastePending = useRef(false);
-  const attachmentSignature = attachments.map((attachment) => `${attachment.id}:${attachment.label}:${attachment.src ?? ""}`).join("|");
+  const attachmentSignature = attachments
+    .map(
+      (attachment) =>
+        `${attachment.id}:${attachment.label}:${attachment.src ?? ""}`,
+    )
+    .join("|");
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    if (!initialized.current || value !== lastValue.current || attachmentSignature !== lastAttachments.current) {
+    if (
+      !initialized.current ||
+      value !== lastValue.current ||
+      attachmentSignature !== lastAttachments.current
+    ) {
       root.innerHTML = renderInlineEditorHtml(value, attachments);
       lastValue.current = value;
       lastAttachments.current = attachmentSignature;
@@ -421,7 +549,11 @@ function InlineTextEditor({
         onSelection("", 0, 0);
         const match = INLINE_URL_PATTERN.exec(next);
         INLINE_URL_PATTERN.lastIndex = 0;
-        if (match && (pastePending.current || /\s|$/.test(next.slice(match.index + match[0].length)))) {
+        if (
+          match &&
+          (pastePending.current ||
+            /\s|$/.test(next.slice(match.index + match[0].length)))
+        ) {
           pastePending.current = false;
           onInlineUrl(match[0].replace(/[),.!?]+$/, ""), next);
           return;
@@ -431,10 +563,15 @@ function InlineTextEditor({
         onChange(next);
       }}
       onPaste={(event) => {
-        pastePending.current = /https?:\/\/[^\s<>()"']+/i.test(event.clipboardData.getData("text/plain"));
+        pastePending.current = /https?:\/\/[^\s<>()"']+/i.test(
+          event.clipboardData.getData("text/plain"),
+        );
       }}
       onKeyDown={(event) => {
-        if (event.key === "/" && !serializeInlineEditor(event.currentTarget).trim()) {
+        if (
+          event.key === "/" &&
+          !serializeInlineEditor(event.currentTarget).trim()
+        ) {
           event.preventDefault();
           onCommand?.();
         }
@@ -453,14 +590,26 @@ function InlineTextEditor({
           return;
         }
         const source = serializeInlineEditor(event.currentTarget);
-        const anchor = serializedPointOffset(root, selection.anchorNode!, selection.anchorOffset);
-        const focus = serializedPointOffset(root, selection.focusNode!, selection.focusOffset);
+        const anchor = serializedPointOffset(
+          root,
+          selection.anchorNode!,
+          selection.anchorOffset,
+        );
+        const focus = serializedPointOffset(
+          root,
+          selection.focusNode!,
+          selection.focusOffset,
+        );
         const start = Math.min(anchor, focus);
         const end = Math.max(anchor, focus);
         const selected = source.slice(start, end);
         // A highlight should never split an inline attachment marker. If the
         // selection touches one, leave it available for moving/deleting instead.
-        if (!selected.trim() || selected.includes(INLINE_TOKEN_START) || selected.includes(INLINE_TOKEN_END)) {
+        if (
+          !selected.trim() ||
+          selected.includes(INLINE_TOKEN_START) ||
+          selected.includes(INLINE_TOKEN_END)
+        ) {
           onSelection("", 0, 0);
           return;
         }
@@ -562,15 +711,24 @@ function MediaBlock({
   block: ArticleBlock;
   patch: (patch: Partial<ArticleBlock>) => void;
 }) {
-  const kind = block.type === "audio" ? "audio" : block.type === "video" ? "video" : "image";
+  const kind =
+    block.type === "audio"
+      ? "audio"
+      : block.type === "video"
+        ? "video"
+        : "image";
   if (!["image", "video", "audio"].includes(block.type)) {
     return <LegacyMediaBlock block={block} patch={patch} />;
   }
   return (
     <div className="writer-inline-asset" data-kind={kind}>
       <div className="writer-asset-chip" aria-label={`${kind} block`}>
-        <span aria-hidden="true">{kind === "audio" ? "◉" : kind === "video" ? "▷" : "▧"}</span>
-        <strong>{block.label || (block.src ? `${kind} attached` : `Add ${kind}`)}</strong>
+        <span aria-hidden="true">
+          {kind === "audio" ? "◉" : kind === "video" ? "▷" : "▧"}
+        </span>
+        <strong>
+          {block.label || (block.src ? `${kind} attached` : `Add ${kind}`)}
+        </strong>
         <small>{block.src ? "Ready" : "Needs media"}</small>
       </div>
       <details className="writer-asset-details">
@@ -578,28 +736,69 @@ function MediaBlock({
         <div className="writer-asset-editor">
           {block.src ? (
             <div className="writer-media-preview">
-              {kind === "image" ? <img src={block.src} alt={block.alt ?? ""} /> : null}
-              {kind === "video" ? <video src={block.src} controls preload="metadata"><track kind="captions" srcLang="en" label="English captions" /></video> : null}
-              {kind === "audio" ? <audio src={block.src} controls preload="metadata" /> : null}
-              <button type="button" onClick={() => patch({ src: "" })}>Replace</button>
+              {kind === "image" ? (
+                <img src={block.src} alt={block.alt ?? ""} />
+              ) : null}
+              {kind === "video" ? (
+                <video src={block.src} controls preload="metadata">
+                  <track
+                    kind="captions"
+                    srcLang="en"
+                    label="English captions"
+                  />
+                </video>
+              ) : null}
+              {kind === "audio" ? (
+                <audio src={block.src} controls preload="metadata" />
+              ) : null}
+              <button type="button" onClick={() => patch({ src: "" })}>
+                Replace
+              </button>
             </div>
           ) : (
             <AdminMediaUpload
               folder="/portfolio/writing"
-              accept={kind === "audio" ? "audio/*" : kind === "video" ? "video/*" : "image/*"}
+              accept={
+                kind === "audio"
+                  ? "audio/*"
+                  : kind === "video"
+                    ? "video/*"
+                    : "image/*"
+              }
               label={`Add ${kind}`}
               onUploaded={(asset) => patch({ src: asset.src, alt: asset.alt })}
             />
           )}
           {kind === "audio" ? (
             <>
-              <input className="writer-inline-input" value={block.label ?? ""} placeholder="Voice-note label" onChange={(event) => patch({ label: event.target.value })} />
-              <textarea className="writer-inline-input" value={block.transcript ?? ""} placeholder="Transcript for accessibility" onChange={(event) => patch({ transcript: event.target.value })} rows={3} />
+              <input
+                className="writer-inline-input"
+                value={block.label ?? ""}
+                placeholder="Voice-note label"
+                onChange={(event) => patch({ label: event.target.value })}
+              />
+              <textarea
+                className="writer-inline-input"
+                value={block.transcript ?? ""}
+                placeholder="Transcript for accessibility"
+                onChange={(event) => patch({ transcript: event.target.value })}
+                rows={3}
+              />
             </>
           ) : (
             <>
-              <input className="writer-inline-input" value={block.alt ?? ""} placeholder="Alt text" onChange={(event) => patch({ alt: event.target.value })} />
-              <input className="writer-inline-input" value={block.caption ?? ""} placeholder="Optional caption" onChange={(event) => patch({ caption: event.target.value })} />
+              <input
+                className="writer-inline-input"
+                value={block.alt ?? ""}
+                placeholder="Alt text"
+                onChange={(event) => patch({ alt: event.target.value })}
+              />
+              <input
+                className="writer-inline-input"
+                value={block.caption ?? ""}
+                placeholder="Optional caption"
+                onChange={(event) => patch({ caption: event.target.value })}
+              />
             </>
           )}
         </div>
@@ -608,14 +807,30 @@ function MediaBlock({
   );
 }
 
-function InlineAttachmentShelf({ attachments }: { attachments: InlineAttachment[] }) {
+function InlineAttachmentShelf({
+  attachments,
+}: {
+  attachments: InlineAttachment[];
+}) {
   if (!attachments.length) return null;
   return (
     <div className="writer-attachment-shelf" aria-label="Inline attachments">
       <span className="writer-attachment-shelf-label">ATTACHED</span>
       {attachments.map((attachment) => (
-        <span className={`writer-attachment-chip writer-attachment-chip-${attachment.kind}`} key={attachment.id} title={attachment.href ?? attachment.src ?? attachment.label}>
-          <i aria-hidden="true">{attachment.kind === "audio" ? "◉" : attachment.kind === "image" ? "▧" : attachment.kind === "video" ? "▷" : "↗"}</i>
+        <span
+          className={`writer-attachment-chip writer-attachment-chip-${attachment.kind}`}
+          key={attachment.id}
+          title={attachment.href ?? attachment.src ?? attachment.label}
+        >
+          <i aria-hidden="true">
+            {attachment.kind === "audio"
+              ? "◉"
+              : attachment.kind === "image"
+                ? "▧"
+                : attachment.kind === "video"
+                  ? "▷"
+                  : "↗"}
+          </i>
           {attachment.label || attachment.kind}
         </span>
       ))}
@@ -634,7 +849,8 @@ function InlineAttachmentComposer({
 }) {
   const [source, setSource] = useState("");
   const [label, setLabel] = useState("");
-  const uploadKind = kind === "image" || kind === "video" || kind === "audio" ? kind : null;
+  const uploadKind =
+    kind === "image" || kind === "video" || kind === "audio" ? kind : null;
   return (
     <form
       className="writer-inline-composer"
@@ -648,13 +864,23 @@ function InlineAttachmentComposer({
           <p>INLINE CAPSULE</p>
           <strong>Add {kind}</strong>
         </div>
-        <button type="button" onClick={onCancel} aria-label="Back to insert options">Back</button>
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label="Back to insert options"
+        >
+          Back
+        </button>
       </div>
       <input
         type="url"
         value={source}
         onChange={(event) => setSource(event.target.value)}
-        placeholder={uploadKind ? `Paste a ${kind} URL or upload below` : "Paste the source URL"}
+        placeholder={
+          uploadKind
+            ? `Paste a ${kind} URL or upload below`
+            : "Paste the source URL"
+        }
         autoFocus
       />
       <input
@@ -674,7 +900,11 @@ function InlineAttachmentComposer({
             }}
           />
         ) : null}
-        <button type="submit" className="writer-inline-composer-primary" disabled={!source.trim()}>
+        <button
+          type="submit"
+          className="writer-inline-composer-primary"
+          disabled={!source.trim()}
+        >
           Insert capsule
         </button>
       </div>
@@ -750,12 +980,14 @@ function ArticleCanvasBlock({
         <InlineTextEditor
           value={block.content ?? ""}
           attachments={block.inlineAttachments ?? []}
-          onChange={(content) => update({
-            content,
-            inlineAttachments: (block.inlineAttachments ?? []).filter((attachment) =>
-              content.includes(inlineToken(attachment.id)),
-            ),
-          })}
+          onChange={(content) =>
+            update({
+              content,
+              inlineAttachments: (block.inlineAttachments ?? []).filter(
+                (attachment) => content.includes(inlineToken(attachment.id)),
+              ),
+            })
+          }
           placeholder="Write something…"
           onCommand={insertAfter}
           onSelection={onSelectText}
@@ -817,29 +1049,31 @@ function ArticleCanvasBlock({
         <div className="writer-inline-asset writer-smart-card">
           <details className="writer-asset-details" open>
             <summary>Source</summary>
-          <span aria-hidden="true">↗</span>
-          <div>
-            <input
-              className="writer-inline-input"
-              value={block.label ?? ""}
-              placeholder="Source title"
-              onChange={(event) => update({ label: event.target.value })}
-            />
-            <input
-              className="writer-inline-input"
-              type="url"
-              value={block.href ?? ""}
-              placeholder="https://"
-              onChange={(event) => update({ href: event.target.value })}
-            />
-            <textarea
-              className="writer-inline-input"
-              value={block.description ?? ""}
-              placeholder="Quoted text or a short source description"
-              onChange={(event) => update({ description: event.target.value })}
-              rows={3}
-           />
-          </div>
+            <span aria-hidden="true">↗</span>
+            <div>
+              <input
+                className="writer-inline-input"
+                value={block.label ?? ""}
+                placeholder="Source title"
+                onChange={(event) => update({ label: event.target.value })}
+              />
+              <input
+                className="writer-inline-input"
+                type="url"
+                value={block.href ?? ""}
+                placeholder="https://"
+                onChange={(event) => update({ href: event.target.value })}
+              />
+              <textarea
+                className="writer-inline-input"
+                value={block.description ?? ""}
+                placeholder="Quoted text or a short source description"
+                onChange={(event) =>
+                  update({ description: event.target.value })
+                }
+                rows={3}
+              />
+            </div>
           </details>
         </div>
       ) : null}
@@ -847,53 +1081,53 @@ function ArticleCanvasBlock({
         <div className="writer-inline-asset writer-embed-card">
           <details className="writer-asset-details" open>
             <summary>Embed settings</summary>
-          <select
-            value={block.provider ?? "youtube"}
-            onChange={(event) => update({ provider: event.target.value })}
-          >
-            <option value="youtube">YouTube</option>
-            <option value="instagram">Instagram</option>
-            <option value="website">Website</option>
-          </select>
-          <input
-            className="writer-inline-input"
-            type="url"
-            value={block.href ?? ""}
-            placeholder="Paste the embed URL"
-            onChange={(event) => update({ href: event.target.value })}
-          />
-          <div className="writer-embed-time">
-            <label>
-              Start
-              <input
-                type="number"
-                min="0"
-                value={block.timestampStart ?? ""}
-                onChange={(event) =>
-                  update({
-                    timestampStart: event.target.value
-                      ? Number(event.target.value)
-                      : undefined,
-                  })
-                }
-              />
-            </label>
-            <label>
-              End
-              <input
-                type="number"
-                min="0"
-                value={block.timestampEnd ?? ""}
-                onChange={(event) =>
-                  update({
-                    timestampEnd: event.target.value
-                      ? Number(event.target.value)
-                      : undefined,
-                  })
-                }
-              />
-           </label>
-          </div>
+            <select
+              value={block.provider ?? "youtube"}
+              onChange={(event) => update({ provider: event.target.value })}
+            >
+              <option value="youtube">YouTube</option>
+              <option value="instagram">Instagram</option>
+              <option value="website">Website</option>
+            </select>
+            <input
+              className="writer-inline-input"
+              type="url"
+              value={block.href ?? ""}
+              placeholder="Paste the embed URL"
+              onChange={(event) => update({ href: event.target.value })}
+            />
+            <div className="writer-embed-time">
+              <label>
+                Start
+                <input
+                  type="number"
+                  min="0"
+                  value={block.timestampStart ?? ""}
+                  onChange={(event) =>
+                    update({
+                      timestampStart: event.target.value
+                        ? Number(event.target.value)
+                        : undefined,
+                    })
+                  }
+                />
+              </label>
+              <label>
+                End
+                <input
+                  type="number"
+                  min="0"
+                  value={block.timestampEnd ?? ""}
+                  onChange={(event) =>
+                    update({
+                      timestampEnd: event.target.value
+                        ? Number(event.target.value)
+                        : undefined,
+                    })
+                  }
+                />
+              </label>
+            </div>
           </details>
         </div>
       ) : null}
@@ -966,14 +1200,15 @@ function Writer({
   const [insertOrigin, setInsertOrigin] = useState<"inline" | "context">(
     "inline",
   );
-  const [insertPoint, setInsertPoint] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const [insertPoint, setInsertPoint] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [inlineComposer, setInlineComposer] = useState<{
     kind: InlineAttachment["kind"];
     blockIndex: number;
   } | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [canvasMode, setCanvasMode] = useState<"fit" | "paper">("fit");
   const [inspectorTab, setInspectorTab] = useState<
     "publish" | "tools" | "media" | "seo" | "history" | "ai"
@@ -986,10 +1221,20 @@ function Writer({
     text: string;
   } | null>(null);
   const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
+  const [llmImportUndo, setLlmImportUndo] = useState<ArticleDocument | null>(null);
   const creating = useRef(false);
   const hydratedId = useRef<string | null>(null);
   const latestDocument = useRef<ArticleDocument | null>(null);
   const changeVersion = useRef(0);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!createOnLoad || articleId || creating.current) return;
@@ -1020,8 +1265,12 @@ function Writer({
       seo: article.seo as ArticleDocument["seo"],
     };
     const cachedDocument = readCachedDraft(String(article._id));
-    const hydratedDocument = sanitizeEditorialDocument(cachedDocument ?? serverDocument);
-    const editorialCleanupNeeded = JSON.stringify(hydratedDocument) !== JSON.stringify(cachedDocument ?? serverDocument);
+    const hydratedDocument = sanitizeEditorialDocument(
+      cachedDocument ?? serverDocument,
+    );
+    const editorialCleanupNeeded =
+      JSON.stringify(hydratedDocument) !==
+      JSON.stringify(cachedDocument ?? serverDocument);
     setDocument({
       ...hydratedDocument,
       readingTime: articleReadingTime(hydratedDocument.body),
@@ -1038,27 +1287,30 @@ function Writer({
     latestDocument.current = document;
   }, [document]);
 
-  const saveCurrentDraft = useCallback(async (nextDocument?: ArticleDocument) => {
-    const target = nextDocument ?? latestDocument.current;
-    if (!articleId || !target) return false;
-    const versionAtStart = changeVersion.current;
-    const payload = persistableArticleDocument(target);
-    setSaveState("saving");
-    try {
-      await saveDraft({ articleId, document: payload });
-      if (versionAtStart === changeVersion.current) {
-        clearCachedDraft(String(articleId));
-        setSaveState("saved");
-      } else {
-        setSaveState("dirty");
+  const saveCurrentDraft = useCallback(
+    async (nextDocument?: ArticleDocument) => {
+      const target = nextDocument ?? latestDocument.current;
+      if (!articleId || !target) return false;
+      const versionAtStart = changeVersion.current;
+      const payload = persistableArticleDocument(target);
+      setSaveState("saving");
+      try {
+        await saveDraft({ articleId, document: payload });
+        if (versionAtStart === changeVersion.current) {
+          clearCachedDraft(String(articleId));
+          setSaveState("saved");
+        } else {
+          setSaveState("dirty");
+        }
+        return true;
+      } catch (error) {
+        console.error("Writing studio draft save failed", error);
+        if (versionAtStart === changeVersion.current) setSaveState("error");
+        return false;
       }
-      return true;
-    } catch (error) {
-      console.error("Writing studio draft save failed", error);
-      if (versionAtStart === changeVersion.current) setSaveState("error");
-      return false;
-    }
-  }, [articleId, saveDraft]);
+    },
+    [articleId, saveDraft],
+  );
 
   useEffect(() => {
     if (!articleId || !document || saveState !== "dirty") return;
@@ -1068,17 +1320,22 @@ function Writer({
 
   useEffect(() => {
     const flushOnHide = () => {
-      if (window.document.visibilityState === "hidden" && saveState === "dirty") {
+      if (
+        window.document.visibilityState === "hidden" &&
+        saveState === "dirty"
+      ) {
         void saveCurrentDraft();
       }
     };
     window.document.addEventListener("visibilitychange", flushOnHide);
-    return () => window.document.removeEventListener("visibilitychange", flushOnHide);
+    return () =>
+      window.document.removeEventListener("visibilitychange", flushOnHide);
   }, [saveCurrentDraft, saveState]);
 
   const change = (
     next: ArticleDocument | ((current: ArticleDocument) => ArticleDocument),
   ) => {
+    setLlmImportUndo(null);
     setDocument((current) => {
       if (!current) return current;
       const updated = typeof next === "function" ? next(current) : next;
@@ -1137,7 +1394,9 @@ function Writer({
           id: `inline-${crypto.randomUUID()}`,
           kind,
           label: label || kind,
-          ...(kind === "link" || kind === "embed" ? { href: source } : { src: source }),
+          ...(kind === "link" || kind === "embed"
+            ? { href: source }
+            : { src: source }),
         };
     const token = inlineToken(attachment.id);
     change((current) => ({
@@ -1145,9 +1404,10 @@ function Writer({
       body: current.body.map((block, index) => {
         if (index !== blockIndex || block.type !== "paragraph") return block;
         const value = block.content ?? "";
-        const insertionPoint = selectedRange?.blockIndex === blockIndex
-          ? selectedRange.end
-          : value.length;
+        const insertionPoint =
+          selectedRange?.blockIndex === blockIndex
+            ? selectedRange.end
+            : value.length;
         const before = value.slice(0, insertionPoint).replace(/\s*$/, "");
         const after = value.slice(insertionPoint).replace(/^\s*/, "");
         const content = `${before}${before ? " " : ""}${token}${after ? " " : ""}${after}`;
@@ -1167,12 +1427,21 @@ function Writer({
   };
 
   const selectInsertOption = (type: ArticleBlockType) => {
-    const contextBlockIndex = insertOrigin === "context" && insertAt !== null ? insertAt - 1 : null;
-    const contextBlock = contextBlockIndex === null ? null : document?.body[contextBlockIndex];
-    const inlineKind = ["image", "video", "audio", "link", "embed"].includes(type)
+    const contextBlockIndex =
+      insertOrigin === "context" && insertAt !== null ? insertAt - 1 : null;
+    const contextBlock =
+      contextBlockIndex === null ? null : document?.body[contextBlockIndex];
+    const inlineKind = ["image", "video", "audio", "link", "embed"].includes(
+      type,
+    )
       ? (type as InlineAttachment["kind"])
       : null;
-    if (contextBlock && contextBlock.type === "paragraph" && contextBlockIndex !== null && inlineKind) {
+    if (
+      contextBlock &&
+      contextBlock.type === "paragraph" &&
+      contextBlockIndex !== null &&
+      inlineKind
+    ) {
       setInlineComposer({ kind: inlineKind, blockIndex: contextBlockIndex });
       return;
     }
@@ -1188,7 +1457,10 @@ function Writer({
       body: current.body.map((block, blockIndex) => {
         if (blockIndex !== index) return block;
         const content = (value || block.content || "").replace(url, token);
-        const inlineAttachments = [...(block.inlineAttachments ?? []), attachment];
+        const inlineAttachments = [
+          ...(block.inlineAttachments ?? []),
+          attachment,
+        ];
         return { ...block, content, inlineAttachments };
       }),
     }));
@@ -1229,26 +1501,6 @@ function Writer({
     () => articleWordCount(document?.body ?? []),
     [document?.body],
   );
-  const articleContext = useMemo(
-    () => [document?.title, document?.summary, ...(document?.body ?? []).map((block) => [block.content, block.description, block.label, block.href, block.src, block.transcript, block.caption, ...(block.items ?? []), ...(block.inlineAttachments ?? []).map((attachment) => `${attachment.label} ${attachment.href ?? attachment.src ?? ""}`)].filter(Boolean).join(" "))].filter(Boolean).join("\n\n"),
-    [document],
-  );
-
-  const portfolioContext = useMemo(
-    () => JSON.stringify({
-      identity: siteData.identity,
-      roles: siteData.roles,
-      about: siteData.about,
-      experience: siteData.experience,
-      education: siteData.education,
-      projects: siteData.projects,
-      links: siteData.links,
-      github: siteData.github,
-      editorialVoice: "Quiet, specific, thoughtful, human. Prefer clear observations over hype.",
-    }).slice(0, 28_000),
-    [],
-  );
-
   const applyAiProposal = (proposal: AiDocumentProposal) => {
     if (!proposal.document) return;
     change((current) => normalizeAiDocument(proposal.document, current));
@@ -1256,14 +1508,31 @@ function Writer({
     setSelectedRange(null);
   };
 
-  const applyHighlight = (tone: NonNullable<ArticleBlock["highlights"]>[number]["tone"]) => {
+  const applyLlmImport = (imported: ArticleDocument) => {
+    change(imported);
+    setLlmImportUndo(document);
+    setSelectedText("");
+    setSelectedRange(null);
+  };
+
+  const undoLlmImport = () => {
+    if (!llmImportUndo) return;
+    change(llmImportUndo);
+    setLlmImportUndo(null);
+  };
+
+  const applyHighlight = (
+    tone: NonNullable<ArticleBlock["highlights"]>[number]["tone"],
+  ) => {
     if (!selectedRange?.text.trim()) return;
     change((current) => {
       const block = current.body[selectedRange.blockIndex];
       const content = block?.content ?? "";
-      const start = content.slice(selectedRange.start, selectedRange.end) === selectedRange.text
-        ? selectedRange.start
-        : content.indexOf(selectedRange.text);
+      const start =
+        content.slice(selectedRange.start, selectedRange.end) ===
+        selectedRange.text
+          ? selectedRange.start
+          : content.indexOf(selectedRange.text);
       if (!block || start < 0) return current;
       const end = Math.min(content.length, start + selectedRange.text.length);
       const highlights = [...(block.highlights ?? [])]
@@ -1272,7 +1541,11 @@ function Writer({
         .sort((a, b) => a.start - b.start);
       return {
         ...current,
-        body: current.body.map((candidate, index) => index === selectedRange.blockIndex ? { ...candidate, highlights } : candidate),
+        body: current.body.map((candidate, index) =>
+          index === selectedRange.blockIndex
+            ? { ...candidate, highlights }
+            : candidate,
+        ),
       };
     });
     setSelectedText("");
@@ -1329,12 +1602,16 @@ function Writer({
     <main className="writing-studio">
       <header className="writer-toolbar">
         <div className="writer-toolbar-start">
-          <a className="writer-back-button" href="/admin" aria-label="Back to content studio">
+          <a
+            className="writer-back-button"
+            href="/admin"
+            aria-label="Back to content studio"
+          >
             Studio
           </a>
           <div>
             <strong>{document.title || "Untitled note"}</strong>
-            <span>
+            <span role="status" aria-live="polite">
               {saveState === "saving"
                 ? "Saving…"
                 : saveState === "dirty"
@@ -1351,7 +1628,9 @@ function Writer({
               <button
                 type="button"
                 key={mode}
-                aria-label={mode === "fit" ? "Fit canvas to viewport" : "Use paper canvas"}
+                aria-label={
+                  mode === "fit" ? "Fit canvas to viewport" : "Use paper canvas"
+                }
                 aria-pressed={canvasMode === mode}
                 onClick={() => setCanvasMode(mode)}
               >
@@ -1365,18 +1644,23 @@ function Writer({
             onClick={() => void saveCurrentDraft()}
             disabled={saveState === "saving" || saveState === "saved"}
           >
-            {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save"}
+            {saveState === "saving"
+              ? "Saving"
+              : saveState === "saved"
+                ? "Saved"
+                : "Save"}
           </button>
           <button
             type="button"
-            className="writer-tool-button"
+            className="writer-tool-button writer-settings-button"
             onClick={() => setSettingsOpen((open) => !open)}
-            aria-pressed={settingsOpen}
+            aria-controls="writer-inspector"
+            aria-expanded={settingsOpen}
           >
             Settings
           </button>
           <a
-            className="writer-tool-button"
+            className="writer-tool-button writer-preview-button"
             href={`/writing/${document.slug}`}
             target="_blank"
             rel="noreferrer"
@@ -1385,7 +1669,7 @@ function Writer({
           </a>
           <button
             type="button"
-            className="writer-tool-button writer-tool-primary"
+            className="writer-tool-button writer-tool-primary writer-publish-button"
             onClick={() => void publishCurrent()}
           >
             Publish
@@ -1438,7 +1722,9 @@ function Writer({
             className="writer-paper"
             onMouseDown={(event) => {
               const target = event.target as HTMLElement;
-              if (!target.closest("input, textarea, [contenteditable], button")) {
+              if (
+                !target.closest("input, textarea, [contenteditable], button")
+              ) {
                 setSelectedText("");
                 setSelectedRange(null);
               }
@@ -1508,7 +1794,9 @@ function Writer({
                   openContextMenu={(point) =>
                     openInsertMenu(index + 1, "context", point)
                   }
-                  onInlineUrl={(url, value) => convertInlineUrl(index, url, value)}
+                  onInlineUrl={(url, value) =>
+                    convertInlineUrl(index, url, value)
+                  }
                   onSelectText={(selection, start, end) => {
                     if (!selection.trim()) {
                       setSelectedText("");
@@ -1516,7 +1804,12 @@ function Writer({
                       return;
                     }
                     setSelectedText(selection);
-                    setSelectedRange({ blockIndex: index, start, end, text: selection });
+                    setSelectedRange({
+                      blockIndex: index,
+                      start,
+                      end,
+                      text: selection,
+                    });
                   }}
                 />
               ))}
@@ -1540,9 +1833,16 @@ function Writer({
             onClick={() => setSettingsOpen(false)}
           />
         ) : null}
-        <aside className="writer-inspector" aria-label="Post settings">
+        <aside
+          id="writer-inspector"
+          className="writer-inspector"
+          aria-label="Post settings"
+        >
           <div className="writer-inspector-mobile-head">
-            <span className="writer-inspector-mobile-handle" aria-hidden="true" />
+            <span
+              className="writer-inspector-mobile-handle"
+              aria-hidden="true"
+            />
             <button type="button" onClick={() => setSettingsOpen(false)}>
               Done
             </button>
@@ -1560,250 +1860,311 @@ function Writer({
                 }}
                 onClick={() => setInspectorTab(tab)}
               >
-                <span className="writer-inspector-tab-icon" aria-hidden="true">{icon}</span>
+                <span className="writer-inspector-tab-icon" aria-hidden="true">
+                  {icon}
+                </span>
                 <span className="writer-inspector-tab-label">{label}</span>
               </button>
             ))}
           </nav>
-          {inspectorTab === "tools" ? <section>
-            <header>
-              <p>EDITOR TOOLS</p>
-              <h2>Highlights</h2>
-            </header>
-            <p className="writer-inspector-note">Select words in the paper, then tint them for the public reader.</p>
-            <div className="writer-highlight-status">
-              {selectedText ? <><span>Selected</span><strong>{selectedText.slice(0, 90)}{selectedText.length > 90 ? "…" : ""}</strong></> : <span>Select text in a paragraph, heading, quote, or callout.</span>}
-            </div>
-            <div className="writer-highlight-grid" aria-label="Highlight tone">
-              {(["yellow", "blue", "green", "orange"] as const).map((tone) => (
-                <button type="button" key={tone} className={`writer-highlight-${tone}`} disabled={!selectedText} onMouseDown={(event) => event.preventDefault()} onClick={() => applyHighlight(tone)}>
-                  {tone}
-                </button>
-              ))}
-            </div>
-          </section> : null}
-          {inspectorTab === "publish" ? <section>
-            <header>
-              <p>PUBLISHING</p>
-              <h2>Post settings</h2>
-            </header>
-            <div className="writer-status-row">
-              <span>Status</span>
-              <strong data-status={document.status}>{document.status}</strong>
-            </div>
-            <fieldset className="writer-card-tone">
-              <legend>Card color</legend>
-              <p>Choose the tone used for this note on the writing grid.</p>
-              <div className="writer-card-tone-grid" role="radiogroup" aria-label="Writing card color">
-                {([
-                  ["blue", "Sky"],
-                  ["orange", "Apricot"],
-                  ["green", "Sage"],
-                  ["yellow", "Butter"],
-                ] as const).map(([tone, label]) => (
-                  <button
-                    type="button"
-                    key={tone}
-                    className={`writer-card-tone-button tone-${tone}`}
-                    aria-label={`${label} card color`}
-                    aria-pressed={(document.tone ?? "blue") === tone}
-                    onClick={() => change({ ...document, tone: tone as ArticleCardTone })}
-                  >
-                    <i aria-hidden="true" />
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-            <label>
-              Slug
-              <div className="writer-prefix-input">
-                <span>/writing/</span>
-                <input
-                  value={document.slug}
-                  onChange={(event) =>
-                    change({
-                      ...document,
-                      slug: slugify(event.target.value),
-                      seo: {
-                        ...document.seo,
-                        canonicalPath: `/writing/${slugify(event.target.value)}`,
-                      },
-                    })
-                  }
-                />
-              </div>
-            </label>
-            <div className="writer-reading-time" aria-live="polite">
-              <div>
-                <span>Reading time</span>
-                <strong>{document.readingTime}</strong>
-              </div>
-              <small>Calculated from the article text</small>
-            </div>
-            {document.status === "draft" ? (
-              <div className="writer-draft-delete">
-                {confirmDeleteDraft ? (
+          {inspectorTab === "tools" ? (
+            <section>
+              <header>
+                <p>EDITOR TOOLS</p>
+                <h2>Highlights</h2>
+              </header>
+              <p className="writer-inspector-note">
+                Select words in the paper, then tint them for the public reader.
+              </p>
+              <div className="writer-highlight-status">
+                {selectedText ? (
                   <>
-                    <p>Delete this draft? This cannot be restored from the studio.</p>
-                    <div>
-                      <button type="button" onClick={() => setConfirmDeleteDraft(false)}>
-                        Keep draft
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void setArchived({ articleId, archived: true }).then(() =>
-                            location.assign("/admin"),
-                          )
-                        }
-                      >
-                        Delete draft
-                      </button>
-                    </div>
+                    <span>Selected</span>
+                    <strong>
+                      {selectedText.slice(0, 90)}
+                      {selectedText.length > 90 ? "…" : ""}
+                    </strong>
                   </>
                 ) : (
-                  <button type="button" onClick={() => setConfirmDeleteDraft(true)}>
-                    Delete draft
-                  </button>
+                  <span>
+                    Select text in a paragraph, heading, quote, or callout.
+                  </span>
                 )}
               </div>
-            ) : null}
-          </section> : null}
+              <div
+                className="writer-highlight-grid"
+                aria-label="Highlight tone"
+              >
+                {(["yellow", "blue", "green", "orange"] as const).map(
+                  (tone) => (
+                    <button
+                      type="button"
+                      key={tone}
+                      className={`writer-highlight-${tone}`}
+                      disabled={!selectedText}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyHighlight(tone)}
+                    >
+                      {tone}
+                    </button>
+                  ),
+                )}
+              </div>
+            </section>
+          ) : null}
+          {inspectorTab === "publish" ? (
+            <section>
+              <header>
+                <p>PUBLISHING</p>
+                <h2>Post settings</h2>
+              </header>
+              <div className="writer-status-row">
+                <span>Status</span>
+                <strong data-status={document.status}>{document.status}</strong>
+              </div>
+              <fieldset className="writer-card-tone">
+                <legend>Card color</legend>
+                <p>Choose the tone used for this note on the writing grid.</p>
+                <div
+                  className="writer-card-tone-grid"
+                  role="radiogroup"
+                  aria-label="Writing card color"
+                >
+                  {(
+                    [
+                      ["blue", "Sky"],
+                      ["orange", "Apricot"],
+                      ["green", "Sage"],
+                      ["yellow", "Butter"],
+                    ] as const
+                  ).map(([tone, label]) => (
+                    <button
+                      type="button"
+                      key={tone}
+                      className={`writer-card-tone-button tone-${tone}`}
+                      aria-label={`${label} card color`}
+                      aria-pressed={(document.tone ?? "blue") === tone}
+                      onClick={() =>
+                        change({ ...document, tone: tone as ArticleCardTone })
+                      }
+                    >
+                      <i aria-hidden="true" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <label>
+                Slug
+                <div className="writer-prefix-input">
+                  <span>/writing/</span>
+                  <input
+                    value={document.slug}
+                    onChange={(event) =>
+                      change({
+                        ...document,
+                        slug: slugify(event.target.value),
+                        seo: {
+                          ...document.seo,
+                          canonicalPath: `/writing/${slugify(event.target.value)}`,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </label>
+              <div className="writer-reading-time" aria-live="polite">
+                <div>
+                  <span>Reading time</span>
+                  <strong>{document.readingTime}</strong>
+                </div>
+                <small>Calculated from the article text</small>
+              </div>
+              {document.status === "draft" ? (
+                <div className="writer-draft-delete">
+                  {confirmDeleteDraft ? (
+                    <>
+                      <p>
+                        Delete this draft? This cannot be restored from the
+                        studio.
+                      </p>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteDraft(false)}
+                        >
+                          Keep draft
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void setArchived({
+                              articleId,
+                              archived: true,
+                            }).then(() => location.assign("/admin"))
+                          }
+                        >
+                          Delete draft
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteDraft(true)}
+                    >
+                      Delete draft
+                    </button>
+                  )}
+                </div>
+              ) : null}
+            </section>
+          ) : null}
           {inspectorTab === "ai" ? (
             <StudioAiPanel
               articleId={articleId}
               title={document.title}
-              context={articleContext}
-              portfolioContext={portfolioContext}
               document={document}
               articleUpdatedAt={article.updatedAt}
               selection={selectedText}
               onApply={applyAiProposal}
+              onImport={applyLlmImport}
+              canUndoImport={Boolean(llmImportUndo)}
+              onUndoImport={undoLlmImport}
             />
           ) : null}
-          {inspectorTab === "media" ? <section>
-            <header>
-              <p>MEDIA</p>
-              <h2>Cover & audio</h2>
-            </header>
-            {document.cover?.src ? (
-              <div className="writer-inspector-media">
-                <img src={document.cover.src} alt="" />
-                <button
-                  type="button"
-                  onClick={() => change({ ...document, cover: undefined })}
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <AdminMediaUpload
-                folder="/portfolio/writing/covers"
-                accept="image/*"
-                label="Upload cover"
-                onUploaded={(cover) => change({ ...document, cover })}
-              />
-            )}
-            {document.narration?.src ? (
-              <div className="writer-inspector-audio">
-                {/* biome-ignore lint/a11y/useMediaCaption: article narration is paired with editorial transcript content. */}
-                <audio src={document.narration.src} controls />
-                <button
-                  type="button"
-                  onClick={() => change({ ...document, narration: undefined })}
-                >
-                  Remove narration
-                </button>
-              </div>
-            ) : (
-              <AdminMediaUpload
-                folder="/portfolio/writing/narration"
-                accept="audio/*"
-                label="Add article narration"
-                onUploaded={(narration) => change({ ...document, narration })}
-              />
-            )}
-          </section> : null}
-          {inspectorTab === "seo" ? <section>
-            <header>
-              <p>SEARCH</p>
-              <h2>SEO</h2>
-            </header>
-            <label>
-              SEO title
-              <input
-                value={document.seo.title}
-                onChange={(event) =>
-                  change({
-                    ...document,
-                    seo: { ...document.seo, title: event.target.value },
-                  })
-                }
-              />
-            </label>
-            <label>
-              Description
-              <textarea
-                rows={4}
-                value={document.seo.description}
-                onChange={(event) =>
-                  change({
-                    ...document,
-                    seo: { ...document.seo, description: event.target.value },
-                  })
-                }
-              />
-            </label>
-          </section> : null}
-          {inspectorTab === "history" ? <section>
-            <header>
-              <p>HISTORY</p>
-              <h2>Published versions</h2>
-            </header>
-            <div className="writer-revisions">
-              {revisions.length ? (
-                revisions.map((revision) => (
-                  <article key={revision._id}>
-                    <div>
-                      <strong>{revision.label}</strong>
-                      <span>
-                        {new Date(revision.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void restoreRevision({
-                          articleId,
-                          revisionId: revision._id,
-                        }).then(() => {
-                          hydratedId.current = null;
-                          setSaveState("saved");
-                        })
-                      }
-                    >
-                      Restore as draft
-                    </button>
-                  </article>
-                ))
+          {inspectorTab === "media" ? (
+            <section>
+              <header>
+                <p>MEDIA</p>
+                <h2>Cover & audio</h2>
+              </header>
+              {document.cover?.src ? (
+                <div className="writer-inspector-media">
+                  <img src={document.cover.src} alt="" />
+                  <button
+                    type="button"
+                    onClick={() => change({ ...document, cover: undefined })}
+                  >
+                    Remove
+                  </button>
+                </div>
               ) : (
-                <p>No published versions yet.</p>
+                <AdminMediaUpload
+                  folder="/portfolio/writing/covers"
+                  accept="image/*"
+                  label="Upload cover"
+                  onUploaded={(cover) => change({ ...document, cover })}
+                />
               )}
-            </div>
-          </section> : null}
-          {inspectorTab === "history" ? <section className="writer-danger-zone">
-            <button
-              type="button"
-              onClick={() =>
-                void setArchived({ articleId, archived: true }).then(() =>
-                  location.assign("/admin"),
-                )
-              }
-            >
-              Archive article
-            </button>
-          </section> : null}
+              {document.narration?.src ? (
+                <div className="writer-inspector-audio">
+                  {/* biome-ignore lint/a11y/useMediaCaption: article narration is paired with editorial transcript content. */}
+                  <audio src={document.narration.src} controls />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      change({ ...document, narration: undefined })
+                    }
+                  >
+                    Remove narration
+                  </button>
+                </div>
+              ) : (
+                <AdminMediaUpload
+                  folder="/portfolio/writing/narration"
+                  accept="audio/*"
+                  label="Add article narration"
+                  onUploaded={(narration) => change({ ...document, narration })}
+                />
+              )}
+            </section>
+          ) : null}
+          {inspectorTab === "seo" ? (
+            <section>
+              <header>
+                <p>SEARCH</p>
+                <h2>SEO</h2>
+              </header>
+              <label>
+                SEO title
+                <input
+                  value={document.seo.title}
+                  onChange={(event) =>
+                    change({
+                      ...document,
+                      seo: { ...document.seo, title: event.target.value },
+                    })
+                  }
+                />
+              </label>
+              <label>
+                Description
+                <textarea
+                  rows={4}
+                  value={document.seo.description}
+                  onChange={(event) =>
+                    change({
+                      ...document,
+                      seo: { ...document.seo, description: event.target.value },
+                    })
+                  }
+                />
+              </label>
+            </section>
+          ) : null}
+          {inspectorTab === "history" ? (
+            <section>
+              <header>
+                <p>HISTORY</p>
+                <h2>Published versions</h2>
+              </header>
+              <div className="writer-revisions">
+                {revisions.length ? (
+                  revisions.map((revision) => (
+                    <article key={revision._id}>
+                      <div>
+                        <strong>{revision.label}</strong>
+                        <span>
+                          {new Date(revision.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void restoreRevision({
+                            articleId,
+                            revisionId: revision._id,
+                          }).then(() => {
+                            hydratedId.current = null;
+                            setSaveState("saved");
+                          })
+                        }
+                      >
+                        Restore as draft
+                      </button>
+                    </article>
+                  ))
+                ) : (
+                  <p>No published versions yet.</p>
+                )}
+              </div>
+            </section>
+          ) : null}
+          {inspectorTab === "history" ? (
+            <section className="writer-danger-zone">
+              <button
+                type="button"
+                onClick={() =>
+                  void setArchived({ articleId, archived: true }).then(() =>
+                    location.assign("/admin"),
+                  )
+                }
+              >
+                Archive article
+              </button>
+            </section>
+          ) : null}
         </aside>
       </div>
       {insertAt !== null ? (
@@ -1835,10 +2196,15 @@ function Writer({
             >
               <header>
                 <div>
-                  <p>{insertOrigin === "context" ? "ADD AFTER THIS BLOCK" : "INSERT"}</p>
+                  <p>
+                    {insertOrigin === "context"
+                      ? "ADD AFTER THIS BLOCK"
+                      : "INSERT"}
+                  </p>
                   <h2>
                     {insertOrigin === "context"
-                      ? document?.body[(insertAt ?? 1) - 1]?.type === "paragraph"
+                      ? document?.body[(insertAt ?? 1) - 1]?.type ===
+                        "paragraph"
                         ? "Add a capsule or block"
                         : "Choose a block"
                       : "Add to the article"}
@@ -1861,7 +2227,12 @@ function Writer({
                   kind={inlineComposer.kind}
                   onCancel={() => setInlineComposer(null)}
                   onInsert={(source, label) =>
-                    insertInlineAttachment(inlineComposer.blockIndex, inlineComposer.kind, source, label)
+                    insertInlineAttachment(
+                      inlineComposer.blockIndex,
+                      inlineComposer.kind,
+                      source,
+                      label,
+                    )
                   }
                 />
               ) : (
@@ -1871,7 +2242,19 @@ function Writer({
                       type="button"
                       key={option.type}
                       data-block-type={option.type}
-                      data-inline={(["image", "video", "audio", "link", "embed"] as ArticleBlockType[]).includes(option.type) ? "true" : "false"}
+                      data-inline={
+                        (
+                          [
+                            "image",
+                            "video",
+                            "audio",
+                            "link",
+                            "embed",
+                          ] as ArticleBlockType[]
+                        ).includes(option.type)
+                          ? "true"
+                          : "false"
+                      }
                       onClick={() => selectInsertOption(option.type)}
                     >
                       <strong>{option.label}</strong>

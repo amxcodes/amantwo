@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -7,6 +7,7 @@ import {
   articleWordCount,
   type ArticleDocument,
 } from "./article-types";
+import LlmDraftHandoff from "./LlmDraftHandoff";
 
 type AiResult = {
   answer?: string;
@@ -28,24 +29,126 @@ type ConversationMessage = {
   text: string;
 };
 
+const MAX_ASSISTANT_MESSAGE_CHARS = 12_000;
+const MAX_ASSISTANT_DOCUMENT_CHARS = 20_000;
+const MAX_ASSISTANT_CONVERSATION_MESSAGES = 8;
+
+const trimBlockForAssistant = (
+  content: string,
+  maxLength: number,
+  selection: string,
+) => {
+  if (content.length <= maxLength) return content;
+
+  const marker = "[…snipped…]";
+  const windowLength = Math.max(0, maxLength - marker.length * 2);
+  const selectedText = selection.trim();
+  const selectedIndex = selectedText ? content.indexOf(selectedText) : -1;
+
+  if (selectedIndex >= 0 && selectedText.length <= windowLength) {
+    const start = Math.max(
+      0,
+      Math.min(
+        selectedIndex - Math.floor((windowLength - selectedText.length) / 2),
+        content.length - windowLength,
+      ),
+    );
+    const end = start + windowLength;
+    return `${start > 0 ? marker : ""}${content.slice(start, end)}${end < content.length ? marker : ""}`;
+  }
+
+  return `${content.slice(0, Math.max(0, maxLength - marker.length))}${marker}`;
+};
+
+const compactDocumentForAssistant = (
+  document: ArticleDocument,
+  selection: string,
+) => {
+  const selected = selection.trim()
+    ? document.body.filter((block) => block.content?.includes(selection))
+    : [];
+  const remaining = document.body.filter((block) => !selected.includes(block));
+  const body: ArticleDocument["body"] = [];
+  const emptyDocumentLength = JSON.stringify({ ...document, body: [] }).length;
+
+  for (const block of [...selected, ...remaining]) {
+    const candidate = [...body, block];
+    if (JSON.stringify({ ...document, body: candidate }).length <= MAX_ASSISTANT_DOCUMENT_CHARS) {
+      body.push(block);
+      continue;
+    }
+
+    // A single unusually large block should not make the whole canvas vanish
+    // from context. Include a bounded excerpt, keeping the selected passage in
+    // view when it fits, then stop before later blocks exceed the budget.
+    if (body.length === 0 && typeof block.content === "string") {
+      const blockShellLength = JSON.stringify({ ...block, content: "" }).length;
+      let contentLimit = Math.max(
+        0,
+        MAX_ASSISTANT_DOCUMENT_CHARS - emptyDocumentLength - blockShellLength,
+      );
+      let boundedContent = trimBlockForAssistant(
+        block.content,
+        contentLimit,
+        selection,
+      );
+      let boundedBlock = { ...block, content: boundedContent };
+      let boundedDocument = { ...document, body: [boundedBlock] };
+
+      while (
+        contentLimit > 0 &&
+        JSON.stringify(boundedDocument).length > MAX_ASSISTANT_DOCUMENT_CHARS
+      ) {
+        contentLimit = Math.max(
+          0,
+          contentLimit -
+            (JSON.stringify(boundedDocument).length - MAX_ASSISTANT_DOCUMENT_CHARS),
+        );
+        boundedContent = trimBlockForAssistant(
+          block.content,
+          contentLimit,
+          selection,
+        );
+        boundedBlock = { ...block, content: boundedContent };
+        boundedDocument = { ...document, body: [boundedBlock] };
+      }
+
+      if (JSON.stringify(boundedDocument).length <= MAX_ASSISTANT_DOCUMENT_CHARS) {
+        body.push(boundedBlock);
+      }
+    }
+
+    break;
+  }
+  return { ...document, body };
+};
+
+const compactConversationForAssistant = (conversation: ConversationMessage[]) =>
+  conversation
+    .slice(-MAX_ASSISTANT_CONVERSATION_MESSAGES)
+    .map((message) => `${message.role}: ${message.text.slice(0, 1_500)}`)
+    .join("\n");
+
 export default function StudioAiPanel({
   articleId,
   title,
-  context,
-  portfolioContext,
   document,
   articleUpdatedAt,
   selection,
   onApply,
+  onImport,
+  canUndoImport,
+  onUndoImport,
 }: {
   articleId: Id<"articles">;
   title: string;
-  context: string;
-  portfolioContext: string;
   document: ArticleDocument;
   articleUpdatedAt?: number;
   selection: string;
   onApply: (proposal: AiDocumentProposal) => void;
+  onImport: (document: ArticleDocument) => void;
+  canUndoImport: boolean;
+  onUndoImport: () => void;
 }) {
   const createJob = useMutation(api.ai.createJob);
   const applyChangeSet = useMutation(api.articles.applyAiChangeSet);
@@ -58,6 +161,10 @@ export default function StudioAiPanel({
   const [localError, setLocalError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [handoffOpen, setHandoffOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);
+  const shouldStickToBottom = useRef(true);
   const job = useQuery(api.ai.getJob, jobId ? { jobId } : "skip");
   const events = useQuery(api.ai.getJobEvents, jobId ? { jobId } : "skip") ?? [];
   const result = (job?.result ?? null) as AiResult | null;
@@ -96,6 +203,12 @@ export default function StudioAiPanel({
     setRecordedJob(String(jobId));
   }, [job, jobId, recordedJob]);
 
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed || !shouldStickToBottom.current) return;
+    feed.scrollTo({ top: feed.scrollHeight, behavior: conversation.length > 1 ? "smooth" : "auto" });
+  }, [conversation.length, job?.status, latestMessage]);
+
   const run = async () => {
     const prompt = instruction.trim();
     if (!prompt || busy) return;
@@ -115,13 +228,9 @@ export default function StudioAiPanel({
           instruction: prompt,
           selection,
           title,
-          document,
+          document: compactDocumentForAssistant(document, selection),
           baseUpdatedAt: articleUpdatedAt,
-          context: [
-            context,
-            `Portfolio seed context:\n${portfolioContext}`,
-            "Agent conversation so far:\n" + nextConversation.map((message) => `${message.role}: ${message.text}`).join("\n"),
-          ].filter(Boolean).join("\n\n"),
+          context: "Agent conversation so far:\n" + compactConversationForAssistant(nextConversation),
           urls: [],
         },
       });
@@ -169,7 +278,7 @@ export default function StudioAiPanel({
   const hasReadyProposal = Boolean(result?.changeSetId && result.document && result.proposal?.state === "ready" && changeSet?.state === "ready");
 
   return (
-    <section className="writer-ai-panel writer-ai-chat-panel" aria-label="AI assistant">
+    <section className={`writer-ai-panel writer-ai-chat-panel${expanded ? " is-expanded" : ""}`} aria-label="AI assistant">
       <header className="writer-ai-chat-header">
         <span className="writer-ai-chat-avatar" aria-hidden="true">✦</span>
         <div>
@@ -177,9 +286,11 @@ export default function StudioAiPanel({
           <h2>How can I help?</h2>
           <span className="writer-ai-chat-subtitle">Ask naturally. I know the portfolio context, the canvas schema, and how to research public sources.</span>
         </div>
-        <span className="writer-ai-chat-state" data-state={busy ? "working" : failed ? "error" : "ready"}>
-          {busy ? "Thinking" : failed ? "Needs attention" : "Private"}
-        </span>
+        <div className="writer-ai-chat-controls">
+          <span className="writer-ai-chat-state" data-state={busy ? "working" : failed ? "error" : "ready"}>{busy ? "Thinking" : failed ? "Needs attention" : "Private"}</span>
+          <button type="button" className="writer-ai-chat-control" onClick={() => setHandoffOpen(true)}>Bring draft</button>
+          <button type="button" className="writer-ai-chat-control" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{expanded ? "Compact" : "Expand"}</button>
+        </div>
       </header>
 
       <div className="writer-ai-chat-context">
@@ -187,7 +298,7 @@ export default function StudioAiPanel({
         <strong>{selection || title || "Untitled note"}</strong>
       </div>
 
-      <div className="writer-ai-chat-feed" aria-live="polite">
+      <div ref={feedRef} className="writer-ai-chat-feed" aria-live="polite" onScroll={(event) => { const target = event.currentTarget; shouldStickToBottom.current = target.scrollHeight - target.scrollTop - target.clientHeight < 96; }}>
         {conversation.length ? conversation.map((message, index) => (
           <div className={`writer-ai-chat-message writer-ai-chat-message-${message.role}`} key={`${message.role}-${index}`}>
             <span>{message.role === "you" ? "You" : "Aman Studio"}</span>
@@ -262,6 +373,7 @@ export default function StudioAiPanel({
           </div>
         ) : null}
         {applied ? <div className="writer-ai-applied-note">Applied to the canvas. Review it, then publish when it feels right.</div> : null}
+        {canUndoImport ? <div className="writer-ai-import-note"><span>External LLM draft is on the canvas.</span><button type="button" onClick={onUndoImport}>Undo import</button></div> : null}
       </div>
 
       <form className="writer-ai-chat-compose" onSubmit={(event) => { event.preventDefault(); void run(); }}>
@@ -270,10 +382,11 @@ export default function StudioAiPanel({
           onChange={(event) => setInstruction(event.target.value)}
           placeholder="Ask for a complete draft, research, or a canvas change…"
           rows={3}
+          maxLength={MAX_ASSISTANT_MESSAGE_CHARS}
           aria-label="Message Aman Studio"
         />
         <div className="writer-ai-chat-compose-footer">
-          <span>{isResearchRequest ? "Public sources will be discovered and cited automatically." : "Drafts stay in review until you approve them."}</span>
+          <span>{isResearchRequest ? "Public sources will be discovered and cited automatically." : "Drafts stay in review until you approve them."} {instruction.length.toLocaleString()}/{MAX_ASSISTANT_MESSAGE_CHARS.toLocaleString()}</span>
           <button type="submit" aria-label="Send message" disabled={busy || !instruction.trim()}>
             <span aria-hidden="true">↑</span>
           </button>
@@ -281,6 +394,7 @@ export default function StudioAiPanel({
       </form>
       {localError ? <p className="writer-ai-error">{localError}</p> : null}
       {job?.status === "failed" ? <p className="writer-ai-error">{job.error}</p> : null}
+      <LlmDraftHandoff document={document} open={handoffOpen} onClose={() => setHandoffOpen(false)} onApply={onImport} />
     </section>
   );
 }
