@@ -5,7 +5,6 @@ import {
   Unauthenticated,
   useAction,
   useMutation,
-  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
@@ -1159,15 +1158,8 @@ function SiteManager({
   const replaceSections = useMutation(api.cms.replaceSections);
   const publishPage = useMutation(api.cms.publishPage);
   const deleteArticle = useMutation(api.articles.deleteArticle);
-  const {
-    results: articles,
-    status: articlesStatus,
-    loadMore: loadMoreArticles,
-  } = usePaginatedQuery(
-    api.articles.adminList,
-    {},
-    { initialNumItems: 12 },
-  );
+  const articlesResult = useQuery(api.articles.adminList);
+  const articles = articlesResult ?? [];
   const { signOut } = useAuthActions();
   const [sections, setSections] = useState<AdminSection[]>(homeSections);
   const [activeKind, setActiveKind] = useState<SectionKind | null>(null);
@@ -1460,9 +1452,9 @@ function SiteManager({
                     <span>{entry.label}</span>
                     <small>
                       {entry.kind === "writing"
-                        ? articlesStatus === "LoadingFirstPage"
+                        ? articlesResult === undefined
                           ? "…"
-                          : `${articles.length}${articlesStatus === "Exhausted" ? "" : "+"}`
+                          : articles.length
                         : countFor(entry.kind)}
                     </small>
                   </button>
@@ -1500,7 +1492,7 @@ function SiteManager({
                   <div
                     className="manager-collection"
                     aria-label="Writing items"
-                    aria-busy={articlesStatus === "LoadingFirstPage" || articlesStatus === "LoadingMore"}
+                    aria-busy={articlesResult === undefined}
                   >
                     {articles.map((article) => (
                       <article key={article._id}>
@@ -1618,24 +1610,12 @@ function SiteManager({
                     ))}
                   </div>
                 )}
-                {activeKind === "writing" && articlesStatus === "LoadingFirstPage" ? (
+                {activeKind === "writing" && articlesResult === undefined ? (
                   <p className="manager-inline-help" role="status">Loading writing…</p>
-                ) : null}
-                {activeKind === "writing" && articlesStatus === "LoadingMore" ? (
-                  <p className="manager-inline-help" role="status">Loading more writing…</p>
-                ) : null}
-                {activeKind === "writing" && articlesStatus === "CanLoadMore" ? (
-                  <button
-                    className="studio-button studio-button-quiet manager-load-more"
-                    type="button"
-                    onClick={() => loadMoreArticles(12)}
-                  >
-                    Show more writing
-                  </button>
                 ) : null}
                 {(
                   activeKind === "writing"
-                    ? articlesStatus === "Exhausted" && !articles.length
+                    ? articlesResult !== undefined && !articles.length
                     : !collection.length
                 ) ? (
                   <div className="manager-empty-state">
