@@ -1189,13 +1189,19 @@ function Writer({
     api.articles.adminGet,
     articleId ? { articleId } : "skip",
   );
-  const revisions =
-    useQuery(api.articles.adminRevisions, articleId ? { articleId } : "skip") ??
-    [];
+  const revisionsQuery = useQuery(
+    api.articles.adminRevisions,
+    articleId ? { articleId } : "skip",
+  );
+  const revisions = revisionsQuery ?? [];
   const [document, setDocument] = useState<ArticleDocument | null>(null);
   const [saveState, setSaveState] = useState<
     "idle" | "dirty" | "saving" | "saved" | "error"
   >("idle");
+  const [saveError, setSaveError] = useState("");
+  const [creationError, setCreationError] = useState("");
+  const [revisionBusy, setRevisionBusy] = useState(false);
+  const [editorMessage, setEditorMessage] = useState("");
   const [insertAt, setInsertAt] = useState<number | null>(null);
   const [insertOrigin, setInsertOrigin] = useState<"inline" | "context">(
     "inline",
@@ -1237,15 +1243,19 @@ function Writer({
   }, [settingsOpen]);
 
   useEffect(() => {
-    if (!createOnLoad || articleId || creating.current) return;
+    if (!createOnLoad || articleId || creating.current || creationError) return;
     creating.current = true;
     void createDraft({}).then((id) => {
       setArticleId(id);
       const url = new URL(window.location.href);
       url.searchParams.set("article", String(id));
       window.history.replaceState({}, "", url);
+      creating.current = false;
+    }).catch((error: unknown) => {
+      creating.current = false;
+      setCreationError(error instanceof Error ? error.message : "Could not create a draft. Check your connection and try again.");
     });
-  }, [articleId, createDraft, createOnLoad]);
+  }, [articleId, createDraft, createOnLoad, creationError]);
 
   useEffect(() => {
     if (!article || hydratedId.current === String(article._id)) return;
@@ -1298,6 +1308,7 @@ function Writer({
         await saveDraft({ articleId, document: payload });
         if (versionAtStart === changeVersion.current) {
           clearCachedDraft(String(articleId));
+          setSaveError("");
           setSaveState("saved");
         } else {
           setSaveState("dirty");
@@ -1305,7 +1316,10 @@ function Writer({
         return true;
       } catch (error) {
         console.error("Writing studio draft save failed", error);
-        if (versionAtStart === changeVersion.current) setSaveState("error");
+        if (versionAtStart === changeVersion.current) {
+          setSaveError(error instanceof Error ? error.message : "Could not save this draft.");
+          setSaveState("error");
+        }
         return false;
       }
     },
@@ -1336,6 +1350,7 @@ function Writer({
     next: ArticleDocument | ((current: ArticleDocument) => ArticleDocument),
   ) => {
     setLlmImportUndo(null);
+    setSaveError("");
     setDocument((current) => {
       if (!current) return current;
       const updated = typeof next === "function" ? next(current) : next;
@@ -1569,6 +1584,24 @@ function Writer({
       </main>
     );
   }
+  if (creationError) {
+    return (
+      <main className="writer-error-state" role="alert">
+        <p>Draft could not be created</p>
+        <span>{creationError}</span>
+        <button
+          className="writer-retry-button"
+          type="button"
+          onClick={() => {
+            creating.current = false;
+            setCreationError("");
+          }}
+        >
+          Try again
+        </button>
+      </main>
+    );
+  }
   if (!articleId || article === undefined || !document) {
     return <SessionLoader message="Preparing the writing studio…" />;
   }
@@ -1593,7 +1626,8 @@ function Writer({
       clearCachedDraft(String(articleId));
       change({ ...publishDocument, status: "published" });
       setSaveState("saved");
-    } catch {
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Could not publish this draft.");
       setSaveState("error");
     }
   };
@@ -1617,7 +1651,7 @@ function Writer({
                 : saveState === "dirty"
                   ? "Unsaved changes"
                   : saveState === "error"
-                    ? "Save failed"
+                    ? saveError || "Save failed"
                     : "Saved"}
             </span>
           </div>
@@ -1670,6 +1704,7 @@ function Writer({
           <button
             type="button"
             className="writer-tool-button writer-tool-primary writer-publish-button"
+            disabled={saveState === "saving"}
             onClick={() => void publishCurrent()}
           >
             Publish
@@ -2120,7 +2155,9 @@ function Writer({
                 <h2>Published versions</h2>
               </header>
               <div className="writer-revisions">
-                {revisions.length ? (
+                {revisionsQuery === undefined ? (
+                  <p role="status">Loading version history…</p>
+                ) : revisions.length ? (
                   revisions.map((revision) => (
                     <article key={revision._id}>
                       <div>
@@ -2131,23 +2168,30 @@ function Writer({
                       </div>
                       <button
                         type="button"
-                        onClick={() =>
+                        disabled={revisionBusy}
+                        onClick={() => {
+                          setRevisionBusy(true);
+                          setEditorMessage("");
                           void restoreRevision({
                             articleId,
                             revisionId: revision._id,
                           }).then(() => {
                             hydratedId.current = null;
                             setSaveState("saved");
-                          })
-                        }
+                            setEditorMessage("Version restored as a draft.");
+                          }).catch((error: unknown) => {
+                            setEditorMessage(error instanceof Error ? error.message : "Could not restore this version.");
+                          }).finally(() => setRevisionBusy(false));
+                        }}
                       >
-                        Restore as draft
+                        {revisionBusy ? "Restoring…" : "Restore as draft"}
                       </button>
                     </article>
                   ))
                 ) : (
                   <p>No published versions yet.</p>
                 )}
+                {editorMessage ? <p role="status">{editorMessage}</p> : null}
               </div>
             </section>
           ) : null}
@@ -2156,9 +2200,11 @@ function Writer({
               <button
                 type="button"
                 onClick={() =>
-                  void setArchived({ articleId, archived: true }).then(() =>
-                    location.assign("/admin"),
-                  )
+                  void setArchived({ articleId, archived: true })
+                    .then(() => location.assign("/admin"))
+                    .catch((error: unknown) => {
+                      setEditorMessage(error instanceof Error ? error.message : "Could not archive this article.");
+                    })
                 }
               >
                 Archive article

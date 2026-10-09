@@ -320,16 +320,25 @@ function applyAiDocument(current: Record<string, unknown>, candidate: unknown) {
 }
 
 export const adminList = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     await requireEditor(ctx);
-    const articles = await ctx.db
+    const result = await ctx.db
       .query("articles")
       .withIndex("by_updatedAt")
-      .collect();
-    return articles
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .map((article) => ({ ...article, readingTime: automaticReadingTime(article.body) }));
+      .order("desc")
+      .paginate(args.paginationOpts);
+    return {
+      ...result,
+      page: result.page.map((article) => ({
+        _id: article._id,
+        slug: article.slug,
+        title: article.title,
+        status: article.status,
+        updatedAt: article.updatedAt,
+        readingTime: automaticReadingTime(article.body),
+      })),
+    };
   },
 });
 
@@ -348,9 +357,12 @@ export const adminRevisions = query({
     await requireEditor(ctx);
     const revisions = await ctx.db
       .query("articleRevisions")
-      .withIndex("by_article", (q) => q.eq("articleId", args.articleId))
-      .collect();
-    return revisions.sort((a, b) => b.createdAt - a.createdAt).slice(0, 12);
+      .withIndex("by_article_createdAt", (q) =>
+        q.eq("articleId", args.articleId),
+      )
+      .order("desc")
+      .take(12);
+    return revisions;
   },
 });
 

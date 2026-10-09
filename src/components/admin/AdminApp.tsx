@@ -5,6 +5,7 @@ import {
   Unauthenticated,
   useAction,
   useMutation,
+  usePaginatedQuery,
   useQuery,
 } from "convex/react";
 import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
@@ -1158,7 +1159,15 @@ function SiteManager({
   const replaceSections = useMutation(api.cms.replaceSections);
   const publishPage = useMutation(api.cms.publishPage);
   const deleteArticle = useMutation(api.articles.deleteArticle);
-  const articles = useQuery(api.articles.adminList) ?? [];
+  const {
+    results: articles,
+    status: articlesStatus,
+    loadMore: loadMoreArticles,
+  } = usePaginatedQuery(
+    api.articles.adminList,
+    {},
+    { initialNumItems: 12 },
+  );
   const { signOut } = useAuthActions();
   const [sections, setSections] = useState<AdminSection[]>(homeSections);
   const [activeKind, setActiveKind] = useState<SectionKind | null>(null);
@@ -1174,7 +1183,7 @@ function SiteManager({
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (savedSections?.length) {
+    if (savedSections !== undefined) {
       // Convex query results include database metadata. Keep only the public
       // replaceSections input shape so `_id`, `pageId`, and timestamps never
       // leak back into the mutation validator.
@@ -1449,7 +1458,13 @@ function SiteManager({
                     }}
                   >
                     <span>{entry.label}</span>
-                    <small>{countFor(entry.kind)}</small>
+                    <small>
+                      {entry.kind === "writing"
+                        ? articlesStatus === "LoadingFirstPage"
+                          ? "…"
+                          : `${articles.length}${articlesStatus === "Exhausted" ? "" : "+"}`
+                        : countFor(entry.kind)}
+                    </small>
                   </button>
                 ))}
               </nav>
@@ -1485,6 +1500,7 @@ function SiteManager({
                   <div
                     className="manager-collection"
                     aria-label="Writing items"
+                    aria-busy={articlesStatus === "LoadingFirstPage" || articlesStatus === "LoadingMore"}
                   >
                     {articles.map((article) => (
                       <article key={article._id}>
@@ -1510,12 +1526,14 @@ function SiteManager({
                             <button
                               type="button"
                               className="manager-writing-delete manager-writing-delete-confirm"
-                              onClick={() =>
+                              onClick={() => {
                                 void deleteArticle({ articleId: article._id }).then(() => {
                                   setPendingArticleDelete(null);
                                   setNotice("Writing entry deleted.");
-                                })
-                              }
+                                }).catch((error: unknown) => {
+                                  setNotice(error instanceof Error ? error.message : "Could not delete this writing entry.");
+                                });
+                              }}
                               aria-label={`Confirm delete ${article.title}`}
                             >
                               Delete
@@ -1600,9 +1618,24 @@ function SiteManager({
                     ))}
                   </div>
                 )}
+                {activeKind === "writing" && articlesStatus === "LoadingFirstPage" ? (
+                  <p className="manager-inline-help" role="status">Loading writing…</p>
+                ) : null}
+                {activeKind === "writing" && articlesStatus === "LoadingMore" ? (
+                  <p className="manager-inline-help" role="status">Loading more writing…</p>
+                ) : null}
+                {activeKind === "writing" && articlesStatus === "CanLoadMore" ? (
+                  <button
+                    className="studio-button studio-button-quiet manager-load-more"
+                    type="button"
+                    onClick={() => loadMoreArticles(12)}
+                  >
+                    Show more writing
+                  </button>
+                ) : null}
                 {(
                   activeKind === "writing"
-                    ? !articles.length
+                    ? articlesStatus === "Exhausted" && !articles.length
                     : !collection.length
                 ) ? (
                   <div className="manager-empty-state">

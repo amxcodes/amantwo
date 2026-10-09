@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 
 type Props = { onClose: () => void };
@@ -26,12 +26,50 @@ const formatDate = (value: number) =>
   new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(value);
 
 export default function NewsletterSettings({ onClose }: Props) {
+  const panelRef = useRef<HTMLElement>(null);
   const dashboard = useQuery(api.newsletter.adminDashboard, { limit: 100 });
   const saveSettings = useMutation(api.newsletter.updateSettings);
   const [form, setForm] = useState<FormState>(initialForm);
   const [filter, setFilter] = useState<"all" | "subscribed" | "unsubscribed">("subscribed");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const panel = panelRef.current;
+    panel?.querySelector<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled])',
+    )?.focus({ preventScroll: true });
+
+    const keepFocusInDialog = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      ));
+      if (!focusable.length) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", keepFocusInDialog);
+    return () => {
+      window.removeEventListener("keydown", keepFocusInDialog);
+      previousActiveElement?.focus({ preventScroll: true });
+    };
+  }, []);
 
   useEffect(() => {
     if (!dashboard?.settings) return;
@@ -44,6 +82,7 @@ export default function NewsletterSettings({ onClose }: Props) {
   };
 
   const save = async () => {
+    if (dashboard === undefined || saving) return;
     setSaving(true);
     setNotice("");
     try {
@@ -62,10 +101,13 @@ export default function NewsletterSettings({ onClose }: Props) {
   return (
     <div className="manager-modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section
+        ref={panelRef}
         className="newsletter-admin-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="newsletter-admin-title"
+        aria-busy={dashboard === undefined || saving}
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="newsletter-admin-header">
@@ -85,30 +127,35 @@ export default function NewsletterSettings({ onClose }: Props) {
                 <h3 id="newsletter-copy-title">Join options</h3>
               </div>
               <label className="newsletter-admin-toggle">
-                <input type="checkbox" checked={form.enabled} onChange={(event) => update("enabled", event.target.checked)} />
+                <input type="checkbox" disabled={dashboard === undefined || saving} checked={form.enabled} onChange={(event) => update("enabled", event.target.checked)} />
                 <span>Enabled</span>
               </label>
             </div>
+            {dashboard === undefined ? (
+              <p className="newsletter-admin-empty" role="status">
+                Loading saved newsletter settings…
+              </p>
+            ) : null}
             <div className="newsletter-admin-form-grid">
               <label className="manager-field">
                 Heading
-                <input value={form.title} onChange={(event) => update("title", event.target.value)} />
+                <input disabled={dashboard === undefined || saving} value={form.title} onChange={(event) => update("title", event.target.value)} />
               </label>
               <label className="manager-field">
                 Button label
-                <input value={form.buttonLabel} onChange={(event) => update("buttonLabel", event.target.value)} />
+                <input disabled={dashboard === undefined || saving} value={form.buttonLabel} onChange={(event) => update("buttonLabel", event.target.value)} />
               </label>
               <label className="manager-field newsletter-admin-wide">
                 Description
-                <textarea rows={2} value={form.description} onChange={(event) => update("description", event.target.value)} />
+                <textarea disabled={dashboard === undefined || saving} rows={2} value={form.description} onChange={(event) => update("description", event.target.value)} />
               </label>
               <label className="manager-field">
                 Placeholder
-                <input value={form.placeholder} onChange={(event) => update("placeholder", event.target.value)} />
+                <input disabled={dashboard === undefined || saving} value={form.placeholder} onChange={(event) => update("placeholder", event.target.value)} />
               </label>
               <label className="manager-field">
                 Success message
-                <input value={form.successMessage} onChange={(event) => update("successMessage", event.target.value)} />
+                <input disabled={dashboard === undefined || saving} value={form.successMessage} onChange={(event) => update("successMessage", event.target.value)} />
               </label>
             </div>
           </section>
@@ -151,7 +198,7 @@ export default function NewsletterSettings({ onClose }: Props) {
           <span aria-live="polite">{notice || "Changes apply to the public footer after saving."}</span>
           <div>
             <button type="button" className="studio-button studio-button-quiet" onClick={onClose}>Close</button>
-            <button type="button" className="studio-button studio-button-primary" disabled={saving} onClick={() => void save()}>
+            <button type="button" className="studio-button studio-button-primary" disabled={dashboard === undefined || saving} onClick={() => void save()}>
               {saving ? "Saving..." : "Save options"}
             </button>
           </div>

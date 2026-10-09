@@ -132,6 +132,7 @@ export default defineSchema({
     publishedAt: v.optional(v.number()),
   })
     .index("by_article", ["articleId"])
+    .index("by_article_createdAt", ["articleId", "createdAt"])
     .index("by_state", ["state"]),
 
   articleChangeSets: defineTable({

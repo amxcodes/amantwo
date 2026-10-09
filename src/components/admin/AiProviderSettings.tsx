@@ -38,7 +38,8 @@ export default function AiProviderSettings({
   const panelRef = useRef<HTMLElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
-  const providers = useQuery(api.ai.providerCatalog) ?? [];
+  const providerQuery = useQuery(api.ai.providerCatalog);
+  const providers = providerQuery ?? [];
   const saveProvider = useAction(api.aiActions.saveProvider);
   const testProvider = useAction(api.aiActions.testProvider);
   const [message, setMessage] = useState("");
@@ -46,6 +47,8 @@ export default function AiProviderSettings({
   const [selectedProviderId, setSelectedProviderId] =
     useState<Id<"aiProviders"> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [operation, setOperation] = useState<"saving" | "testing" | null>(null);
+  const settingsBusy = providerQuery === undefined || operation !== null;
 
   useEffect(() => {
     const previousActiveElement = document.activeElement instanceof HTMLElement
@@ -126,7 +129,7 @@ export default function AiProviderSettings({
   };
 
   useEffect(() => {
-    if (isCreating || selectedProviderId || !providers[0]) return;
+    if (providerQuery === undefined || isCreating || selectedProviderId || !providers[0]) return;
     const provider = providers[0];
     setSelectedProviderId(provider._id);
     setForm({
@@ -139,9 +142,17 @@ export default function AiProviderSettings({
       dailyLimit: String(provider.dailyLimit),
       active: provider.active,
     });
-  }, [isCreating, providers, selectedProviderId]);
+  }, [isCreating, providerQuery, providers, selectedProviderId]);
 
   const submit = async () => {
+    if (settingsBusy) return;
+    const priority = Number(form.priority);
+    const dailyLimit = Number(form.dailyLimit);
+    if (!Number.isFinite(priority) || priority < 1 || !Number.isFinite(dailyLimit) || dailyLimit < 1) {
+      setMessage("Priority and daily limit must be numbers greater than zero.");
+      return;
+    }
+    setOperation("saving");
     setMessage("Saving securely…");
     try {
       const providerId = await saveProvider({
@@ -151,8 +162,8 @@ export default function AiProviderSettings({
         researchModel: form.researchModel,
         thinkingLevel: form.thinkingLevel,
         apiKey: form.apiKey.trim() || undefined,
-        priority: Number(form.priority),
-        dailyLimit: Number(form.dailyLimit),
+        priority,
+        dailyLimit,
         active: form.active,
       });
       setSelectedProviderId(providerId);
@@ -163,10 +174,14 @@ export default function AiProviderSettings({
       setMessage(
         error instanceof Error ? error.message : "Could not save provider.",
       );
+    } finally {
+      setOperation(null);
     }
   };
 
   const testConnection = async () => {
+    if (settingsBusy) return;
+    setOperation("testing");
     setMessage("Checking the Gemini connection…");
     try {
       const result = await testProvider({
@@ -181,6 +196,8 @@ export default function AiProviderSettings({
           ? error.message
           : "Could not verify this provider.",
       );
+    } finally {
+      setOperation(null);
     }
   };
 
@@ -200,6 +217,7 @@ export default function AiProviderSettings({
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-settings-title"
+        aria-busy={settingsBusy}
         tabIndex={-1}
       >
         <header className="studio-control-header">
@@ -224,12 +242,15 @@ export default function AiProviderSettings({
         <div className="ai-settings-body">
           <div className="ai-provider-list">
             <p className="ai-settings-label">CONFIGURED PROVIDERS</p>
-            {providers.length ? (
+            {providerQuery === undefined ? (
+              <div className="ai-settings-empty" role="status">Loading configured providers…</div>
+            ) : providers.length ? (
               providers.map((provider) => (
                 <button
                   className={`ai-provider-card${selectedProviderId === provider._id ? " is-selected" : ""}`}
                   key={provider._id}
                   type="button"
+                  disabled={settingsBusy}
                   onClick={() => selectProvider(provider)}
                   aria-pressed={selectedProviderId === provider._id}
                 >
@@ -251,6 +272,7 @@ export default function AiProviderSettings({
             <button
               className="studio-button studio-button-quiet ai-provider-new"
               type="button"
+              disabled={settingsBusy}
               onClick={startNew}
             >
               + New provider
@@ -275,6 +297,7 @@ export default function AiProviderSettings({
             <label>
               Label
               <input
+                disabled={settingsBusy}
                 value={form.label}
                 onChange={(event) => update("label", event.target.value)}
               />
@@ -282,6 +305,7 @@ export default function AiProviderSettings({
             <label>
               Chat & writing model
               <select
+                disabled={settingsBusy}
                 value={form.model}
                 onChange={(event) => update("model", event.target.value)}
               >
@@ -298,6 +322,7 @@ export default function AiProviderSettings({
             <label>
               Research model
               <select
+                disabled={settingsBusy}
                 value={form.researchModel}
                 onChange={(event) =>
                   update("researchModel", event.target.value)
@@ -317,6 +342,7 @@ export default function AiProviderSettings({
             <label>
               Thinking depth
               <select
+                disabled={settingsBusy}
                 value={form.thinkingLevel}
                 onChange={(event) =>
                   update(
@@ -339,6 +365,7 @@ export default function AiProviderSettings({
             <label>
               {selectedProviderId ? "New API key (optional)" : "Gemini API key"}
               <input
+                disabled={settingsBusy}
                 type="password"
                 value={form.apiKey}
                 onChange={(event) => update("apiKey", event.target.value)}
@@ -358,6 +385,7 @@ export default function AiProviderSettings({
               <label>
                 Priority
                 <input
+                  disabled={settingsBusy}
                   type="number"
                   min="1"
                   value={form.priority}
@@ -367,6 +395,7 @@ export default function AiProviderSettings({
               <label>
                 Daily limit
                 <input
+                  disabled={settingsBusy}
                   type="number"
                   min="1"
                   value={form.dailyLimit}
@@ -376,6 +405,7 @@ export default function AiProviderSettings({
             </div>
             <label className="ai-settings-toggle">
               <input
+                disabled={settingsBusy}
                 type="checkbox"
                 checked={form.active}
                 onChange={(event) => update("active", event.target.checked)}
@@ -386,16 +416,18 @@ export default function AiProviderSettings({
               <button
                 className="studio-button studio-button-primary"
                 type="button"
+                disabled={settingsBusy}
                 onClick={() => void submit()}
               >
-                {selectedProviderId ? "Save changes" : "Save provider"}
+                {operation === "saving" ? "Saving…" : selectedProviderId ? "Save changes" : "Save provider"}
               </button>
               <button
                 className="studio-button studio-button-quiet"
                 type="button"
+                disabled={settingsBusy}
                 onClick={() => void testConnection()}
               >
-                Test connection
+                {operation === "testing" ? "Testing…" : "Test connection"}
               </button>
             </div>
             {message ? <small role="status">{message}</small> : null}

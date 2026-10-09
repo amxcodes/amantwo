@@ -14,6 +14,46 @@
   -webkit-font-smoothing: antialiased;
 }
 
+.writer-error-state {
+  --writer-ink: #17243a;
+  --writer-muted: #6c7c8f;
+  --writer-canvas: #e9edef;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 24px max(24px, calc((100vw - 620px) / 2));
+  color: var(--writer-ink);
+  background: var(--writer-canvas);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.writer-error-state p {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.writer-error-state > span {
+  color: var(--writer-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.writer-retry-button {
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: #274764;
+  cursor: pointer;
+  font: 600 13px Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
 .writer-empty-state {
   display: grid;
   min-height: 100dvh;
@@ -5091,4 +5131,382 @@ html[data-theme="dark"] .writer-llm-errors { background: #33211f; color: #e5aa98
 @media (prefers-reduced-motion: reduce) {
   .writer-ai-chat-control,
   .writer-ai-import-note button { transition: none; }
+}
+
+/* Dark appearance pass. Keep semantic editor accents, but route structural
+   surfaces, text, and form controls through the app theme tokens. The root
+   scope gives these rules enough weight to beat older component-level colors. */
+html[data-theme="dark"] .writing-studio,
+html[data-theme="dark"] .writer-loading,
+html[data-theme="dark"] .writer-empty-state,
+html[data-theme="dark"] .writer-error-state {
+  --writer-ink: var(--color-text);
+  --writer-muted: var(--color-text-muted);
+  --writer-canvas: var(--color-bg);
+  --writer-paper: var(--color-surface);
+  --writer-panel: var(--color-surface-raised);
+  --writer-blue: #9bb8d3;
+  --writer-yellow: #e8ce82;
+  color: var(--writer-ink);
+  color-scheme: dark;
+  background: var(--writer-canvas);
+}
+
+html[data-theme="dark"] .writer-empty-state > div,
+html[data-theme="dark"] .writer-error-state > div {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 30%);
+}
+
+html[data-theme="dark"] .writer-retry-button {
+  color: var(--color-bg);
+  background: #9bb8d3;
+}
+
+html[data-theme="dark"] .writing-studio input:is([type="checkbox"], [type="radio"]) {
+  accent-color: #9bb8d3;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-toolbar,
+  .writer-index,
+  .writer-sidebar,
+  .writer-canvas-shell,
+  .writer-paper,
+  .writer-inspector,
+  .writer-inspector-mobile-head,
+  .writer-settings-panel,
+  .writer-index-panel,
+  .writer-ai-panel,
+  .writer-ai-chat-panel,
+  .writer-ai-chat-compose,
+  .writer-ai-result,
+  .writer-ai-answer,
+  .writer-ai-sources,
+  .writer-error-state
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-canvas,
+  .writer-canvas-page,
+  .writer-canvas-header,
+  .writer-block,
+  .writer-block-editor,
+  .writer-block-placeholder,
+  .writer-inspector-card,
+  .writer-settings-card,
+  .writer-index-popover,
+  .writer-ai-chat-feed,
+  .writer-ai-thinking,
+  .writer-ai-source,
+  .writer-ai-composer,
+  .writer-ai-brief,
+  .writer-ai-selection,
+  .writer-ai-context-strip,
+  .writer-ai-message-assistant,
+  .writer-media-block,
+  .writer-embed-card,
+  .writer-smart-card,
+  .writer-inline-composer,
+  .writer-insert-menu
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-toolbar button,
+  .writer-toolbar a,
+  .writer-inspector-tabs,
+  .writer-settings-tabs,
+  .writer-index-trigger,
+  .writer-tool-button,
+  .writer-back-button,
+  .writer-block-tools,
+  .writer-ai-tabs,
+  .writer-appearance-grid button,
+  .writer-insert-options button,
+  .writer-inline-composer-actions button,
+  .writer-ai-chat-control,
+  .writer-ai-import-note button
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-toolbar button:hover,
+  .writer-toolbar a:hover,
+  .writer-tool-button:hover,
+  .writer-inspector-tabs button:hover,
+  .writer-settings-tabs button:hover,
+  .writer-index-trigger:hover,
+  .writer-block-tools button:hover,
+  .writer-ai-chat-control:hover,
+  .writer-ai-import-note button:hover
+) {
+  background-color: color-mix(in srgb, var(--color-surface-muted) 78%, var(--color-text) 10%);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-tool-primary,
+  .writer-button-primary,
+  .writer-ai-run,
+  .writer-ai-apply-row button:first-child,
+  .writer-inline-composer-primary,
+  .writer-ai-chat-compose-footer button
+) {
+  color: var(--color-bg);
+  background-color: #9bb8d3;
+  border-color: #9bb8d3;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-field :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+  .writer-inspector :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+  .writer-ai-field textarea,
+  .writer-ai-chat-compose textarea,
+  .writer-block :is(input:not([type="checkbox"]), textarea),
+  .writer-inline-input,
+  .writer-embed-card :is(input, select),
+  .writer-embed-time input,
+  .writer-code :is(input, textarea),
+  .writer-llm-handoff textarea
+) {
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
+  caret-color: var(--writer-yellow);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  input::placeholder,
+  textarea::placeholder,
+  [contenteditable="true"]:empty::before
+) {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [contenteditable="true"]:focus-visible
+) {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 30%, transparent);
+  outline: 0;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-toolbar span,
+  .writer-index p,
+  .writer-index small,
+  .writer-inspector p,
+  .writer-inspector small,
+  .writer-settings-panel p,
+  .writer-ai-panel p,
+  .writer-ai-chat-panel p,
+  .writer-ai-chat-panel small,
+  .writer-ai-source,
+  .writer-ai-result-meta,
+  .writer-ai-progress,
+  .writer-ai-context-strip span,
+  .writer-ai-brief > span:last-child,
+  .writer-ai-chat-subtitle,
+  .writer-ai-chat-state,
+  .writer-ai-chat-context span,
+  .writer-ai-chat-message > span,
+  .writer-ai-chat-welcome p,
+  .writer-ai-chat-thinking summary,
+  .writer-ai-chat-thinking summary small,
+  .writer-ai-agent-proposal > span,
+  .writer-ai-agent-proposal > small,
+  .writer-ai-document-preview span,
+  .writer-ai-document-preview small,
+  .writer-ai-research-note,
+  .writer-attachment-shelf,
+  .writer-attachment-chip i,
+  .writer-inspector-note,
+  .writer-empty-state span,
+  .writer-loading,
+  .writer-error-state > span,
+  .writer-llm-message,
+  .writer-llm-step-heading p,
+  .writer-llm-handoff-header > div > span,
+  .writer-llm-brief-meta,
+  .writer-llm-import-actions > span,
+  .writer-llm-preview-card p,
+  .writer-llm-preview-card small
+) {
+  color: var(--color-text-muted);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-ai-chat-message p,
+  .writer-ai-chat-message-you p,
+  .writer-ai-message p,
+  .writer-ai-result p,
+  .writer-ai-chat-header h2,
+  .writer-ai-chat-context strong,
+  .writer-ai-chat-welcome strong,
+  .writer-ai-agent-proposal strong,
+  .writer-ai-document-preview strong,
+  .writer-ai-selection strong,
+  .writer-ai-brief strong,
+  .writer-title,
+  .writer-deck,
+  .writer-paragraph,
+  .writer-heading,
+  .writer-quote-copy,
+  .writer-callout-copy
+) {
+  color: var(--color-text);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-ai-message-you,
+  .writer-ai-chat-message-you,
+  .writer-ai-import-note,
+  .writer-quote,
+  .writer-callout,
+  .writer-inline-token
+) {
+  color: var(--color-text);
+  background-color: #17283a;
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writing-studio .writer-inline-token span {
+  color: var(--color-text-muted);
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-highlight-blue,
+  .writer-highlight-green,
+  .writer-highlight-orange,
+  .writer-highlight-yellow
+) {
+  color: #17243a;
+}
+
+html[data-theme="dark"] .writing-studio :is(
+  .writer-ai-error,
+  .writer-ai-chat-state[data-state="error"],
+  .writer-llm-errors
+) {
+  color: #f0a497;
+}
+
+html[data-theme="dark"] .writing-studio .writer-ai-status,
+html[data-theme="dark"] .writing-studio .writer-ai-chat-thinking li[data-status="complete"] {
+  color: #a8d3ba;
+  background-color: #18352b;
+}
+
+html[data-theme="dark"] .writing-studio .writer-inspector-backdrop,
+html[data-theme="dark"] .writing-studio .writer-insert-backdrop {
+  background: var(--color-overlay);
+}
+
+html[data-theme="dark"] .writing-studio .writer-ai-chat-compose {
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writer-llm-handoff {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writer-llm-step,
+html[data-theme="dark"] .writer-llm-handoff .writer-button-secondary {
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .writer-llm-handoff :is(.writer-llm-step-heading strong, .writer-llm-preview-card strong) {
+  color: var(--color-text);
+}
+
+html[data-theme="dark"] .writer-llm-handoff .writer-llm-preview-card {
+  background: #10242d;
+}
+
+html[data-theme="dark"] .writer-llm-handoff .writer-llm-issues {
+  color: #e4c98e;
+  background: #302817;
+}
+
+html[data-theme="dark"] .writer-llm-handoff .writer-llm-errors {
+  color: #f0a497;
+  background: #33211f;
+}
+
+html[data-theme="dark"] .writing-studio :is(.writer-canvas-wrap, .writer-inspector, .writer-index, .writer-ai-chat-feed) {
+  scrollbar-color: #526273 transparent;
+}
+
+@media (max-width: 720px) {
+  .writer-inspector {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .writer-ai-chat-panel,
+  .writer-ai-panel,
+  .writer-inspector > section {
+    min-width: 0;
+  }
+
+  .writer-ai-chat-compose textarea,
+  .writer-ai-field textarea,
+  .writer-inspector input:not([type="checkbox"]),
+  .writer-inspector select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .writer-block-tools > button,
+  .writer-inspector-tabs button,
+  .writer-ai-tabs button,
+  .writer-toolbar-actions .writer-tool-button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 540px) {
+  .writer-toolbar-start > div {
+    display: grid;
+    min-width: 0;
+    max-width: calc(100vw - 250px);
+  }
+
+  .writer-toolbar-start strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .writer-toolbar-start span {
+    display: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .writer-toolbar-start > div {
+    max-width: calc(100vw - 230px);
+  }
 }

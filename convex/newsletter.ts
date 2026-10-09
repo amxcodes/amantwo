@@ -99,6 +99,19 @@ async function requireEditorQuery(ctx: QueryCtx) {
   return profile;
 }
 
+async function countSubscribersByStatus(
+  ctx: QueryCtx,
+  status: "subscribed" | "unsubscribed",
+) {
+  let count = 0;
+  for await (const _subscriber of ctx.db
+    .query("newsletterSubscribers")
+    .withIndex("by_status_createdAt", (q) => q.eq("status", status))) {
+    count += 1;
+  }
+  return count;
+}
+
 /** Public, non-sensitive newsletter presentation settings. */
 export const getPublicSettings = query({
   args: {},
@@ -178,10 +191,11 @@ export const adminDashboard = query({
       .query("siteSettings")
       .withIndex("by_key", (q) => q.eq("key", settingsKey))
       .unique();
-    const items = args.status
+    const subscriberStatus = args.status;
+    const items = subscriberStatus
       ? await ctx.db
         .query("newsletterSubscribers")
-        .withIndex("by_status_createdAt", (q) => q.eq("status", args.status!))
+        .withIndex("by_status_createdAt", (q) => q.eq("status", subscriberStatus))
         .order("desc")
         .take(limit)
       : await ctx.db
@@ -189,14 +203,10 @@ export const adminDashboard = query({
         .withIndex("by_createdAt")
         .order("desc")
         .take(limit);
-    const subscribed = await ctx.db
-      .query("newsletterSubscribers")
-      .withIndex("by_status_createdAt", (q) => q.eq("status", "subscribed"))
-      .collect();
-    const unsubscribed = await ctx.db
-      .query("newsletterSubscribers")
-      .withIndex("by_status_createdAt", (q) => q.eq("status", "unsubscribed"))
-      .collect();
+    const [subscribed, unsubscribed] = await Promise.all([
+      countSubscribersByStatus(ctx, "subscribed"),
+      countSubscribersByStatus(ctx, "unsubscribed"),
+    ]);
     return {
       settings: asSettings(settingsRow?.value),
       items: items.map(({ _id, _creationTime, email, status, source, createdAt, updatedAt, subscribedAt, unsubscribedAt }) => ({
@@ -211,9 +221,9 @@ export const adminDashboard = query({
         unsubscribedAt,
       })),
       counts: {
-        subscribed: subscribed.length,
-        unsubscribed: unsubscribed.length,
-        total: subscribed.length + unsubscribed.length,
+        subscribed,
+        unsubscribed,
+        total: subscribed + unsubscribed,
       },
     };
   },

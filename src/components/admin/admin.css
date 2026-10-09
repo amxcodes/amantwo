@@ -1889,6 +1889,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(58rem, 100%);
+  height: min(48rem, calc(100dvh - 2rem));
   max-height: min(48rem, calc(100svh - 2rem));
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 68%);
@@ -2347,4 +2348,236 @@ html[data-theme="dark"] .ai-provider-card:hover,
 html[data-theme="dark"] .ai-provider-card.is-selected {
   background: var(--color-surface-muted);
   border-color: var(--color-focus);
+}
+
+/* Use the theme tokens at component specificity. The earlier :where() rules
+   intentionally have no selector weight and cannot beat some legacy manager
+   component rules that still carry explicit light-mode colors. */
+html[data-theme="dark"] .studio-shell {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .studio-shell input:is([type="checkbox"], [type="radio"]) {
+  accent-color: #9bb8d3;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-toolbar,
+  .studio-control-panel,
+  .studio-collection-workspace,
+  .manager-modal,
+  .manager-confirm,
+  .ai-settings-panel,
+  .newsletter-admin-panel,
+  .timeline-composer,
+  .timeline-details,
+  .site-manager-panel,
+  .visual-editor-inspector
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-collection-nav,
+  .manager-modal-scroll,
+  .manager-segment,
+  .manager-media,
+  .timeline-live-preview,
+  .timeline-canvas,
+  .timeline-preview,
+  .ai-settings-empty,
+  .ai-settings-note,
+  .newsletter-admin-section,
+  .newsletter-admin-row,
+  .visual-editor-layers,
+  .writing-composer > div
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-control-header,
+  .studio-control-footer,
+  .manager-modal > header,
+  .manager-modal > footer,
+  .newsletter-admin-header,
+  .newsletter-admin-footer
+) {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 0 var(--color-border) inset;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-button,
+  .studio-icon-button,
+  .manager-modal > header > button,
+  .manager-modal > footer button,
+  .manager-confirm footer button,
+  .site-manager-actions button,
+  .site-manager-panel button,
+  .visual-actions button,
+  .visual-composer-button,
+  .writing-composer footer button
+) {
+  color: var(--color-text);
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-button-primary,
+  .site-manager-actions .site-manager-add,
+  .visual-actions button:first-child,
+  .writing-composer footer button
+) {
+  color: var(--color-bg);
+  background-color: #9bb8d3;
+  border-color: #9bb8d3;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .manager-field :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+  .manager-segment :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+  .manager-media > textarea,
+  .ai-provider-form :is(input:not([type="checkbox"]), select),
+  .newsletter-admin-panel :is(input:not([type="checkbox"]), textarea, select),
+  .site-manager-panel textarea,
+  .visual-editor-inspector textarea,
+  .writing-composer :is(input, textarea)
+) {
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
+  caret-color: var(--color-focus);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .manager-field input::placeholder,
+  .manager-field textarea::placeholder,
+  .manager-segment input::placeholder,
+  .manager-segment textarea::placeholder,
+  .ai-provider-form input::placeholder,
+  .newsletter-admin-panel input::placeholder,
+  .newsletter-admin-panel textarea::placeholder
+) {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .manager-field :is(input, textarea, select):focus-visible,
+  .manager-segment :is(input, textarea, select):focus-visible,
+  .manager-media > textarea:focus-visible,
+  .ai-provider-form :is(input, select):focus-visible,
+  .newsletter-admin-panel :is(input, textarea, select):focus-visible
+) {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 28%, transparent);
+  outline: 0;
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .manager-field,
+  .manager-media legend,
+  .studio-control-header p,
+  .studio-collection-heading p,
+  .newsletter-admin-header p,
+  .newsletter-admin-section-heading p,
+  .newsletter-admin-toggle,
+  .newsletter-admin-counts,
+  .ai-settings-label,
+  .ai-provider-form label
+) {
+  color: var(--color-text-muted);
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .studio-control-header h2,
+  .studio-collection-heading h3,
+  .newsletter-admin-header h2,
+  .newsletter-admin-section-heading h3,
+  .newsletter-admin-row strong,
+  .ai-provider-card strong
+) {
+  color: var(--color-text);
+}
+
+html[data-theme="dark"] .studio-shell :is(
+  .newsletter-admin-header span,
+  .newsletter-admin-row span,
+  .newsletter-admin-empty,
+  .newsletter-admin-footer > span,
+  .ai-provider-form small,
+  .ai-settings-note p,
+  .ai-provider-card span,
+  .ai-provider-card small,
+  .manager-inline-help
+) {
+  color: var(--color-text-muted);
+}
+
+html[data-theme="dark"] .studio-shell .ai-field-help,
+html[data-theme="dark"] .studio-shell .ai-model-source {
+  color: var(--color-text-muted) !important;
+}
+
+html[data-theme="dark"] .studio-shell .ai-settings-note-mark {
+  color: #a8d3ba;
+  background: #18352b;
+}
+
+html[data-theme="dark"] .studio-shell .newsletter-admin-counts span {
+  background: var(--color-surface-muted);
+}
+
+html[data-theme="dark"] .studio-shell .newsletter-admin-filters button {
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="dark"] .studio-shell .newsletter-admin-filters button[aria-selected="true"] {
+  color: var(--color-text);
+  background: #20384e;
+  border-color: var(--color-focus);
+}
+
+html[data-theme="dark"] .studio-shell .newsletter-admin-row small[data-status="unsubscribed"],
+html[data-theme="dark"] .studio-shell .manager-modal-delete,
+html[data-theme="dark"] .studio-shell .manager-writing-delete {
+  color: #f0a497;
+}
+
+html[data-theme="dark"] .studio-shell :is(.studio-control-panel, .manager-modal, .newsletter-admin-panel) {
+  scrollbar-color: #526273 transparent;
+}
+
+.ai-settings-body,
+.newsletter-admin-scroll,
+.studio-shell .manager-modal-scroll {
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 760px) {
+  .newsletter-admin-panel {
+    height: min(90dvh, 48rem);
+    max-height: 94dvh;
+  }
+
+  .newsletter-admin-scroll {
+    padding-bottom: 1.2rem;
+  }
+
+  .newsletter-admin-footer {
+    padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
+  }
 }
