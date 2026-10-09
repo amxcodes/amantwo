@@ -139,6 +139,7 @@ export default function StudioAiPanel({
   onImport,
   canUndoImport,
   onUndoImport,
+  onCloseMobile,
 }: {
   articleId: Id<"articles">;
   title: string;
@@ -149,6 +150,7 @@ export default function StudioAiPanel({
   onImport: (document: ArticleDocument) => void;
   canUndoImport: boolean;
   onUndoImport: () => void;
+  onCloseMobile: () => void;
 }) {
   const createJob = useMutation(api.ai.createJob);
   const applyChangeSet = useMutation(api.articles.applyAiChangeSet);
@@ -164,6 +166,7 @@ export default function StudioAiPanel({
   const [handoffOpen, setHandoffOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const shouldStickToBottom = useRef(true);
   const job = useQuery(api.ai.getJob, jobId ? { jobId } : "skip");
   const events = useQuery(api.ai.getJobEvents, jobId ? { jobId } : "skip") ?? [];
@@ -208,6 +211,61 @@ export default function StudioAiPanel({
     if (!feed || !shouldStickToBottom.current) return;
     feed.scrollTo({ top: feed.scrollHeight, behavior: conversation.length > 1 ? "smooth" : "auto" });
   }, [conversation.length, job?.status, latestMessage]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const returnFocus = window.document.activeElement instanceof HTMLElement
+      ? window.document.activeElement
+      : null;
+    const previousOverflow = window.document.body.style.overflow;
+    window.document.body.style.overflow = "hidden";
+
+    const getFocusable = () => Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => element.getClientRects().length > 0);
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      getFocusable()[0]?.focus({ preventScroll: true });
+    });
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (window.document.querySelector(".writer-llm-handoff[open]")) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setExpanded(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (!focusable.length) {
+        event.preventDefault();
+        panel.focus({ preventScroll: true });
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (window.document.activeElement === first || !panel.contains(window.document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (window.document.activeElement === last || !panel.contains(window.document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.document.addEventListener("keydown", trapFocus);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.document.removeEventListener("keydown", trapFocus);
+      window.document.body.style.overflow = previousOverflow;
+      if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+    };
+  }, [expanded]);
 
   const run = async () => {
     const prompt = instruction.trim();
@@ -278,18 +336,35 @@ export default function StudioAiPanel({
   const hasReadyProposal = Boolean(result?.changeSetId && result.document && result.proposal?.state === "ready" && changeSet?.state === "ready");
 
   return (
-    <section className={`writer-ai-panel writer-ai-chat-panel${expanded ? " is-expanded" : ""}`} aria-label="AI assistant">
+    <>
+    {expanded ? (
+      <div
+        className="writer-ai-chat-backdrop"
+        aria-hidden="true"
+        onClick={() => setExpanded(false)}
+      />
+    ) : null}
+    <section
+      ref={panelRef}
+      id="writer-ai-chat-surface"
+      className={`writer-ai-panel writer-ai-chat-panel${expanded ? " is-expanded" : ""}`}
+      role={expanded ? "dialog" : undefined}
+      aria-modal={expanded ? true : undefined}
+      aria-labelledby="writer-ai-chat-title"
+      tabIndex={expanded ? -1 : undefined}
+    >
       <header className="writer-ai-chat-header">
         <span className="writer-ai-chat-avatar" aria-hidden="true">✦</span>
         <div>
           <p>AMAN STUDIO</p>
-          <h2>How can I help?</h2>
-          <span className="writer-ai-chat-subtitle">Ask naturally. I know the portfolio context, the canvas schema, and how to research public sources.</span>
+          <h2 id="writer-ai-chat-title">Writing assistant</h2>
+          <span className="writer-ai-chat-subtitle">Research, refine, or shape this draft.</span>
         </div>
         <div className="writer-ai-chat-controls">
           <span className="writer-ai-chat-state" data-state={busy ? "working" : failed ? "error" : "ready"}>{busy ? "Thinking" : failed ? "Needs attention" : "Private"}</span>
           <button type="button" className="writer-ai-chat-control" onClick={() => setHandoffOpen(true)}>Bring draft</button>
-          <button type="button" className="writer-ai-chat-control" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{expanded ? "Compact" : "Expand"}</button>
+          <button type="button" className="writer-ai-chat-control writer-ai-chat-expand" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} aria-controls="writer-ai-chat-surface">{expanded ? "Compact" : "Expand"}</button>
+          <button type="button" className="writer-ai-chat-control writer-ai-chat-mobile-back" onClick={onCloseMobile} aria-label="Return to the writing editor"><span aria-hidden="true">←</span> Editor</button>
         </div>
       </header>
 
@@ -308,11 +383,14 @@ export default function StudioAiPanel({
           <div className="writer-ai-chat-welcome">
             <span className="writer-ai-chat-welcome-mark" aria-hidden="true">✦</span>
             <div>
-              <strong>Hi, I’m ready when you are.</strong>
-              <p>Ask for a complete blog, a rewrite, research, sources, or a link/media placement. Nothing reaches the canvas until you approve it.</p>
+              <strong>Your draft stays yours.</strong>
+              <p>Ask for a rewrite, research, or a full draft. Review every change before it reaches the canvas.</p>
             </div>
           </div>
         )}
+
+        {localError ? <p className="writer-ai-error" role="alert">{localError}</p> : null}
+        {job?.status === "failed" ? <p className="writer-ai-error" role="alert">{job.error}</p> : null}
 
         {jobId ? (
           <details className="writer-ai-chat-thinking" open={busy}>
@@ -380,21 +458,20 @@ export default function StudioAiPanel({
         <textarea
           value={instruction}
           onChange={(event) => setInstruction(event.target.value)}
-          placeholder="Ask for a complete draft, research, or a canvas change…"
-          rows={3}
+          placeholder="Message Aman Studio…"
+          rows={2}
           maxLength={MAX_ASSISTANT_MESSAGE_CHARS}
           aria-label="Message Aman Studio"
         />
         <div className="writer-ai-chat-compose-footer">
-          <span>{isResearchRequest ? "Public sources will be discovered and cited automatically." : "Drafts stay in review until you approve them."} {instruction.length.toLocaleString()}/{MAX_ASSISTANT_MESSAGE_CHARS.toLocaleString()}</span>
+          <span>{isResearchRequest ? "Public sources will be cited" : "Review before applying"} · {instruction.length.toLocaleString()}/{MAX_ASSISTANT_MESSAGE_CHARS.toLocaleString()}</span>
           <button type="submit" aria-label="Send message" disabled={busy || !instruction.trim()}>
             <span aria-hidden="true">↑</span>
           </button>
         </div>
       </form>
-      {localError ? <p className="writer-ai-error">{localError}</p> : null}
-      {job?.status === "failed" ? <p className="writer-ai-error">{job.error}</p> : null}
       <LlmDraftHandoff document={document} open={handoffOpen} onClose={() => setHandoffOpen(false)} onApply={onImport} />
     </section>
+    </>
   );
 }

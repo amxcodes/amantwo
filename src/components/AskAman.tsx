@@ -111,6 +111,7 @@ function AskAmanInner() {
   const [sources, setSources] = useState<Array<{ title: string; url: string }>>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryAvailable, setRetryAvailable] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const action = useAction(api.assistantActions.answerPublic);
   const results = useQuery(
@@ -272,6 +273,7 @@ function AskAmanInner() {
     setAnswer(null);
     setSources([]);
     setError(null);
+    setRetryAvailable(false);
     setExpanded(true);
   };
 
@@ -284,6 +286,37 @@ function AskAmanInner() {
     setExpanded(false);
   };
 
+  const askPublic = async (query: string) => {
+    setBusy(true);
+    setError(null);
+    setRetryAvailable(false);
+    setAnswer(null);
+    setSources([]);
+    try {
+      const response = await action({
+        query,
+        mode: "ask",
+        visitorToken: visitorToken(),
+      });
+      if (response.status === "temporarily_unavailable") {
+        setError(response.answer);
+        setRetryAvailable(true);
+        return;
+      }
+      setAnswer(response.answer);
+      setSources((response.sources ?? []).map((source) => ({ title: source.title, url: source.url })));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Ask Aman is unavailable right now.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const retryPublicAnswer = () => {
+    if (busy || !submittedQuery) return;
+    void askPublic(submittedQuery);
+  };
+
   const submit = async (event: SubmitLikeEvent) => {
     event.preventDefault();
     const query = input.trim();
@@ -294,6 +327,7 @@ function AskAmanInner() {
     setAnswer(null);
     setSources([]);
     setError(null);
+    setRetryAvailable(false);
 
     setSubmittedQuery(query);
     setResultRevealQuery("");
@@ -310,24 +344,7 @@ function AskAmanInner() {
     }, 720);
 
     if (detectedMode === "writings") return;
-
-    setBusy(true);
-    setError(null);
-    setAnswer(null);
-    setSources([]);
-    try {
-      const response = await action({
-        query,
-        mode: "ask",
-        visitorToken: visitorToken(),
-      });
-      setAnswer(response.answer);
-      setSources((response.sources ?? []).map((source) => ({ title: source.title, url: source.url })));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Ask Aman is unavailable right now.");
-    } finally {
-      setBusy(false);
-    }
+    await askPublic(query);
   };
 
   const resultList = (surface: "desktop" | "mobile") => {
@@ -381,7 +398,21 @@ function AskAmanInner() {
             ) : null}
           </div>
         ) : null}
-        {error ? <p className="ask-aman-error" role="alert">{error}</p> : null}
+        {error ? (
+          <div className="ask-aman-error" role="alert">
+            <span>{error}</span>
+            {retryAvailable && !busy ? (
+              <button
+                className="ask-aman-retry"
+                type="button"
+                onClick={retryPublicAnswer}
+                data-vaul-no-drag
+              >
+                Try again
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -465,6 +496,7 @@ function AskAmanInner() {
             setInput(value);
             if (isNarrowViewport()) {
               setExpanded(true);
+              setRetryAvailable(false);
             } else {
               // Editing starts a fresh intent; keep the previous result
               // surface from flashing while the next query is composed.
@@ -474,6 +506,7 @@ function AskAmanInner() {
               setAnswer(null);
               setSources([]);
               setError(null);
+              setRetryAvailable(false);
             }
           }}
           placeholder={searching ? "Thinking…" : "Ask Aman"}

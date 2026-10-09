@@ -1215,6 +1215,7 @@ function Writer({
     blockIndex: number;
   } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(false);
   const [canvasMode, setCanvasMode] = useState<"fit" | "paper">("fit");
   const [inspectorTab, setInspectorTab] = useState<
     "publish" | "tools" | "media" | "seo" | "history" | "ai"
@@ -1228,19 +1229,81 @@ function Writer({
   } | null>(null);
   const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
   const [llmImportUndo, setLlmImportUndo] = useState<ArticleDocument | null>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const inspectorRef = useRef<HTMLElement>(null);
   const creating = useRef(false);
   const hydratedId = useRef<string | null>(null);
   const latestDocument = useRef<ArticleDocument | null>(null);
   const changeVersion = useRef(0);
+  const mobileAiFocus = mobileViewport && settingsOpen && inspectorTab === "ai";
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 720px)");
+    const syncViewport = () => setMobileViewport(media.matches);
+    syncViewport();
+    media.addEventListener("change", syncViewport);
+    return () => media.removeEventListener("change", syncViewport);
+  }, []);
 
   useEffect(() => {
     if (!settingsOpen) return;
     const closeOnEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") setSettingsOpen(false);
+      if (event.key === "Escape" && !event.defaultPrevented && !window.document.querySelector(".writer-llm-handoff[open]")) {
+        setSettingsOpen(false);
+        window.requestAnimationFrame(() => settingsButtonRef.current?.focus({ preventScroll: true }));
+      }
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!mobileAiFocus) return;
+    const inspector = inspectorRef.current;
+    if (!inspector) return;
+    const previousOverflow = window.document.body.style.overflow;
+    window.document.body.style.overflow = "hidden";
+    const getFocusable = () => Array.from(
+      inspector.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => element.getClientRects().length > 0);
+    const focusFrame = window.requestAnimationFrame(() => {
+      inspector.querySelector<HTMLButtonElement>(".writer-ai-chat-mobile-back")?.focus({ preventScroll: true });
+    });
+    const containFocus = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || inspector.querySelector(".writer-ai-chat-panel.is-expanded")) return;
+      if (window.document.querySelector(".writer-llm-handoff[open]")) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setSettingsOpen(false);
+        window.requestAnimationFrame(() => settingsButtonRef.current?.focus({ preventScroll: true }));
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (!focusable.length) {
+        event.preventDefault();
+        inspector.focus({ preventScroll: true });
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (window.document.activeElement === first || !inspector.contains(window.document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (window.document.activeElement === last || !inspector.contains(window.document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.document.addEventListener("keydown", containFocus);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.document.removeEventListener("keydown", containFocus);
+      window.document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileAiFocus]);
 
   useEffect(() => {
     if (!createOnLoad || articleId || creating.current || creationError) return;
@@ -1686,6 +1749,7 @@ function Writer({
           </button>
           <button
             type="button"
+            ref={settingsButtonRef}
             className="writer-tool-button writer-settings-button"
             onClick={() => setSettingsOpen((open) => !open)}
             aria-controls="writer-inspector"
@@ -1870,8 +1934,11 @@ function Writer({
         ) : null}
         <aside
           id="writer-inspector"
-          className="writer-inspector"
-          aria-label="Post settings"
+          ref={inspectorRef}
+          className={`writer-inspector${mobileAiFocus ? " writer-inspector-ai-focus" : ""}`}
+          role={mobileAiFocus ? "dialog" : undefined}
+          aria-modal={mobileAiFocus ? true : undefined}
+          aria-label={mobileAiFocus ? "Writing assistant" : "Post settings"}
         >
           <div className="writer-inspector-mobile-head">
             <span
@@ -2066,6 +2133,10 @@ function Writer({
               onImport={applyLlmImport}
               canUndoImport={Boolean(llmImportUndo)}
               onUndoImport={undoLlmImport}
+              onCloseMobile={() => {
+                setSettingsOpen(false);
+                window.requestAnimationFrame(() => settingsButtonRef.current?.focus({ preventScroll: true }));
+              }}
             />
           ) : null}
           {inspectorTab === "media" ? (

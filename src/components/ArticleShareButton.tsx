@@ -4,7 +4,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { createPortal } from "react-dom";
+import { Drawer } from "vaul";
 
 type Props = {
   slug: string;
@@ -69,8 +69,11 @@ export default function ArticleShareButton({
   const [storyImageUrl, setStoryImageUrl] = useState<string | null>(null);
   const [storyPreparing, setStoryPreparing] = useState(false);
   const [storyLinkCopied, setStoryLinkCopied] = useState(false);
+  const [storyNested, setStoryNested] = useState(false);
   const longPressTimer = useRef<number | undefined>(undefined);
   const longPressTriggered = useRef(false);
+  const storyNestedRef = useRef(false);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
   const storyObjectUrl = useRef<string | null>(null);
 
   useEffect(
@@ -122,6 +125,7 @@ export default function ArticleShareButton({
 
   const openStoryFlow = () => {
     const url = shareUrl(slug);
+    setStoryNested(storyNestedRef.current);
     setStoryLinkCopied(false);
     void copyText(url)
       .then(() => {
@@ -192,14 +196,20 @@ export default function ArticleShareButton({
     }
   };
 
+  const StoryDrawerRoot = storyNested ? Drawer.NestedRoot : Drawer.Root;
+
   return (
     <>
       <button
+        ref={shareButtonRef}
         className={`article-share-button ${className}`.trim()}
         type="button"
         data-vaul-no-drag
         onPointerDown={(event) => {
           event.stopPropagation();
+          storyNestedRef.current = Boolean(
+            event.currentTarget.closest(".blog-reader"),
+          );
           if (!isMobilePointer(event)) return;
           clearLongPress();
           longPressTriggered.current = false;
@@ -233,95 +243,99 @@ export default function ArticleShareButton({
       >
         <span>{copied ? "Copied" : "Share note"}</span>
       </button>
-      {storyOpen && typeof document !== "undefined"
-        ? createPortal(
-            <div
-              className="story-share-sheet"
-              role="presentation"
-              onPointerDown={() => setStoryOpen(false)}
-            >
-              <section
-                className="story-share-sheet-panel"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="story-share-title"
-                onPointerDown={(event) => event.stopPropagation()}
+      <StoryDrawerRoot
+        open={storyOpen}
+        direction="bottom"
+        dismissible
+        handleOnly={false}
+        closeThreshold={0.24}
+        scrollLockTimeout={120}
+        onOpenChange={setStoryOpen}
+      >
+        <Drawer.Portal>
+          <Drawer.Overlay className="story-share-overlay" />
+          <Drawer.Content
+            className="story-share-sheet-panel"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              window.requestAnimationFrame(() => {
+                if (shareButtonRef.current?.isConnected) {
+                  shareButtonRef.current.focus({ preventScroll: true });
+                }
+              });
+            }}
+          >
+            <Drawer.Handle
+              className="story-share-sheet-handle"
+              aria-hidden="true"
+            />
+            <header>
+              <div>
+                <p>STORY CARD</p>
+                <Drawer.Title>Share this note</Drawer.Title>
+              </div>
+            </header>
+            <div className="story-share-preview">
+              {storyImageUrl ? (
+                <img
+                  src={storyImageUrl}
+                  alt="Generated story card preview"
+                />
+              ) : (
+                <div
+                  className="story-share-preview-loading"
+                  aria-busy="true"
+                >
+                  {storyPreparing
+                    ? "Preparing your card…"
+                    : "Story card unavailable"}
+                </div>
+              )}
+            </div>
+            <Drawer.Description className="story-share-note">
+              {storyLinkCopied
+                ? "The note link is copied. Choose Instagram from the share sheet, or save the card and add the link sticker in Instagram."
+                : "Copy the link below, then choose Instagram from the share sheet or add the link sticker manually."}
+            </Drawer.Description>
+            <div className="story-share-actions">
+              <button
+                type="button"
+                className="story-share-primary"
+                data-vaul-no-drag
+                disabled={!storyImageUrl}
+                onClick={() => void shareStory()}
               >
-                <div className="story-share-sheet-handle" aria-hidden="true" />
-                <header>
-                  <div>
-                    <p>STORY CARD</p>
-                    <h2 id="story-share-title">Share this note</h2>
-                  </div>
-                  <button
-                    type="button"
-                    className="story-share-close"
-                    onClick={() => setStoryOpen(false)}
-                    aria-label="Close story sharing"
-                  >
-                    ×
-                  </button>
-                </header>
-                <div className="story-share-preview">
-                  {storyImageUrl ? (
-                    <img
-                      src={storyImageUrl}
-                      alt="Generated story card preview"
-                    />
-                  ) : (
-                    <div
-                      className="story-share-preview-loading"
-                      aria-busy="true"
-                    >
-                      {storyPreparing
-                        ? "Preparing your card…"
-                        : "Story card unavailable"}
-                    </div>
-                  )}
-                </div>
-                <p className="story-share-note">
-                  {storyLinkCopied
-                    ? "The note link is copied. Choose Instagram from the share sheet, or save the card and add the link sticker in Instagram."
-                    : "Copy the link below, then choose Instagram from the share sheet or add the link sticker manually."}
-                </p>
-                <div className="story-share-actions">
-                  <button
-                    type="button"
-                    className="story-share-primary"
-                    disabled={!storyImageUrl}
-                    onClick={() => void shareStory()}
-                  >
-                    Share story image
-                  </button>
-                  <button
-                    type="button"
-                    className="story-share-secondary"
-                    disabled={!storyImageUrl}
-                    onClick={downloadStory}
-                  >
-                    Save image
-                  </button>
-                  <button
-                    type="button"
-                    className="story-share-secondary"
-                    onClick={() =>
-                      void copyText(shareUrl(slug))
-                        .then(() => {
-                          setStoryLinkCopied(true);
-                          setCopied(true);
-                          window.setTimeout(() => setCopied(false), 1800);
-                        })
-                        .catch(() => setStoryLinkCopied(false))
-                    }
-                  >
-                    Copy link
-                  </button>
-                </div>
-              </section>
-            </div>,
-            document.body,
-          )
-        : null}
+                Share story image
+              </button>
+              <button
+                type="button"
+                className="story-share-secondary"
+                data-vaul-no-drag
+                disabled={!storyImageUrl}
+                onClick={downloadStory}
+              >
+                Save image
+              </button>
+              <button
+                type="button"
+                className="story-share-secondary"
+                data-vaul-no-drag
+                onClick={() =>
+                  void copyText(shareUrl(slug))
+                    .then(() => {
+                      setStoryLinkCopied(true);
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1800);
+                    })
+                    .catch(() => setStoryLinkCopied(false))
+                }
+              >
+                Copy link
+              </button>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </StoryDrawerRoot>
     </>
   );
 }

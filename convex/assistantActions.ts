@@ -8,7 +8,72 @@ declare const process: { env: Record<string, string | undefined> };
 
 type Source = { title: string; url: string; excerpt: string };
 type Provider = { model: string; apiKey: string };
-type PublicResult = { model: string; answer: string; resultSlugs: string[]; citations: unknown[] };
+type PublicResult = {
+  status: "ready" | "temporarily_unavailable";
+  model: string;
+  answer: string;
+  resultSlugs: string[];
+  citations: unknown[];
+};
+
+const GEMINI_RETRYABLE_STATUSES = new Set([408, 500, 502, 503, 504]);
+const GEMINI_MAX_RETRIES = 2;
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function retryDelay(retryIndex: number) {
+  return 500 * 2 ** retryIndex + Math.floor(Math.random() * 250);
+}
+
+async function requestGeminiWithRetry(
+  model: string,
+  apiKey: string,
+  prompt: string,
+): Promise<{ response: Response } | { networkError: string }> {
+  const generationConfig: Record<string, unknown> = {
+    responseMimeType: "application/json",
+  };
+  if (!model.startsWith("gemini-3")) generationConfig.temperature = 0.25;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  for (let retryIndex = 0; retryIndex <= GEMINI_MAX_RETRIES; retryIndex += 1) {
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig,
+        }),
+      });
+    } catch (error) {
+      if (retryIndex === GEMINI_MAX_RETRIES) {
+        return {
+          networkError:
+            error instanceof Error ? error.message : "Network request failed",
+        };
+      }
+      await wait(retryDelay(retryIndex));
+      continue;
+    }
+
+    if (
+      response.ok ||
+      !GEMINI_RETRYABLE_STATUSES.has(response.status) ||
+      retryIndex === GEMINI_MAX_RETRIES
+    ) {
+      return { response };
+    }
+
+    await response.body?.cancel().catch(() => undefined);
+    await wait(retryDelay(retryIndex));
+  }
+
+  return { networkError: "Network request failed" };
+}
 
 export const answerPublic = action({
   args: {
@@ -73,19 +138,40 @@ Public portfolio context: ${publicContext}
 
 External sources: ${sourceContext}`;
   const errors: string[] = [];
+  let hadTransientFailure = false;
   for (const provider of candidates) {
     const model = provider.model;
-    const generationConfig: Record<string, unknown> = { responseMimeType: "application/json" };
-    if (!model.startsWith("gemini-3")) generationConfig.temperature = 0.25;
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${provider.apiKey}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig }),
-    });
-    if (!response.ok) { errors.push(`${model} (${response.status})`); continue; }
-    const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const request = await requestGeminiWithRetry(model, provider.apiKey, prompt);
+    if ("networkError" in request) {
+      errors.push(`${model} (network unavailable)`);
+      hadTransientFailure = true;
+      continue;
+    }
+    const { response } = request;
+    if (!response.ok) {
+      errors.push(`${model} (${response.status})`);
+      hadTransientFailure ||= GEMINI_RETRYABLE_STATUSES.has(response.status);
+      continue;
+    }
+    let payload: { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    try {
+      payload = (await response.json()) as typeof payload;
+    } catch {
+      errors.push(`${model} (invalid response)`);
+      hadTransientFailure = true;
+      continue;
+    }
     const parsed = parsePublicAssistant(payload.candidates?.[0]?.content?.parts?.[0]?.text ?? "");
-    return { model, answer: parsed.answer, resultSlugs: parsed.resultSlugs, citations: parsed.citations };
+    return { status: "ready", model, answer: parsed.answer, resultSlugs: parsed.resultSlugs, citations: parsed.citations };
+  }
+  if (hadTransientFailure) {
+    return {
+      status: "temporarily_unavailable",
+      model: candidates[0]?.model ?? "",
+      answer: "Ask Aman is temporarily busy. Please try again shortly.",
+      resultSlugs: [],
+      citations: [],
+    };
   }
   throw new ConvexError(errors.length ? `Ask Aman could not reach Gemini (${errors.join(", ")}).` : "Gemini did not return a usable response.");
 }
