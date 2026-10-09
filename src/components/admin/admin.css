@@ -1373,13 +1373,20 @@
 }
 
 .ai-settings-panel {
-  width: min(760px, calc(100vw - 32px));
+  width: min(920px, calc(100vw - 48px));
+  height: min(760px, calc(100dvh - 48px));
+  max-height: calc(100dvh - 48px);
 }
 .ai-settings-body {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 26px;
+  min-height: 0;
   padding: 26px 30px 34px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  align-items: start;
 }
 .ai-settings-label {
   margin: 0 0 12px;
@@ -1393,6 +1400,9 @@
   display: grid;
   align-content: start;
   gap: 12px;
+}
+.ai-provider-form {
+  min-width: 0;
 }
 .ai-provider-list article,
 .ai-provider-card,
@@ -1533,6 +1543,17 @@
   .ai-settings-body {
     grid-template-columns: 1fr;
     padding-inline: 20px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .ai-settings-panel {
+    width: calc(100vw - 32px);
+  }
+
+  .ai-settings-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
 }
 

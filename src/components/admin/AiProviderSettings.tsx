@@ -1,5 +1,5 @@
 import { useAction, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -35,6 +35,9 @@ export default function AiProviderSettings({
 }: {
   onClose: () => void;
 }) {
+  const panelRef = useRef<HTMLElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   const providers = useQuery(api.ai.providerCatalog) ?? [];
   const saveProvider = useAction(api.aiActions.saveProvider);
   const testProvider = useAction(api.aiActions.testProvider);
@@ -43,6 +46,57 @@ export default function AiProviderSettings({
   const [selectedProviderId, setSelectedProviderId] =
     useState<Id<"aiProviders"> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    const previousActiveElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousRootOverflow = document.documentElement.style.overflow;
+    const panel = panelRef.current;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    panel?.querySelector<HTMLElement>(".ai-provider-form input:not([type=checkbox]), .ai-provider-form select")
+      ?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      ));
+      if (!focusable.length) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || !panel.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousRootOverflow;
+      previousActiveElement?.focus({ preventScroll: true });
+    };
+  }, []);
   const update = <Key extends keyof FormState>(
     key: Key,
     value: FormState[Key],
@@ -137,12 +191,16 @@ export default function AiProviderSettings({
         type="button"
         onClick={onClose}
         aria-label="Close AI settings"
+        aria-hidden="true"
+        tabIndex={-1}
       />
       <section
+        ref={panelRef}
         className="studio-control-panel ai-settings-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-settings-title"
+        tabIndex={-1}
       >
         <header className="studio-control-header">
           <div>
