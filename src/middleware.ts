@@ -34,6 +34,20 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     /(?:^|,)\s*text\/markdown(?:\s*;|,|$)/i.test(accept) ||
     markdownBotPattern.test(userAgent);
 
+  const legacyPostSlug =
+    context.url.pathname === "/"
+      ? context.url.searchParams.get("post")?.trim()
+      : undefined;
+  if (legacyPostSlug) {
+    return Response.redirect(
+      new URL(
+        `/writing/${encodeURIComponent(legacyPostSlug)}`,
+        context.url.origin,
+      ),
+      308,
+    );
+  }
+
   if (context.url.pathname === "/" && wantsMarkdown) {
     return new Response(homepageMarkdown, {
       headers: {
