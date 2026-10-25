@@ -5,9 +5,6 @@ import {
   notFoundMarkdown,
 } from "./lib/agent-resources";
 
-const markdownBotPattern =
-  /(?:GPTBot|ClaudeBot|ChatGPT-User|PerplexityBot|Google-Extended|Applebot-Extended|ora-agent|DeepSeekBot)/i;
-
 const appendVary = (current: string | null, value: string) => {
   const fields = (current ?? "")
     .split(",")
@@ -22,17 +19,25 @@ const appendVary = (current: string | null, value: string) => {
   return fields.join(", ");
 };
 
+const explicitlyAcceptsMarkdown = (accept: string) =>
+  accept.split(",").some((mediaRange) => {
+    const [mediaType, ...parameters] = mediaRange.split(";");
+    if (mediaType?.trim().toLowerCase() !== "text/markdown") return false;
+
+    const quality = parameters
+      .map((parameter) => parameter.trim().match(/^q\s*=\s*(.+)$/i)?.[1])
+      .find((value): value is string => value !== undefined);
+
+    return quality === undefined || Number(quality) > 0;
+  });
+
 /**
- * Let agents choose a compact, cache-safe representation without changing
- * normal browser visits. The user-agent path is deliberately limited to the
- * documented answer-engine bots; every other request follows Accept headers.
+ * Serve Markdown only when the client explicitly requests it. Crawler
+ * user-agents that request HTML should receive the same HTML as browsers.
  */
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const accept = context.request.headers.get("accept") ?? "";
-  const userAgent = context.request.headers.get("user-agent") ?? "";
-  const wantsMarkdown =
-    /(?:^|,)\s*text\/markdown(?:\s*;|,|$)/i.test(accept) ||
-    markdownBotPattern.test(userAgent);
+  const wantsMarkdown = explicitlyAcceptsMarkdown(accept);
 
   const legacyPostSlug =
     context.url.pathname === "/"
@@ -65,7 +70,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       headers: {
         ...markdownHeaders,
         Link: '</sitemap.xml>; rel="sitemap", </llms.txt>; rel="alternate"; type="text/markdown"',
-        Vary: "Accept, User-Agent",
+        Vary: "Accept",
       },
     });
   }
@@ -74,11 +79,8 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   response.headers.set(
     "Vary",
     appendVary(
-      appendVary(
-        appendVary(response.headers.get("Vary"), "Accept"),
-        "Accept-Encoding",
-      ),
-      "User-Agent",
+      appendVary(response.headers.get("Vary"), "Accept"),
+      "Accept-Encoding",
     ),
   );
   response.headers.append(
