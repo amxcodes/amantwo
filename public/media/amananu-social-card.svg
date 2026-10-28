@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="background" x1="85" y1="36" x2="1117" y2="647" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111F"/>
+      <stop offset="1" stop-color="#111C2B"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientTransform="matrix(0 420 -610 0 600 279)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D8C898" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#D8C898" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tile" x1="428" y1="79" x2="781" y2="433" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F3E9"/>
+      <stop offset="1" stop-color="#DFE6E7"/>
+    </linearGradient>
+    <filter id="shadow" x="368" y="38" width="464" height="464" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="19"/>
+      <feOffset dy="13"/>
+      <feColorMatrix values="0 0 0 0 0.01 0 0 0 0 0.025 0 0 0 0 0.05 0 0 0 .3 0"/>
+      <feBlend in2="SourceGraphic" result="shadow"/>
+      <feBlend in="SourceGraphic" in2="shadow"/>
+    </filter>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" stroke="#E8EEF5" stroke-opacity=".035"/>
+    </pattern>
+  </defs>
+  <path fill="url(#background)" d="M0 0h1200v630H0z"/>
+  <path fill="url(#halo)" d="M0 0h1200v630H0z"/>
+  <path fill="url(#grid)" d="M0 0h1200v630H0z"/>
+  <circle cx="600" cy="265" r="216" stroke="#E8D9AD" stroke-opacity=".12"/>
+  <circle cx="600" cy="265" r="195" stroke="#E8D9AD" stroke-opacity=".07"/>
+  <rect x="420" y="85" width="360" height="360" rx="94" fill="url(#tile)" filter="url(#shadow)"/>
+  <g transform="translate(369 35) scale(7.2)" fill="#172136">
+    <path d="M16 47 29 16h7l12 31h-8l-2-7H26l-2 7Zm13-14h7l-3-10Z"/>
+  </g>
+  <path d="M460 491h280" stroke="#D8C898" stroke-opacity=".38"/>
+  <text x="600" y="537" fill="#F7F3E9" font-family="Arial, sans-serif" font-size="23" font-weight="600" letter-spacing="7" text-anchor="middle">AMAN ANU</text>
+  <text x="600" y="572" fill="#AAB8C8" font-family="Arial, sans-serif" font-size="12" font-weight="500" letter-spacing="3.2" text-anchor="middle">AMANANU.ME</text>
+</svg>
