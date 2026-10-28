@@ -26,11 +26,9 @@ let managedArticles: {
   continueCursor?: string;
   isDone: boolean;
 } | null = null;
-let managedReadSucceeded = false;
 
-// This component is rendered as an Astro server island from the home page.
-// Keep the short edge cache on the island response as well as the shell so a
-// cold Convex read is isolated from the visitor's first meaningful paint.
+// Keep the public snapshot briefly cached at the edge while allowing published
+// CMS changes to appear promptly for readers and crawlers.
 Astro.response.headers.set(
   "Cache-Control",
   "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
@@ -63,7 +61,6 @@ if (convexUrl) {
           : undefined,
       isDone: articles.isDone === true,
     };
-    managedReadSucceeded = true;
   }
 }
 
@@ -74,7 +71,6 @@ const projectsContent = managedContent("projects");
 const aboutContent = managedContent("about");
 const experienceContent = managedContent("experience");
 const educationContent = managedContent("education");
-const writingContent = managedContent("writing");
 
 // Keep the local, optimized hero avatar canonical. Older CMS drafts can still
 // contain the previous demo/remote avatar URL and would otherwise silently
@@ -166,8 +162,9 @@ const projects = normalizeProjects(projectSource);
 const about = (aboutContent ?? siteData.about) as typeof siteData.about;
 const experience = (Array.isArray(experienceContent?.entries) ? experienceContent.entries : siteData.experience) as typeof siteData.experience;
 const education = (Array.isArray(educationContent?.entries) ? educationContent.entries : siteData.education) as typeof siteData.education;
-const legacyPosts = (Array.isArray(writingContent?.posts) ? writingContent.posts : siteData.posts) as typeof siteData.posts;
-const posts = managedArticles?.cards ?? (managedReadSucceeded ? [] : legacyPosts);
+// The seed article cards do not have public article routes. Hide them when
+// Convex is unavailable instead of exposing links that redirect back home.
+const posts = managedArticles?.cards ?? [];
 ---
 
 <ProfileHero {...identity} heroRoles={heroRoles} />

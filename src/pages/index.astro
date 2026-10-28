@@ -1,22 +1,15 @@
 ---
-import AboutSection from "../components/AboutSection.astro";
-import BlogSection from "../components/BlogSection.astro";
-import EducationSection from "../components/EducationSection.astro";
-import ExperienceSection from "../components/ExperienceSection.astro";
+import AgentModeView from "../components/AgentModeView.astro";
 import ManagedPortfolio from "../components/ManagedPortfolio.astro";
-import ProfileHero from "../components/ProfileHero.astro";
-import ProjectCollection from "../components/ProjectCollection.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { siteData } from "../content/site";
 import { homepageStructuredData } from "../content/structured-data";
-import AgentModeView from "../components/AgentModeView.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { publicConvexUrl } from "../lib/publicConfig";
 
-// The shell is intentionally independent from the Convex snapshot. The
-// managed sections below are fetched by an Astro server island so the header
-// and hero can stream on a cold visit instead of waiting for Convex startup.
+// Render the published snapshot into the initial HTML so crawlers and readers
+// that do not execute JavaScript still receive the current portfolio content.
 export const prerender = false;
 Astro.response.headers.set(
   "Cache-Control",
@@ -34,28 +27,9 @@ const isAgentMode = Astro.url.searchParams.get("mode") === "agent";
 >
   <div class="page-shell">
     <SiteHeader {...siteData.identity} convexUrl={publicConvexUrl} />
-    {isAgentMode ? (
-      <AgentModeView />
-    ) : (
-      <main id="main-content">
-        <ManagedPortfolio server:defer>
-          <Fragment slot="fallback">
-            <!--
-              The fallback is deliberately static and non-interactive. It keeps
-              the existing card geometry visible while the managed snapshot
-              arrives, without starting a second GitHub request or hydrating a
-              second set of drawers that would immediately be replaced.
-            -->
-            <ProfileHero {...siteData.identity} heroRoles={siteData.heroRoles} />
-            <ProjectCollection projects={siteData.projects} roles={siteData.roles} github={siteData.github} interactive={false} />
-            <AboutSection {...siteData.about} />
-            <ExperienceSection entries={siteData.experience} />
-            <EducationSection entries={siteData.education} />
-            <BlogSection posts={siteData.posts} interactive={false} />
-          </Fragment>
-        </ManagedPortfolio>
-      </main>
-    )}
+    <main id="main-content">
+      {isAgentMode ? <AgentModeView /> : <ManagedPortfolio />}
+    </main>
     <!-- Keep the footer's visible-only signature hydration on the public page.
          The static island fallback intentionally stays non-interactive, but
          the footer itself owns its reveal animation and newsletter behavior. -->
