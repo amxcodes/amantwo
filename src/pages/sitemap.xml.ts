@@ -6,7 +6,14 @@ import { publicConvexUrl } from "../lib/publicConfig";
 export const prerender = false;
 
 const siteOrigin = new URL(import.meta.env.SITE ?? "https://amananu.me");
-const staticPaths = ["/", "/about", "/contact", "/privacy", "/developers"];
+const staticPaths = [
+  "/",
+  "/about",
+  "/contact",
+  "/privacy",
+  "/developers",
+  "/your-secret-admirer-finder",
+];
 
 const escapeXml = (value: string) =>
   value
